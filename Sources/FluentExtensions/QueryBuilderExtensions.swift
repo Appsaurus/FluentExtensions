@@ -43,3 +43,21 @@ extension QueryBuilder{
 		return self.connection.eventLoop.newSucceededFuture(result: nil)
 	}
 }
+
+extension QueryBuilder {
+	public func or(_ values: Database.QueryFilter...) -> Self {
+		return group(Database.queryFilterRelationOr) { (or) in
+			for value in values{
+				or.filter(value)
+			}
+		}
+	}
+
+	public func and(_ values: Database.QueryFilter...) -> Self {
+		return group(Database.queryFilterRelationAnd) { (and) in
+			for value in values{
+				and.filter(value)
+			}
+		}
+	}
+}
