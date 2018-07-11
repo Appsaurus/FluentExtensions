@@ -1,3 +1,3 @@
 # FluentExtensions
 
-A description of this package.
+Description coming soon.
