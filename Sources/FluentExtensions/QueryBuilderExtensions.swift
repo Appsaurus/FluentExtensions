@@ -48,7 +48,7 @@ extension QueryBuilder {
 	public func or(_ values: Database.QueryFilter...) -> Self {
 		return group(Database.queryFilterRelationOr) { (or) in
 			for value in values{
-				or.filter(value)
+				or.filter(custom: value)
 			}
 		}
 	}
@@ -56,7 +56,7 @@ extension QueryBuilder {
 	public func and(_ values: Database.QueryFilter...) -> Self {
 		return group(Database.queryFilterRelationAnd) { (and) in
 			for value in values{
-				and.filter(value)
+				and.filter(custom: value)
 			}
 		}
 	}
