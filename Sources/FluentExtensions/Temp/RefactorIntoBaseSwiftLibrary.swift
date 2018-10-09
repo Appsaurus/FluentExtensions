@@ -43,12 +43,6 @@ extension ClosedRange where Bound == Int{
 	}
 }
 
-extension CountableClosedRange where Bound == Int{
-	func randomSubrange(_ size: Int) -> ClosedRange<Int>{
-		return ClosedRange<Int>(Range<Int>(self).randomSubrange(size))
-	}
-}
-
 extension RandomAccessCollection {
 	func random() -> Iterator.Element? {
 		guard let index = randomIndex() else { return nil }
