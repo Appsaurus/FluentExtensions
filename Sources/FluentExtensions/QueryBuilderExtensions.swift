@@ -22,14 +22,14 @@ extension QueryBuilder{
 	public func random() -> Future<Result?>{
 		return self.count().flatMap(to: Optional<Result>.self) { total in
 			guard total > 0 else { return self.emptyResult() }
-			return self.range(lower: Random.int(max: total - 1)).first()
+			return self.range(lower: .random(in: 0..<total)).first()
 		}
 	}
 
 	public func random(count: Int) -> Future<[Result]>{
 		return self.count().flatMap(to: [Result].self) { total in
 			guard total > 0 else { return self.emptyResults()}
-			let queryRange = (0...total - 1).randomSubrange(count)
+			let queryRange = (0..<total).randomSubrange(count)
 			return self.range(queryRange).all()
 		}
 	}

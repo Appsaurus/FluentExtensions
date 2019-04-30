@@ -3,5 +3,6 @@ import XCTest
 import FluentExtensionsTests
 
 var tests = [XCTestCaseEntry]()
-tests += FluentExtensionsTests.allTests()
+tests += FluentExtensionsTests.__allTests()
+
 XCTMain(tests)

@@ -1,5 +1,5 @@
 //
-//  RefactorIntoBaseSwiftLibrary.swift
+//  FoundationExtensions.swift
 //  FluentExtensions
 //
 //  Created by Brian Strobach on 5/30/18.
@@ -26,10 +26,6 @@ extension Range where Bound == Int{
 		guard let randomLowerBound = (lowerBound...maxLowerBound).random() else { return self }
 		return Range<Int>(randomLowerBound...randomLowerBound + size - 1)
 	}
-
-	func random() -> Int? {
-		return CountableClosedRange<Int>(self).random()
-	}
 }
 
 extension ClosedRange where Bound == Int{
@@ -51,7 +47,7 @@ extension RandomAccessCollection {
 
 	func randomIndex() -> Index? {
 		guard !isEmpty else { return nil }
-		let offset = Random.int(max: count)
+		let offset = Int.random(in: 0..<count)
 		let i = index(startIndex, offsetBy: numericCast(offset))
 		return i
 	}
@@ -63,59 +59,4 @@ extension ClosedRange {
 			: upperBound < value ? upperBound
 			: value
 	}
-}
-
-//TODO: Remove this once Swift 4.2 unifies Random API
-public class Random{
-
-	#if os(Linux)
-	static var initialized = false
-	#endif
-
-	static public func int(range: CountableClosedRange<Int> ) -> Int{
-		var offset = 0
-
-		if range.lowerBound < 0   // allow negative ranges
-		{
-			offset = abs(range.lowerBound)
-		}
-
-		let min = range.lowerBound + offset
-		let max = range.upperBound   + offset
-
-		#if os(Linux)
-		seedRandom()
-		return Int((random() % max) + min) - offset
-		#else
-		return Int(UInt32(min) + arc4random_uniform(UInt32(max) - UInt32(min))) - offset
-		#endif
-
-	}
-	static public func int(max: Int) -> Int {
-		#if os(Linux)
-		seedRandom()
-		return Int(random() % max)
-		#else
-		return Int(arc4random_uniform(UInt32(max)))
-		#endif
-	}
-
-
-	static public func int() -> Int{
-		#if os(Linux)
-		seedRandom()
-		return Int(random())
-		#else
-		return Int(arc4random())
-		#endif
-	}
-
-	#if os(Linux)
-	static public func seedRandom(){
-		if !Random.initialized {
-			srandom(UInt32(time(nil)))
-			Random.initialized = true
-		}
-	}
-	#endif
 }
