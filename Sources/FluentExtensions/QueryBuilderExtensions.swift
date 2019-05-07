@@ -8,22 +8,23 @@
 import Foundation
 import Fluent
 
-extension Model{
-	public static func random(on conn: DatabaseConnectable) -> Future<Self?>{
-		return query(on: conn).random()
-	}
 
-	public static func random(on conn: DatabaseConnectable, count: Int) -> Future<[Self]>{
-		return query(on: conn).random(count: count)
-	}
+extension Model where Database: QuerySupporting, ID == Int{
+    public static func random(on conn: DatabaseConnectable) -> Future<Self?>{
+        return query(on: conn).random()
+    }
+
+    public static func random(on conn: DatabaseConnectable, count: Int) -> Future<[Self]>{
+        return query(on: conn).random(count: count)
+    }
 }
 
-extension QueryBuilder{
+extension QueryBuilder where Result: Model, Result.ID == Int{
 	public func random() -> Future<Result?>{
-		return self.count().flatMap(to: Optional<Result>.self) { total in
-			guard total > 0 else { return self.emptyResult() }
-			return self.range(lower: .random(in: 0..<total)).first()
-		}
+        return self.count().flatMap(to: Optional<Result>.self) { total in
+            guard total > 0 else { return self.emptyResult() }
+            return self.filter(Result.idKey == .random(in: 0..<total)).first()
+        }
 	}
 
 	public func random(count: Int) -> Future<[Result]>{

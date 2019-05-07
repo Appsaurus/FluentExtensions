@@ -17,7 +17,7 @@ let package = Package(
 		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", .upToNextMajor(from: "0.1.0")),
 		.package(url: "https://github.com/Appsaurus/FluentTestUtils", .upToNextMajor(from: "0.1.0")),
     ],
-    targets: [
+    targets: [Ç
         .target(
             name: "FluentExtensions",
             dependencies: ["Vapor", "Fluent", "CodableExtensions", "RuntimeExtensions"]),
