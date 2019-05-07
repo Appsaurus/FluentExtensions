@@ -29,7 +29,7 @@ public extension QueryBuilder {
     func randomSlice(count: Int) -> Future<[Result]>{
         return self.count().flatMap(to: [Result].self) { total in
             guard total > 0 else { return self.emptyResults()}
-            let queryRange = (1...total).randomSubrange(count)
+            let queryRange = (0..<total).randomSubrange(count)
             return self.range(queryRange).all()
         }
     }
