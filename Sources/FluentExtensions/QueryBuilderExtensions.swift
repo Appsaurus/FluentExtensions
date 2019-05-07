@@ -18,7 +18,7 @@ public extension Model{
     }
 }
 
-extension QueryBuilder {
+public extension QueryBuilder {
 
     func random() -> Future<Result?>{
         return self.randomSlice(count: 1).map({ (model) -> (Result?) in
