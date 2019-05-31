@@ -37,7 +37,7 @@ extension Future where T: Collection, T.Element: Model & Reflectable {
 
 	public func update(with request: Request) throws -> Future<[T.Element]> {
 
-		let decoder: JSONDecoder = .defaultDecoder
+		let decoder: JSONDecoder = .default
 		let data =  request.http.body.data!
 		let jsonArray: [AnyCodableDictionary] = try [AnyCodableDictionary].decode(fromJSON: data, using: decoder)
 		return try update(with: jsonArray, keyedBy: T.Element.idKeyStringPath, on: request)
@@ -56,7 +56,7 @@ extension Future where T: Collection, T.Element: Model & Reflectable {
 				guard let id: T.Element.ID = try get(keyPath, from: model) else { throw Abort(.badRequest) }
 				let idString = id.toString()
 				guard let json: AnyCodableDictionary = jsonMap[idString] else { throw Abort(.badRequest) }
-				let decoder: JSONDecoder = .defaultDecoder
+				let decoder: JSONDecoder = .default
 				let data = try json.encodeAsJSONData()
 				try decoder.update(&model, from: data)
 

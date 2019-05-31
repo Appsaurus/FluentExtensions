@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/Appsaurus/CodableExtensions",
         "state": {
           "branch": null,
-          "revision": "4b8e1fafe94ac99fa53118d63a1ce8b7f075fa67",
-          "version": "1.0.0"
+          "revision": "2ccfd1323e989dee9a10d204b2959e66f1ba1e2b",
+          "version": "1.0.2"
         }
       },
       {
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/Appsaurus/FluentTestUtils",
         "state": {
           "branch": null,
-          "revision": "4864251820ddc89645797121fa1d3ffadf09484f",
-          "version": "0.1.1"
+          "revision": "50f71ca73c27762112d91ad79f17af60226f369a",
+          "version": "0.1.3"
         }
       },
       {
