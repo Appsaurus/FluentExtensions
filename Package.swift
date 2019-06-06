@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "FluentExtensions",
+    platforms: [
+        .macOS(.v10_12)
+    ],
     products: [
         .library(
             name: "FluentExtensions",
