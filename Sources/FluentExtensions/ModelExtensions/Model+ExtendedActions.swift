@@ -62,3 +62,85 @@ extension Model where Database: QuerySupporting{
 		})
 	}
 }
+
+public typealias ModelInitializer<M: Model> = () throws -> M
+extension Model where Self: Decodable{
+
+    @discardableResult
+    static public func create(id: Self.ID? = nil, on conn: DatabaseConnectable, _ initializer: ModelInitializer<Self>) throws -> Future<Self>{
+        var model: Self = try initializer()
+        if let id = id {
+            model.fluentID = id
+        }
+        return model.create(on: conn)
+    }
+
+    @discardableResult
+    static public func createSync(id: Self.ID? = nil, on conn: DatabaseConnectable, _ initializer: ModelInitializer<Self>) throws -> Self{
+        return try create(id: id, on: conn, initializer).wait()
+    }
+
+    @discardableResult
+    static public func createBatchSync(size: Int, on conn: DatabaseConnectable, _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
+        return try createBatch(size: size, on: conn, initializer).wait()
+    }
+
+
+
+    @discardableResult
+    static public func createBatch(size: Int, on conn: DatabaseConnectable, _ initializer: @escaping ModelInitializer<Self>) throws -> Future<[Self]>{
+        return Future.flatMap(on: conn, { () -> Future<[Self]> in
+            var models: [Future<Self>] = []
+            if size > 0{
+                for _ in 1...size{
+                    models.append(try self.create(on: conn, initializer))
+                }
+            }
+            return models.flatten(on: conn)
+        })
+    }
+
+    @discardableResult
+    static public func findOrCreate(id: Self.ID, on conn: DatabaseConnectable,  _ initializer: @escaping ModelInitializer<Self>) throws -> Future<Self>{
+        return self.find(id, on: conn).unwrap(or: { () -> EventLoopFuture<Self> in
+            return try! self.create(id: id, on: conn, initializer)
+        })
+
+    }
+
+    @discardableResult
+    static public func findOrCreateBatch(ids: [Self.ID], on conn: DatabaseConnectable, _ initializer: @escaping ModelInitializer<Self>) throws -> Future<[Self]>{
+        return Future.flatMap(on: conn, { () -> Future<[Self]> in
+            var models: [Future<Self>] = []
+            for id in ids{
+                models.append(try self.findOrCreate(id: id, on: conn, initializer))
+            }
+            return models.flatten(on: conn)
+        })
+    }
+
+    @discardableResult
+    static public func findOrCreateSync(id: Self.ID, on conn: DatabaseConnectable, _ initializer: @escaping ModelInitializer<Self>) throws -> Self{
+        let futureModel: Future<Self> = try findOrCreate(id: id, on: conn, initializer)
+        let model: Self = try futureModel.wait()
+        return model
+    }
+
+    @discardableResult
+    static public func findOrCreateBatchSync(ids: [Self.ID], on conn: DatabaseConnectable, _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
+        return try findOrCreateBatch(ids: ids, on: conn, initializer).wait()
+    }
+}
+
+public extension Future where Expectation: Vapor.OptionalType {
+    /// Unwraps an optional value contained inside a Future's expectation.
+    /// If the optional resolves to `nil` (`.none`), the supplied error will be thrown instead.
+    func unwrap(or resolve: @escaping () -> Future<Expectation.WrappedType>) -> Future<Expectation.WrappedType> {
+        return flatMap(to: Expectation.WrappedType.self) { optional in
+            guard let _ = optional.wrapped else {
+                return resolve()
+            }
+            return self.unwrap(or: Abort(.internalServerError))
+        }
+    }
+}
