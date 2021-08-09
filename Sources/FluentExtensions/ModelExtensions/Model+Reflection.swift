@@ -10,9 +10,9 @@ import Fluent
 import Vapor
 import RuntimeExtensions
 
-//extension Future where T: Model & Reflectable  {
-//	public func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on conn: DatabaseConnectable) throws -> Future<T> {
-//		return self.map(to: T.self) { (model) in
+//extension Future where Value: Model & Reflectable  {
+//	public func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on conn: Database) throws -> Future<Value> {
+//		return self.map(to: Value.self) { (model) in
 //			return try model.updateReflectively(with: container)
 //			}.update(on: conn)
 //	}
@@ -92,8 +92,8 @@ import RuntimeExtensions
 //	}
 //}
 
-extension Model where Self: KVC, Database: QuerySupporting{
-	public func updateWithKeyValues(of model: Self, on conn: DatabaseConnectable) throws -> Future<Self> {
-		return try updateWithKeyValues(of: model).save(on: conn)
+extension Model where Self: KVC {
+	public func updateWithKeyValues(of model: Self, on conn: Database) throws -> Future<Self> {
+        return try updateWithKeyValues(of: model).save(on: conn).transform(to: self)
 	}
 }
