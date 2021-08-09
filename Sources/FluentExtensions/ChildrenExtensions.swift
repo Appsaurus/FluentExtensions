@@ -8,23 +8,24 @@
 import Foundation
 import Fluent
 
-extension Children where Child: Model, Parent.Database: QuerySupporting{
+extension ChildrenProperty {
 	/// Returns true if the supplied model is a child
 	/// to this relationship.
-	public func includes(_ model: Child, on conn: DatabaseConnectable) throws -> Future<Bool> {
-		return try query(on: conn)
-			.filter(Child.idKey == model.requireID())
+	public func includes(_ model: To, on conn: Database) throws -> Future<Bool> {
+        let id = try model.requireID()
+		return query(on: conn)
+			.filter(\._$id == id)
 			.first()
-			.map(to: Bool.self) { child in
+			.map { child in
 				return child != nil
 		}
 	}
 }
 
-extension Model where Database: QuerySupporting{
+extension Model {
 	/// Returns true if this model is a child
 	/// to the supplied relationship.
-	public func isChild<M: Model>(_ children: Children<M, Self>, on conn: DatabaseConnectable) throws -> Future<Bool> {
+	public func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, on conn: Database) throws -> Future<Bool> {
 		return try children.includes(self, on: conn)
 	}
 }

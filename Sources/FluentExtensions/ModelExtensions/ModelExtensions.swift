@@ -11,20 +11,18 @@ import Vapor
 import RuntimeExtensions
 
 //MARK: Existence checks
-extension Model where Database: QuerySupporting{
+extension Model {
 
-	public func existingEntityWithId(on conn: DatabaseConnectable) throws -> Future<Self?>{
-		guard let id = self.fluentID else {
-			return Future.map(on: conn) { () -> Self? in
-				return nil
-			}
+	public func existingEntityWithId(on conn: Database) -> Future<Self?>{
+		guard let id = self.id else {
+            return conn.eventLoop.makeSucceededFuture(nil)
 		}
 		return Self.find(id, on: conn)
 	}
 
 	@discardableResult
-	public func assertExistingEntityWithId(on conn: DatabaseConnectable) throws -> Future<Self>{
-		return try existingEntityWithId(on: conn)
+	public func assertExistingEntityWithId(on conn: Database) throws -> Future<Self>{
+		return existingEntityWithId(on: conn)
 			.unwrap(or: Abort(.notFound, reason: "An entity with that ID could not be found."))
 	}
 }
@@ -32,7 +30,7 @@ extension Model where Database: QuerySupporting{
 extension Collection where Element: Model{
 
 	@discardableResult
-	public func assertExistingEntitiesWithIds(on conn: DatabaseConnectable) throws -> Future<[Element]>{
+	public func assertExistingEntitiesWithIds(on conn: Database) throws -> Future<[Element]>{
 		var entities: [Future<Element>] = []
 		for entity in self{
 			entities.append(try entity.assertExistingEntityWithId(on: conn))
@@ -42,27 +40,28 @@ extension Collection where Element: Model{
 }
 
 //MARK: Destructive
-extension Model where Database: QuerySupporting & TransactionSupporting{
-
+extension Model {
 	/// Deletes all rows in a table
-	public static func delete(on conn: DatabaseConnectable, transaction: Bool = true) throws -> Future<Void> {
-		return query(on: conn).all().delete(on: conn, transaction: transaction)
+	public static func delete(force: Bool = false, on conn: Database, transaction: Bool = true) throws -> Future<Void> {
+        return query(on: conn).all().delete(force: force, on: conn, transaction: transaction)
 	}
 }
 
 
 //MARK: Query extensions
 
-extension Model where Database: QuerySupporting{
+extension Model {
 
-	public static func find(_ ids: [Self.ID], on conn: DatabaseConnectable) -> Future<[Self]>{
-		return query(on: conn).filter(idKey ~~ ids).all()
+	public static func find(_ ids: [IDValue], on conn: Database) -> Future<[Self]>{
+		return query(on: conn).filter(\._$id  ~~ ids).all()
 
 	}
 	/// Attempts to find an instance of this model w/
 	/// the supplied value at the given key path
-	public static func find<V: Encodable>(_ keyPath: KeyPath<Self, V>, value: V, on conn: DatabaseConnectable) -> Future<Self?> {
-		return query(on: conn).filter(keyPath == value).first()
+    public static func find<V: Encodable & QueryableProperty>(_ keyPath: KeyPath<Self, V>,
+                                                              value: V.Value,
+                                                              on conn: Database) -> Future<Self?> {
+        return query(on: conn).filter(keyPath == value).first()
 	}
 }
 

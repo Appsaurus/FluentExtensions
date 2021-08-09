@@ -5,4 +5,8 @@
 //  Created by Brian Strobach on 8/9/21.
 //
 
-import Foundation
+import Vapor
+public typealias Future = EventLoopFuture
+
+
+

@@ -8,11 +8,11 @@
 import Foundation
 import Fluent
 
-extension FluentProperty{
-	public var name: String{
-		return path.last!
-	}
-	public var fullPath: String{
-		return path.joined(separator: ".")
-	}
-}
+//extension FluentProperty{
+//	public var name: String{
+//		return path.last!
+//	}
+//	public var fullPath: String{
+//		return path.joined(separator: ".")
+//	}
+//}
