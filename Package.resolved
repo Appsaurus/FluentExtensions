@@ -74,6 +74,15 @@
         }
       },
       {
+        "package": "fluent-sqlite-driver",
+        "repositoryURL": "https://github.com/vapor/fluent-sqlite-driver.git",
+        "state": {
+          "branch": null,
+          "revision": "9ca34be792979fb0f1dbd8e45b8af9f1e1440474",
+          "version": "4.1.0"
+        }
+      },
+      {
         "package": "multipart-kit",
         "repositoryURL": "https://github.com/vapor/multipart-kit.git",
         "state": {
@@ -116,6 +125,24 @@
           "branch": null,
           "revision": "b70d1fea1b544dd819c17e83d59fb9aa85c81e74",
           "version": "3.10.0"
+        }
+      },
+      {
+        "package": "sqlite-kit",
+        "repositoryURL": "https://github.com/vapor/sqlite-kit.git",
+        "state": {
+          "branch": null,
+          "revision": "2ec279b9c845cec254646834b66338551a024561",
+          "version": "4.0.2"
+        }
+      },
+      {
+        "package": "sqlite-nio",
+        "repositoryURL": "https://github.com/vapor/sqlite-nio.git",
+        "state": {
+          "branch": null,
+          "revision": "6481dd0b01112d082dd7eb362782126e81964138",
+          "version": "1.1.0"
         }
       },
       {
@@ -215,6 +242,15 @@
           "branch": null,
           "revision": "45d0b3943d9ed2637cb8f7c4fcd4676fc917df9b",
           "version": "4.48.3"
+        }
+      },
+      {
+        "package": "VaporExtensions",
+        "repositoryURL": "https://github.com/Appsaurus/VaporExtensions.git",
+        "state": {
+          "branch": "vapor-4",
+          "revision": "6e9fde13cb73533feccb40e437e9f002b3f13b80",
+          "version": null
         }
       },
       {

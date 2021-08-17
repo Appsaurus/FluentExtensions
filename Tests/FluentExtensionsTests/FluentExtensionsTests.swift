@@ -1,4 +1,5 @@
-import XCTest
+import XCTVapor
+
 @testable import FluentExtensions
 
 final class FluentExtensionsTests: XCTestCase {
@@ -11,7 +12,7 @@ final class FluentExtensionsTests: XCTestCase {
 	let ranges: [ClosedRange<Int>] = [-1000 ... -500, -500...0, -250...250]
 	let iterations: Int = 10000
 
-    func testRandomRangeElement() {
+    func testRandomRangeElement() throws {
 		for range in ranges{
 			for _ in 0...iterations{
 				XCTAssert(range.contains(range.random()!))
@@ -19,7 +20,7 @@ final class FluentExtensionsTests: XCTestCase {
 		}
     }
 
-	func testRandomSubrange() {
+	func testRandomSubrange() throws{
 
 		for range in ranges{
 			for _ in 0...iterations{
@@ -31,4 +32,12 @@ final class FluentExtensionsTests: XCTestCase {
 			}
 		}
 	}
+
+    func testPropertyName() throws {
+//        let app = Application(.testing)
+//        defer { app.shutdown() }
+//        try configure(app)
+    }
 }
+
+
