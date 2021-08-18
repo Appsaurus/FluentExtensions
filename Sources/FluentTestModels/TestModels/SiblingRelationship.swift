@@ -16,7 +16,7 @@ public final class StudentModel: Model, Content {
     public var id: UUID?
 
     @Siblings(through: EnrollmentModel.self, from: \.$student, to: \.$class)
-    var classes: [ClassModel]
+    public var classes: [ClassModel]
 
     public init() {}
 }
@@ -43,7 +43,7 @@ public final class ClassModel: Model, Content {
     public var id: UUID?
 
     @Siblings(through: EnrollmentModel.self, from: \.$class, to: \.$student)
-    var students: [StudentModel]
+    public var students: [StudentModel]
 
     public init() {}
 }

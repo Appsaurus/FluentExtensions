@@ -59,13 +59,13 @@ final class FriendshipModel: Model, Content {
     static let schema = "FriendshipModel"
 
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
 
     @Parent(key: .fromUser)
-    var fromUser: UserModel
+    public var fromUser: UserModel
 
     @Parent(key: .toUser)
-    var toUser: UserModel
+    public var toUser: UserModel
 
     init() { }
 

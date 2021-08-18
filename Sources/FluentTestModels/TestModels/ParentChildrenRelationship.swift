@@ -26,7 +26,7 @@ public final class ParentModel: Model, Content {
     public var name: String
 
     @Children(for: \.$parent)
-    var children: [ChildModel]
+    public var children: [ChildModel]
 
     public init() {}
 
@@ -68,7 +68,7 @@ public final class ChildModel: Model, Content {
     public var name: String
 
     @Parent(key: .parent)
-    var parent: ParentModel
+    public var parent: ParentModel
 
     public init() {}
 
