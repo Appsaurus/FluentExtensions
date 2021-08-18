@@ -12,11 +12,11 @@ public typealias ThrowingBatchAction<V> = (Database) throws -> Future<V>
 
 extension Collection where Element: Model {
 
-    public func performBatch<V>(action: @escaping BatchAction<V>, on conn: Database, transaction: Bool) -> Future<V>{
+    public func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
         guard transaction else {
-            return action(conn)
+            return action(database)
         }
-        return conn.transaction { conn in
+        return database.transaction { conn in
             return action(conn)
         }
     }
@@ -24,9 +24,9 @@ extension Collection where Element: Model {
 
 
 extension Future where Value: Collection, Value.Element: Model {
-    public func performBatch<V>(action: @escaping BatchAction<V>, on conn: Database, transaction: Bool) -> Future<V>{
+    public func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
         return flatMap { elements in
-            return elements.performBatch(action: action, on: conn, transaction: transaction)
+            return elements.performBatch(action: action, on: database, transaction: transaction)
         }
     }
 }

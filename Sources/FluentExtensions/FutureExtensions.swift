@@ -44,7 +44,7 @@ extension Future where Value: Collection, Value.Element: Model/* & Reflectable*/
         return try update(with: jsonArray, keyedBy: Value.Element.idKeyStringPath, on: request)
 	}
 
-	public func update(with json: [AnyCodableDictionary], keyedBy keyPath: String, on conn: Request) throws -> Future<Value> {
+	public func update(with json: [AnyCodableDictionary], keyedBy keyPath: String, on database: Request) throws -> Future<Value> {
 		let jsonMap: [String : AnyCodableDictionary] = try json.indexed { (dictionary) in
 			guard let id: Any = dictionary[keyPath] else { throw Abort(.badRequest) }
 			return "\(id)"
@@ -63,7 +63,7 @@ extension Future where Value: Collection, Value.Element: Model/* & Reflectable*/
 
 			})
 			return models
-        }.updateAndReturn(on: conn.db, transaction: true)
+        }.updateAndReturn(on: database.db, transaction: true)
 	}
 }
 

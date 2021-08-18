@@ -9,12 +9,12 @@ import Foundation
 import FluentKit
 
 public extension Model{
-    static func random(on conn: Database) -> Future<Self?>{
-        return query(on: conn).random()
+    static func random(on database: Database) -> Future<Self?>{
+        return query(on: database).random()
     }
     
-    static func random(on conn: Database, count: Int) -> Future<[Self]>{
-        return query(on: conn).randomSlice(count: count)
+    static func random(on database: Database, count: Int) -> Future<[Self]>{
+        return query(on: database).randomSlice(count: count)
     }
 }
 

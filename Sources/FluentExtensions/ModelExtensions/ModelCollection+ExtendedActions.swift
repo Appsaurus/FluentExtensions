@@ -35,49 +35,49 @@ extension Collection where Element: Model{
 
 
 public extension Collection where Element: Model{
-    func upsert(on conn: Database) -> Future<Void>{
-        compactMap { $0.upsert(on: conn) }.flatten(on: conn.eventLoop).flattenVoid()
+    func upsert(on database: Database) -> Future<Void>{
+        compactMap { $0.upsert(on: database) }.flatten(on: database.eventLoop).flattenVoid()
     }
-    func updateIfExists(on conn: Database) throws -> Future<Void>{
-        try compactMap { try $0.updateIfExists(on: conn) }.flatten(on: conn.eventLoop).flattenVoid()
-    }
-
-
-    func upsert(on conn: Database, transaction: Bool) -> Future<Void>{
-        return performBatch(action: upsert, on: conn, transaction: transaction)
+    func updateIfExists(on database: Database) throws -> Future<Void>{
+        try compactMap { try $0.updateIfExists(on: database) }.flatten(on: database.eventLoop).flattenVoid()
     }
 
-    func replace(with models: Future<Self>, on conn: Database, transaction: Bool) -> Future<Void>{
-         map { return $0.delete(on: conn) }
+
+    func upsert(on database: Database, transaction: Bool) -> Future<Void>{
+        return performBatch(action: upsert, on: database, transaction: transaction)
+    }
+
+    func replace(with models: Future<Self>, on database: Database, transaction: Bool) -> Future<Void>{
+         map { return $0.delete(on: database) }
             .compactMap{ _ in
-                models.save(on: conn, transaction: transaction)
-            }.flatten(on: conn.eventLoop)
+                models.save(on: database, transaction: transaction)
+            }.flatten(on: database.eventLoop)
     }
 }
 
 public extension Future where Value: Collection, Value.Element: Model{
-    func upsert(on conn: Database, transaction: Bool) -> Future<Void>{
-         flatMap { $0.upsert(on: conn, transaction: transaction) }
+    func upsert(on database: Database, transaction: Bool) -> Future<Void>{
+         flatMap { $0.upsert(on: database, transaction: transaction) }
     }
 
 
-    func replace(with models: Future<Value>, on conn: Database, transaction: Bool) -> Future<Void>{
-        flatMap { $0.replace(with: models, on: conn, transaction: transaction) }
+    func replace(with models: Future<Value>, on database: Database, transaction: Bool) -> Future<Void>{
+        flatMap { $0.replace(with: models, on: database, transaction: transaction) }
 	}
 }
 
 
 //extension Future where Value: Collection, Value.Element: Model{
 //
-//	public func updateIfExists(on conn: Database, transaction: Bool) -> Future<Value>{
+//	public func updateIfExists(on database: Database, transaction: Bool) -> Future<Value>{
 //		return flatMap { elements in
-//			return elements.updateIfExists(on: conn, transaction: transaction)
+//			return elements.updateIfExists(on: database, transaction: transaction)
 //		}
 //	}
 //
-//	public func upsert(on conn: Database, transaction: Bool) -> Future<Value>{
+//	public func upsert(on database: Database, transaction: Bool) -> Future<Value>{
 //		return flatMap { elements in
-//			return elements.upsert(on: conn, transaction: transaction)
+//			return elements.upsert(on: database, transaction: transaction)
 //		}
 //	}
 //}

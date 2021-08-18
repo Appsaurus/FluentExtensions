@@ -9,20 +9,20 @@ import FluentKit
 
 extension Future where Value: Model{
 
-    public func create(on conn: Database) -> Future<Void>{
-        flatMap { $0.create(on: conn)}
+    public func create(on database: Database) -> Future<Void>{
+        flatMap { $0.create(on: database)}
     }
 
-    public func save(on conn: Database) -> Future<Void>{
-        flatMap { $0.save(on: conn)}
+    public func save(on database: Database) -> Future<Void>{
+        flatMap { $0.save(on: database)}
     }
 
-    public func update(on conn: Database) -> Future<Void>{
-        flatMap { $0.update(on: conn)}
+    public func update(on database: Database) -> Future<Void>{
+        flatMap { $0.update(on: database)}
     }
 
-    public func delete(force: Bool = false, on conn: Database) -> Future<Void> {
-        flatMap { $0.delete(force: force, on: conn)}
+    public func delete(force: Bool = false, on database: Database) -> Future<Void> {
+        flatMap { $0.delete(force: force, on: database)}
 
     }
 }

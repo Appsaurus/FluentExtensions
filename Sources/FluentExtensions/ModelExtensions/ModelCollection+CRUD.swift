@@ -11,78 +11,78 @@ import Vapor
 
 extension Collection where Element: Model {
 
-	public func create(on conn: Database, transaction: Bool) -> Future<Void> {
-		return performBatch(action: create, on: conn, transaction: transaction)
+	public func create(on database: Database, transaction: Bool) -> Future<Void> {
+		return performBatch(action: create, on: database, transaction: transaction)
 	}
 
-	public func save(on conn: Database, transaction: Bool) -> Future<Void>{
-		return performBatch(action: save, on: conn, transaction: transaction)
+	public func save(on database: Database, transaction: Bool) -> Future<Void>{
+		return performBatch(action: save, on: database, transaction: transaction)
 	}
 
-	public func update(on conn: Database, transaction: Bool) -> Future<Void>{
-		return performBatch(action: update, on: conn, transaction: transaction)
+	public func update(on database: Database, transaction: Bool) -> Future<Void>{
+		return performBatch(action: update, on: database, transaction: transaction)
 	}
 
-    public func delete(force: Bool = false, on conn: Database, transaction: Bool) -> Future<Void> {
+    public func delete(force: Bool = false, on database: Database, transaction: Bool) -> Future<Void> {
         performBatch(action: { database in
-            delete(force: force, on: conn)
-        }, on: conn, transaction: transaction)
+            delete(force: force, on: database)
+        }, on: database, transaction: transaction)
 
     }
 
 
-    public func createAndReturn(on conn: Database, transaction: Bool) -> Future<Self> {
-        return performBatch(action: createAndReturn, on: conn, transaction: transaction)
+    public func createAndReturn(on database: Database, transaction: Bool) -> Future<Self> {
+        return performBatch(action: createAndReturn, on: database, transaction: transaction)
     }
 
-    public func saveAndReturn(on conn: Database, transaction: Bool) -> Future<Self>{
-        return performBatch(action: saveAndReturn, on: conn, transaction: transaction)
+    public func saveAndReturn(on database: Database, transaction: Bool) -> Future<Self>{
+        return performBatch(action: saveAndReturn, on: database, transaction: transaction)
     }
 
-    public func updateAndReturn(on conn: Database, transaction: Bool) -> Future<Self>{
-        return performBatch(action: updateAndReturn, on: conn, transaction: transaction)
+    public func updateAndReturn(on database: Database, transaction: Bool) -> Future<Self>{
+        return performBatch(action: updateAndReturn, on: database, transaction: transaction)
     }
 }
 
 
 extension Future where Value: Collection, Value.Element: Model{
 
-	public func create(on conn: Database, transaction: Bool) -> Future<Void>{
+	public func create(on database: Database, transaction: Bool) -> Future<Void>{
 		return flatMap { elements in
-			return elements.create(on: conn)
+			return elements.create(on: database)
 		}
 	}
 
-//	public func delete(on conn: Database) -> Future<Void>{
+//	public func delete(on database: Database) -> Future<Void>{
 //		return flatMap(to: Void.self) { elements in
-//			return elements.delete(on: conn)
+//			return elements.delete(on: database)
 //		}
 //	}
 
-	public func save(on conn: Database, transaction: Bool) -> Future<Void>{
-        return flatMap { $0.save(on: conn, transaction: transaction )}
+	public func save(on database: Database, transaction: Bool) -> Future<Void>{
+        return flatMap { $0.save(on: database, transaction: transaction )}
 	}
 
-	public func update(on conn: Database, transaction: Bool) -> Future<Void>{
-        return flatMap { $0.update(on: conn, transaction: transaction )}
+	public func update(on database: Database, transaction: Bool) -> Future<Void>{
+        return flatMap { $0.update(on: database, transaction: transaction )}
 	}
 
-    public func createAndReturn(on conn: Database, transaction: Bool) -> Future<Value> {
+    public func createAndReturn(on database: Database, transaction: Bool) -> Future<Value> {
 
-        return flatMap { $0.createAndReturn(on: conn, transaction: transaction )}
+        return flatMap { $0.createAndReturn(on: database, transaction: transaction )}
     }
 
 
-    public func delete(force: Bool = false, on conn: Database, transaction: Bool) -> Future<Void> {
-        return flatMap { $0.delete(force: force, on: conn, transaction: transaction )}
+    public func delete(force: Bool = false, on database: Database, transaction: Bool) -> Future<Void> {
+        return flatMap { $0.delete(force: force, on: database, transaction: transaction )}
 
     }
 
-    public func saveAndReturn(on conn: Database, transaction: Bool) -> Future<Value>{
-        return flatMap { $0.saveAndReturn(on: conn, transaction: transaction )}
+    public func saveAndReturn(on database: Database, transaction: Bool) -> Future<Value>{
+        return flatMap { $0.saveAndReturn(on: database, transaction: transaction )}
     }
 
-    public func updateAndReturn(on conn: Database, transaction: Bool) -> Future<Value>{
-        return flatMap { $0.updateAndReturn(on: conn, transaction: transaction )}
+    public func updateAndReturn(on database: Database, transaction: Bool) -> Future<Value>{
+        return flatMap { $0.updateAndReturn(on: database, transaction: transaction )}
     }
 }

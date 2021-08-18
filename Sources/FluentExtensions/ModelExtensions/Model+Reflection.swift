@@ -11,10 +11,10 @@ import Vapor
 import RuntimeExtensions
 
 //extension Future where Value: Model & Reflectable  {
-//	public func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on conn: Database) throws -> Future<Value> {
+//	public func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on database: Database) throws -> Future<Value> {
 //		return self.map(to: Value.self) { (model) in
 //			return try model.updateReflectively(with: container)
-//			}.update(on: conn)
+//			}.update(on: database)
 //	}
 //
 //}
@@ -93,7 +93,7 @@ import RuntimeExtensions
 //}
 
 extension Model where Self: KVC {
-	public func updateWithKeyValues(of model: Self, on conn: Database) throws -> Future<Self> {
-        return try updateWithKeyValues(of: model).save(on: conn).transform(to: self)
+	public func updateWithKeyValues(of model: Self, on database: Database) throws -> Future<Self> {
+        return try updateWithKeyValues(of: model).save(on: database).transform(to: self)
 	}
 }
