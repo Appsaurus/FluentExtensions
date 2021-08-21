@@ -11,7 +11,7 @@ extension KeyPath where Root: Model, Value: QueryableProperty{
 //	public func querySort(_ direction: Root.Database.QuerySortDirection = Root.Database.querySortDirectionAscending)-> Root.Database.QuerySort{
 //		return Root.Database.querySort(queryField, direction)
 //	}
-	public var fluentProperty: [FieldKey]{
+	public var fluentProperty: [FieldKey]{        
         return Root.path(for: self)
 	}
 //

@@ -99,13 +99,13 @@ extension Collection where Element: Comparable{
 
 
 
-extension Encodable {
-    public func encodeAsJSONData(using encoder: JSONEncoder = JSONEncoder()) throws -> Data {
+fileprivate extension Encodable {
+    func encodeAsJSONData(using encoder: JSONEncoder = JSONEncoder()) throws -> Data {
         return try encoder.encode(self)
     }
 
     //WARN: There is some precision lost on decimals: https://bugs.swift.org/browse/SR-7054
-    public func encodeAsJSONString(encoder: JSONEncoder = JSONEncoder(), stringEncoding: String.Encoding = .utf8) throws -> String{
+    func encodeAsJSONString(encoder: JSONEncoder = JSONEncoder(), stringEncoding: String.Encoding = .utf8) throws -> String{
         let jsonData = try encodeAsJSONData(using: encoder)
         guard let jsonString = String(data: jsonData, encoding: stringEncoding) else{
             let context = EncodingError.Context(codingPath: [], debugDescription: "Unable to convert data \(jsonData) from object \(self) to string.")
