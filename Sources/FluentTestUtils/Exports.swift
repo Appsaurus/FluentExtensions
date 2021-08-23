@@ -8,3 +8,5 @@
 @_exported import FluentKit
 @_exported import VaporTestUtils
 @_exported import Fluent
+@_exported import CodableExtensions
+@_exported import RuntimeExtensions
