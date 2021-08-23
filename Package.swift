@@ -26,6 +26,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.0.0")),
 		.package(url: "https://github.com/vapor/fluent.git", .upToNextMajor(from:"4.0.0")),
         .package(url: "https://github.com/Appsaurus/VaporExtensions.git", .branch("vapor-4")),
+        .package(url: "https://github.com/vapor/sql-kit.git", .upToNextMajor(from: "3.1.0")),
 		.package(url: "https://github.com/Appsaurus/CodableExtensions", .upToNextMajor(from: "1.0.0")),
 		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", .upToNextMajor(from: "0.1.0")),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", .upToNextMajor(from:"4.0.0")),
@@ -35,6 +36,7 @@ let package = Package(
             name: "FluentExtensions",
             dependencies: [.product(name: "Vapor", package: "vapor"),
                            .product(name: "Fluent", package: "fluent"),
+                           .product(name: "SQLKit", package: "sql-kit"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions")]),
         .target(
