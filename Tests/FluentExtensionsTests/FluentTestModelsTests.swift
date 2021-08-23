@@ -6,6 +6,11 @@
     @testable import FluentTestModels
 
     final class FluentTestModelsTests: FluentTestModels.TestCase {
+
+        override func configureTestModelDatabase(_ databases: Databases) {
+            databases.use(.sqlite(.memory), as: .sqlite)
+        }
+        
         override func addConfiguration(to app: Application) throws {
             try super.addConfiguration(to: app)
             app.logger.logLevel = .debug

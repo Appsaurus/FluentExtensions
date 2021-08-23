@@ -21,6 +21,7 @@ public extension Model{
 public extension QueryBuilder {
 
     func sort(_ field: String, _ direction: DatabaseQuery.Sort.Direction = .ascending) -> Self {
+        
         return self.sort(FieldKey(extendedGraphemeClusterLiteral: field), direction)
     }
 

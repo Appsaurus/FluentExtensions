@@ -6,15 +6,17 @@
 //
 
 import FluentTestUtils
-import FluentSQLiteDriver
 import FluentExtensions
 
 public struct FluentTestModels {
     open class TestCase: FluentTestCase {
-
         override open func configure(_ databases: Databases) throws {
             try super.configure(databases)
-            databases.use(.sqlite(.memory), as: .sqlite)
+            configureTestModelDatabase(databases)
+        }
+
+        open func configureTestModelDatabase(_ databases: Databases) {
+            assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         }
         override open func configure(_ middleware: Databases.Middleware) throws {
             try super.configure(middleware)

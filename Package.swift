@@ -47,10 +47,10 @@ let package = Package(
         .target(
             name: "FluentTestModels",
             dependencies: [.target(name: "FluentTestUtils"),
-                           .target(name: "FluentExtensions"),
-                           .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver")]),
+                           .target(name: "FluentExtensions")]),
         .testTarget(
             name: "FluentExtensionsTests",
-            dependencies: [.target(name: "FluentTestModels")]),
+            dependencies: [.target(name: "FluentTestModels"),
+                           .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver")]),
     ]
 )
