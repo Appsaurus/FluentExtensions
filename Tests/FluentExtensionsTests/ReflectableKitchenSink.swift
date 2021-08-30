@@ -205,7 +205,7 @@ public final class ReflectableKitchenSink: Model, Content {
 //MARK: Migration
 extension ReflectableKitchenSink: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.autoMigrate(ReflectableKitchenSink.self)
+        return database.reflectSchema(ReflectableKitchenSink.self)
     }
 
     public func revert(on database: Database) -> EventLoopFuture<Void> {

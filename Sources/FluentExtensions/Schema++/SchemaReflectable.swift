@@ -1,8 +1,8 @@
 //
-//  ReflectableExtensions.swift
-//  FluentExtensions
+//  SchemaReflectable.swift
+//  
 //
-//  Created by Brian Strobach on 6/27/18.
+//  Created by Brian Strobach on 8/30/21.
 //
 
 import Foundation
@@ -11,39 +11,14 @@ import Fluent
 import Runtime
 import RuntimeExtensions
 
-extension Model {
-    public static var schema: String { "\(self)" }
-}
-extension SchemaBuilder {
-    func intID(auto: Bool = true) -> Self {
-        field(.id, .int, .identifier(auto: auto))
-    }
-
-    func stringID(auto: Bool = true) -> Self {
-        field(.id, .string, .identifier(auto: auto))
+public extension Database {
+    func reflectSchema<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
+        return M.reflectSchema(on: self)
     }
 }
 
-extension PropertyInfo {
-    var fieldName: String {
-        var propertyName = name
-        if propertyName.starts(with: "_") {
-            propertyName = String(propertyName.dropFirst())
-        }
-        return propertyName
-    }
-
-
-    var fieldKey: FieldKey {
-        return FieldKey(fieldName)
-    }
-}
 public extension Model {
-    static func schema(for database: Database) -> SchemaBuilder {
-        database.schema(schema)
-    }
-
-    static func autoMigrate(on database: Database) -> EventLoopFuture<Void> {
+    static func reflectSchema(on database: Database) -> EventLoopFuture<Void> {
         var schema = schema(for: database)
         try? RuntimeExtensions.properties(self).forEach { property in
             schema = schema.reflectSchema(for: property)
@@ -52,54 +27,31 @@ public extension Model {
     }
 }
 
-public extension Database {
-    func autoMigrate<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
-        return M.autoMigrate(on: self)
-    }
-}
-
-
-
-public extension FieldKey {
-    init(_ string: String) {
-        self.init(stringLiteral: string)
-    }
-}
-
-protocol SchemaReflectable {
-    @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
-
-}
-
-protocol DatabaseSchemaDataTypeReflectable {
-    static var databaseSchemaDataType: DatabaseSchema.DataType { get }
-}
 
 public extension SchemaBuilder {
-    func reflectSchema(for property: PropertyInfo) -> SchemaBuilder {
+    @discardableResult
+    func reflectSchema(for property: PropertyInfo,
+                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = { $0.fieldKey }) -> SchemaBuilder {
         let propertyType = property.type
-
+        let fieldKey = fieldKeyBuilder(property)
         if let enumSchemaReflectable = propertyType as? EnumSchemaReflectable.Type {
-            return enumSchemaReflectable.reflectEnumSchema(with: property.fieldKey, to: self)
+            return enumSchemaReflectable.reflectEnumSchema(with: fieldKey, to: self)
         }
         else if let enumCollectionSchemaReflectable = propertyType as? EnumCollectionSchemaReflectable.Type {
-            return enumCollectionSchemaReflectable.reflectEnumCollectionSchema(with: property.fieldKey, to: self)
+            return enumCollectionSchemaReflectable.reflectEnumCollectionSchema(with: fieldKey, to: self)
         }
         else if let schemaReflectable = property.type as? SchemaReflectable.Type {
-            return schemaReflectable.reflectSchema(with: property.fieldKey, to: self)
+            return schemaReflectable.reflectSchema(with: fieldKey, to: self)
         }
         return self
     }
+
+    @discardableResult
     func reflectSchema(of type: Any.Type,
-                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = { FieldKey($0.name) }) -> Self {
+                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = { $0.fieldKey }) -> Self {
         try? RuntimeExtensions.properties(type).forEach { property in
-            //            let kind = try property.kind()
-            if let schemaReflectable = property.type as? SchemaReflectable.Type {
-                schemaReflectable.reflectSchema(with: fieldKeyBuilder(property), to: self)
-            }
+            reflectSchema(for: property, fieldKeyBuilder: fieldKeyBuilder)
         }
-        print("SCHEMA: \(self.schema)")
         return self
     }
 }
@@ -134,7 +86,18 @@ public extension CaseIterable {
         return .init(name: name, cases: cases)
     }
 }
-public class ReflectionSchemaBuilder {
+
+
+public extension DatabaseSchema.DataType {
+    init(_ swiftType: Any.Type, defineAsEnum: Bool = false) {
+        do {
+            self = try Self.reflectDatabaseSchemaDataType(for: swiftType, defineAsEnum: defineAsEnum)
+        }
+        catch {
+            fatalError()
+        }
+    }
+
     static func reflectRawDatabaseSchemaDataType(for type: Any.Type) -> DatabaseSchema.DataType {
 
         switch type {
@@ -197,37 +160,6 @@ public class ReflectionSchemaBuilder {
     }
 }
 
-extension TypeInfo {
-    func isDictionary() -> Bool {
-        mangledName == "Dictionary"
-    }
-    var dictionaryKeyType: Any.Type? {
-        return isDictionary() ? try? genericType(at: 0) : nil
-    }
-
-    var dictionaryValueType: Any.Type? {
-        return isDictionary() ? try? genericType(at: 1) : nil
-    }
-    var arrayElementType: Any.Type? {
-        return isArray() ? try? genericType(at: 0) : nil
-    }
-
-
-}
-
-
-public extension DatabaseSchema.DataType {
-    init(_ swiftType: Any.Type, defineAsEnum: Bool = false) {
-        do {
-            self = try ReflectionSchemaBuilder.reflectDatabaseSchemaDataType(for: swiftType, defineAsEnum: defineAsEnum)
-        }
-        catch {
-            fatalError()
-        }
-
-    }
-}
-
 public extension SchemaBuilder {
      func field(
         _ key: FieldKey,
@@ -242,6 +174,16 @@ public extension SchemaBuilder {
         ))
     }
 }
+
+
+//MARK: SchemaReflectable
+
+protocol SchemaReflectable {
+    @discardableResult
+    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
+
+}
+
 extension IDProperty: SchemaReflectable {
     @discardableResult
     static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
@@ -253,41 +195,6 @@ extension FieldProperty: SchemaReflectable {
     @discardableResult
     static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.self, .required)
-    }
-}
-
-protocol EnumSchemaReflectable {
-    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
-}
-protocol EnumCollectionSchemaReflectable {
-    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
-}
-
-extension FieldProperty: EnumSchemaReflectable where Value: CaseIterable & RawRepresentable {
-    @discardableResult
-    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder.field(key, Value.AllCases.Element.RawValue.self, .required)
-    }
-}
-
-extension FieldProperty: EnumCollectionSchemaReflectable where Value: Collection, Value.Element: CaseIterable & RawRepresentable {
-    @discardableResult
-    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder.field(key, [Value.Element.RawValue].self, .required)
-    }
-}
-
-extension OptionalFieldProperty: EnumSchemaReflectable where Value.WrappedType: CaseIterable & RawRepresentable {
-    @discardableResult
-    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder.field(key, Value.WrappedType.AllCases.Element.RawValue.self, .required)
-    }
-}
-
-extension OptionalFieldProperty: EnumCollectionSchemaReflectable where Value.WrappedType: Collection, Value.WrappedType.Element: CaseIterable & RawRepresentable {
-    @discardableResult
-    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder.field(key, [Value.WrappedType.Element.RawValue].self, .required)
     }
 }
 
@@ -380,5 +287,47 @@ extension Collection {
     @discardableResult
     static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, .array(of: .init(Element.self)), .required)
+    }
+}
+
+
+//MARK: EnumSchemaReflectable
+
+protocol EnumSchemaReflectable {
+    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
+}
+
+extension FieldProperty: EnumSchemaReflectable where Value: CaseIterable & RawRepresentable {
+    @discardableResult
+    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder.field(key, Value.AllCases.Element.RawValue.self, .required)
+    }
+}
+
+extension OptionalFieldProperty: EnumSchemaReflectable where Value.WrappedType: CaseIterable & RawRepresentable {
+    @discardableResult
+    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder.field(key, Value.WrappedType.AllCases.Element.RawValue.self, .required)
+    }
+}
+
+//MARK: EnumCollectionSchemaReflectable
+
+protocol EnumCollectionSchemaReflectable {
+    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder
+}
+
+
+extension FieldProperty: EnumCollectionSchemaReflectable where Value: Collection, Value.Element: CaseIterable & RawRepresentable {
+    @discardableResult
+    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder.field(key, [Value.Element.RawValue].self, .required)
+    }
+}
+
+extension OptionalFieldProperty: EnumCollectionSchemaReflectable where Value.WrappedType: Collection, Value.WrappedType.Element: CaseIterable & RawRepresentable {
+    @discardableResult
+    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder.field(key, [Value.WrappedType.Element.RawValue].self, .required)
     }
 }
