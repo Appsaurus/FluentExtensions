@@ -68,7 +68,7 @@ public extension DatabaseSchema.DataType {
 
 extension TypeInfo {
     func enumDefinition(name: String? = nil) -> DatabaseSchema.DataType.Enum? {
-        guard isEnum() else { return nil }
+        guard isEnum else { return nil }
         let name = name ?? self.name
         let cases = cases.map { "\($0.name)"}
         return .init(name: name, cases: cases)
