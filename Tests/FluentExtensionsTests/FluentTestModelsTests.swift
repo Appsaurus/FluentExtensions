@@ -8,7 +8,7 @@
     final class FluentTestModelsTests: FluentTestModels.TestCase {
 
         override func configureTestModelDatabase(_ databases: Databases) {
-            databases.use(.sqlite(.memory), as: .sqlite)
+            databases.use(.sqlite(.memory, connectionPoolTimeout: .minutes(2)), as: .sqlite)
         }
         
         override func addConfiguration(to app: Application) throws {
@@ -47,6 +47,9 @@
             XCTAssertEqual(createUser.stringEnumArray, fetchedUser.stringEnumArray)
             XCTAssertEqual(createUser.rawStringEnumArray, fetchedUser.rawStringEnumArray)
             XCTAssertEqual(createUser.rawIntEnumArray, fetchedUser.rawIntEnumArray)
+            XCTAssertEqual(createUser.stringDictionary, fetchedUser.stringDictionary)
+            XCTAssertEqual(createUser.intDictionary, fetchedUser.intDictionary)
+            XCTAssertEqual(createUser.enumDictionary, fetchedUser.enumDictionary)
         }
 
 
