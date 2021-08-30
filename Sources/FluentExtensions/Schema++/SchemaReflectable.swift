@@ -12,15 +12,13 @@ import Runtime
 import RuntimeExtensions
 
 
-protocol ReflectionMigration: Migration where Self: Model {
-
-}
-extension ReflectionMigration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+public protocol ReflectionMigration: Migration where Self: Model {}
+public extension ReflectionMigration {
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.reflectSchema(Self.self)
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
+    func revert(on database: Database) -> EventLoopFuture<Void> {
         return database.schema(Self.schema).delete()
     }
 }
