@@ -11,6 +11,20 @@ import Fluent
 import Runtime
 import RuntimeExtensions
 
+
+protocol ReflectionMigration: Migration where Self: Model {
+
+}
+extension ReflectionMigration {
+    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.reflectSchema(Self.self)
+    }
+
+    public func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(Self.schema).delete()
+    }
+}
+
 public extension Database {
     func reflectSchema<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
         return M.reflectSchema(on: self)
