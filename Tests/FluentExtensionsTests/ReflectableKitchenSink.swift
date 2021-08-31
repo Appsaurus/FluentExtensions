@@ -38,10 +38,6 @@ private extension FieldKey {
     static var stringDictionary: Self { "stringDictionary" }
     static var intDictionary: Self { "intDictionary" }
     static var enumDictionary: Self { "enumDictionary" }
-
-    static func group(_ group: FieldKey, _ field: FieldKey) -> Self {
-        return  .string("\(group)_\(field)")
-    }
 }
 
 public final class ReflectableKitchenSink: Model, Content {
@@ -205,7 +201,7 @@ public final class ReflectableKitchenSink: Model, Content {
 //MARK: Migration
 extension ReflectableKitchenSink: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.reflectSchema(ReflectableKitchenSink.self)
+        return database.autoMigrate(ReflectableKitchenSink.self)
     }
 
     public func revert(on database: Database) -> EventLoopFuture<Void> {

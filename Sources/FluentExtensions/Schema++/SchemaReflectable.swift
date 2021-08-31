@@ -12,38 +12,130 @@ import Runtime
 import RuntimeExtensions
 
 
-public protocol ReflectionMigration: Migration where Self: Model {}
-public extension ReflectionMigration {
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.reflectSchema(Self.self)
+extension Model {
+    public typealias Migration = AutoMigration<Self>
+}
+open class AutoMigration<M: Model>: ReflectionMigration {
+    public typealias ModelType = M
+    public required init(){}
+
+    open var config: ReflectionConfiguration {
+        defaultConfiguration
     }
 
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(Self.schema).delete()
+    open var fieldKeyMap: [String: FieldKey] { [:] }
+
+    open func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool { false }
+
+    @discardableResult
+    open func customize(schema: SchemaBuilder) -> SchemaBuilder {
+        return schema
+    }
+
+    open func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let schema = database.reflectSchema(ModelType.self, configuration: config)
+        return customize(schema: schema).create()
+    }
+
+    open func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(ModelType.schema).delete()
     }
 }
 
+open class ReflectionConfiguration {
+    open var fieldKeyMap: [String: FieldKey]
+    open var override: ((SchemaBuilder, PropertyInfo) -> Bool)
+
+    public init(fieldKeyMap: [String : FieldKey] = [:],
+                  overrides: @escaping ((SchemaBuilder, PropertyInfo) -> Bool) = { _ , _ in false }) {
+        self.fieldKeyMap = fieldKeyMap
+        self.override = overrides
+    }
+}
+
+public protocol ReflectionMigration: Migration  {
+    associatedtype ModelType: Model
+    var config: ReflectionConfiguration { get }
+    func customize(schema: SchemaBuilder) -> SchemaBuilder
+    var fieldKeyMap: [String: FieldKey] { get}
+    func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool
+    init()
+}
+
+public extension ReflectionMigration {
+    fileprivate var defaultConfiguration: ReflectionConfiguration {
+        ReflectionConfiguration(fieldKeyMap: fieldKeyMap, overrides: override(schema:property:))
+    }
+    var config: ReflectionConfiguration {
+        defaultConfiguration
+    }
+
+    var fieldKeyMap: [String: FieldKey] { [:] }
+
+    func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool { false }
+
+    @discardableResult
+    func customize(schema: SchemaBuilder) -> SchemaBuilder {
+        return schema
+    }
+
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        let schema = database.reflectSchema(ModelType.self, configuration: config)
+        return customize(schema: schema).create()
+    }
+
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(ModelType.schema).delete()
+    }
+}
+
+public extension ReflectionMigration where Self: Model {
+    typealias ModelType = Self
+}
+
 public extension Database {
-    func reflectSchema<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
-        return M.reflectSchema(on: self)
+    func reflectSchema<M: Model>(_ model: M.Type, configuration: ReflectionConfiguration? = nil) -> SchemaBuilder {
+        return M.reflectSchema(on: self, configuration: configuration)
+    }
+
+    func autoMigrate<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
+        return M.autoMigrate(on: self)
     }
 }
 
 public extension Model {
-    static func reflectSchema(on database: Database) -> EventLoopFuture<Void> {
-        var schema = schema(for: database)
-        try? RuntimeExtensions.properties(self).forEach { property in
-            schema = schema.reflectSchema(for: property)
+    static func reflectSchema(on database: Database, configuration: ReflectionConfiguration? = nil) -> SchemaBuilder {
+        let schema = schema(for: database)
+        var properties: [PropertyInfo] = []
+        if let reflectedProperties = try? RuntimeExtensions.properties(self) {
+            properties = reflectedProperties
         }
-        return schema.create()
+        for property in properties {
+            guard configuration?.override(schema, property) != true else {
+                continue
+            }
+
+            schema.reflectSchema(for: property) { property in
+                let fieldKey = configuration?.fieldKeyMap[property.fieldName]
+                return fieldKey ?? FieldKey.reflectionBuilder(property)
+            }
+        }
+        return schema
+    }
+    static func autoMigrate(on database: Database) -> EventLoopFuture<Void> {
+        return reflectSchema(on: database).create()
     }
 }
 
-
+extension FieldKey {
+    public static var reflectionBuilder: (PropertyInfo) -> FieldKey = { property in
+        return property.fieldKey
+    }
+}
 public extension SchemaBuilder {
     @discardableResult
-    func reflectSchema(for property: PropertyInfo,
-                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = { $0.fieldKey }) -> SchemaBuilder {
+    func    reflectSchema(for property: PropertyInfo,
+                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = FieldKey.reflectionBuilder) -> SchemaBuilder {
         let propertyType = property.type
         let fieldKey = fieldKeyBuilder(property)
         if let enumSchemaReflectable = propertyType as? EnumSchemaReflectable.Type {
@@ -60,7 +152,7 @@ public extension SchemaBuilder {
 
     @discardableResult
     func reflectSchema(of type: Any.Type,
-                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = { $0.fieldKey }) -> Self {
+                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = FieldKey.reflectionBuilder) -> Self {
         try? RuntimeExtensions.properties(type).forEach { property in
             reflectSchema(for: property, fieldKeyBuilder: fieldKeyBuilder)
         }
@@ -81,7 +173,7 @@ public extension DatabaseSchema.DataType {
 extension TypeInfo {
     func enumDefinition(name: String? = nil) -> DatabaseSchema.DataType.Enum? {
         guard isEnum else { return nil }
-        let name = name ?? self.name
+        let name = name ?? self.fieldName
         let cases = cases.map { "\($0.name)"}
         return .init(name: name, cases: cases)
     }
@@ -266,33 +358,46 @@ extension TimestampProperty: SchemaReflectable {
     }
 }
 
+
+extension ParentProperty: SchemaReflectable {
+
+    @discardableResult
+    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder
+            .field(key, .init(To.IDValue.self), .required)
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
+    }
+}
+
 extension OptionalParentProperty: SchemaReflectable {
     @discardableResult
     static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
+            .field(key, .init(To.IDValue.self))
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
     }
 }
-
-extension ChildrenProperty: SchemaReflectable {
-    @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder
-    }
-}
-
-extension OptionalChildProperty: SchemaReflectable {
-    @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder
-    }
-}
-
-extension SiblingsProperty: SchemaReflectable {
-    @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
-        return builder
-    }
-}
+//
+//extension ChildrenProperty: SchemaReflectable {
+//    @discardableResult
+//    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+//        return builder//No schema required
+//    }
+//}
+//
+//extension OptionalChildProperty: SchemaReflectable {
+//    @discardableResult
+//    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+//        return builder//No schema required
+//    }
+//}
+//
+//extension SiblingsProperty: SchemaReflectable {
+//    @discardableResult
+//    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+//        return builder//No schema required
+//    }
+//}
 
 
 extension Collection {

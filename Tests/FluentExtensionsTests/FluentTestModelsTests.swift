@@ -5,7 +5,7 @@
     import FluentKit
     @testable import FluentTestModels
 
-    final class FluentTestModelsTests: FluentTestModels.TestCase {
+    class FluentTestModelsTests: FluentTestModels.TestCase {
 
         override func configureTestModelDatabase(_ databases: Databases) {
             databases.use(.sqlite(.memory, connectionPoolTimeout: .minutes(2)), as: .sqlite)
@@ -55,11 +55,11 @@
 
 
         func testParentChildRelationship() throws {
-            let parent = ParentModel(name: "parent")
+            let parent = TestParentModel(name: "parent")
             try parent.create(on: app.db).wait()
 
-            let son = try ChildModel(name: "son", parent: parent)
-            let daughter = try ChildModel(name: "daughter", parent: parent)
+            let son = try TestChildModel(name: "son", parent: parent)
+            let daughter = try TestChildModel(name: "daughter", parent: parent)
 
             try son.create(on: app.db).wait()
             try daughter.create(on: app.db).wait()
@@ -84,7 +84,7 @@
 
         func testSiblings() throws {
 
-            func assert(_ student: StudentModel, isEnrolled: Bool, in `class`: ClassModel) throws {
+            func assert(_ student: TestStudentModel, isEnrolled: Bool, in `class`: TestClassModel) throws {
                 //Check via class
                 let isInClassRoster = try `class`.$students.isAttached(to: student, on: app.db).wait()
 
@@ -101,15 +101,15 @@
                 }
             }
 
-            let brian = StudentModel()
-            let josh = StudentModel()
-            let gerry = StudentModel()
+            let brian = TestStudentModel()
+            let josh = TestStudentModel()
+            let gerry = TestStudentModel()
 
             try [brian, josh, gerry].forEach({try $0.create(on: app.db).wait()})
 
 
-            let algorithms = ClassModel()
-            let discreteMathematics = ClassModel()
+            let algorithms = TestClassModel()
+            let discreteMathematics = TestClassModel()
 
             try [algorithms, discreteMathematics].forEach({try $0.save(on: app.db).wait()})
 
@@ -131,13 +131,13 @@
 
 
         func testSelfSiblings() throws {
-            let bill = UserModel(name: "Bill")
+            let bill = TestUserModel(name: "Bill")
             try bill.create(on: app.db).wait()
 
-            let ted = UserModel(name: "Ted")
+            let ted = TestUserModel(name: "Ted")
             try ted.create(on: app.db).wait()
 
-            let socrates = UserModel(name: "Socrates")
+            let socrates = TestUserModel(name: "Socrates")
             try socrates.create(on: app.db).wait()
 //            let socratesID = try socrates.requireID()
 
@@ -149,12 +149,12 @@
 
             //Make sure we throw if we try to add an existing relationship by creating pivot directly.
 
-            let friendshipModel = FriendshipModel()
+            let friendshipModel = TestFriendshipModel()
             try friendshipModel.$fromUser.id = ted.requireID()
             try friendshipModel.$toUser.id = bill.requireID()
             XCTAssertThrowsError(try friendshipModel.create(on: app.db).wait())
 
-            let friendshipModelReverse = FriendshipModel()
+            let friendshipModelReverse = TestFriendshipModel()
             try friendshipModelReverse.$fromUser.id = bill.requireID()
             try friendshipModelReverse.$toUser.id = ted.requireID()
             XCTAssertThrowsError(try friendshipModelReverse.create(on: app.db).wait())
@@ -168,7 +168,7 @@
 
         }
 
-        func assert(_ fromUser: UserModel, _ toUser: UserModel, areFriends: Bool) throws {
+        func assert(_ fromUser: TestUserModel, _ toUser: TestUserModel, areFriends: Bool) throws {
             let fromUserID = try fromUser.requireID()
             let toUserID = try toUser.requireID()
 
@@ -191,7 +191,7 @@
             //Through sqlQuery(on:) method of socialGraph property.
             let toUserFriends = try toUser.$socialGraph
                 .sqlQuery(on: app.db)
-                .all(decoding: UserModel.self).wait()
+                .all(decoding: TestUserModel.self).wait()
             let toUserIsFriendsWithFromUser = toUserFriends.contains(where: {$0.id == fromUserID})
 
             assertion(toUserIsFriendsWithFromUser)

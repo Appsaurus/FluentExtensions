@@ -266,12 +266,6 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
 
 }
 
-extension SelfSiblingsProperty: CustomStringConvertible {
-    public var description: String {
-        self.name
-    }
-}
-
 // MARK: Property
 
 extension SelfSiblingsProperty: AnyProperty { }

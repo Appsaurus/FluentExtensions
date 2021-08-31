@@ -9,7 +9,12 @@ import FluentTestUtils
 import FluentExtensions
 
 public struct FluentTestModels {
+
     open class TestCase: FluentTestCase {
+        open var useReflectionMigrations: Bool {
+            false
+        }
+
         override open func configure(_ databases: Databases) throws {
             try super.configure(databases)
             configureTestModelDatabase(databases)
@@ -20,21 +25,35 @@ public struct FluentTestModels {
         }
         override open func configure(_ middleware: Databases.Middleware) throws {
             try super.configure(middleware)
-            let siblingsMiddleware = FriendshipModel.selfSiblingMiddleware(from: \.$fromUser, to: \.$toUser)
+            let siblingsMiddleware = TestFriendshipModel.selfSiblingMiddleware(from: \.$fromUser, to: \.$toUser)
             middleware.use(siblingsMiddleware)
         }
         override open func migrate(_ migrations: Migrations) throws {
             try super.migrate(migrations)
-            migrations.add([
-                KitchenSink(),
-                ParentModelMigration(),
-                ChildModelMigration(),
-                StudentModel(),
-                ClassModel(),
-                EnrollmentModel(),
-                UserModelMigration(),
-                FriendshipModelMigration()
-            ])
+            if useReflectionMigrations {
+                migrations.add([
+                    KitchenSinkReflectionMigration(),
+                    TestParentModelReflectionMigration(),
+                    TestChildModelReflectionMigration(),
+                    TestStudentModelReflectionMigration(),
+                    TestClassModelReflectionMigration(),
+                    TestEnrollmentModelReflectionMigration(),
+                    TestUserModelReflectionMigration(),
+                    TestFriendshipModelReflectionMigration()
+                ])
+            }
+            else {
+                migrations.add([
+                    KitchenSinkMigration(),
+                    TestParentModelMigration(),
+                    TestChildModelMigration(),
+                    TestStudentModelMigration(),
+                    TestClassModelMigration(),
+                    TestEnrollmentModelMigration(),
+                    TestUserModelMigration(),
+                    TestFriendshipModelMigration()
+                ])
+            }
         }
     }
 }

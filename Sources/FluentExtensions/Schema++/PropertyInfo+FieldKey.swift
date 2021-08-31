@@ -10,15 +10,32 @@ import Runtime
 
 public extension PropertyInfo {
     var fieldName: String {
-        var propertyName = name
-        if propertyName.starts(with: "_") {
-            propertyName = String(propertyName.dropFirst())
-        }
-        return propertyName
+        name.fieldName
     }
 
 
     var fieldKey: FieldKey {
         return FieldKey(fieldName)
+    }
+}
+
+
+extension TypeInfo {
+    var fieldName: String {
+        name.fieldName
+    }
+
+    var fieldKey: FieldKey {
+        return FieldKey(fieldName)
+    }
+}
+
+//Converts underscore-prefixed wrapped property names
+fileprivate extension String {
+    var fieldName: String {
+        if self.starts(with: "_") {
+            return String(self.dropFirst())
+        }
+        return self
     }
 }

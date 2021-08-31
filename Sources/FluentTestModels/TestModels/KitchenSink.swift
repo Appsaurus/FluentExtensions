@@ -5,9 +5,7 @@
 //  Created by Brian Strobach on 11/28/17.
 //
 
-import Foundation
-import Fluent
-import Vapor
+import FluentExtensions
 
 private extension FieldKey {
     static var stringField: Self { "stringField" }
@@ -24,7 +22,7 @@ private extension FieldKey {
     static var createdAt: Self { "createdAt" }
     static var updatedAt: Self { "updatedAt" }
     static var deletedAt: Self { "deletedAt" }
-    static var group: Self { "group" }
+    static var groupedFields: Self { "groupedFields" }
     static var stringEnum: Self { "stringEnum" }
     static var optionalStringEnum: Self { "optionalStringEnum" }
     static var rawStringEnum: Self { "rawStringEnum" }
@@ -37,16 +35,12 @@ private extension FieldKey {
     static var stringDictionary: Self { "stringDictionary" }
     static var intDictionary: Self { "intDictionary" }
     static var enumDictionary: Self { "enumDictionary" }
-
-    static func group(_ group: FieldKey, _ field: FieldKey) -> Self {
-        return  .string("\(group)_\(field)")
-    }
 }
 
 public final class KitchenSink: Model, Content {
 
     public static var schema: String {
-        "TestModel"
+        "KitchenSink"
     }
 
     @ID(custom: .id)
@@ -102,7 +96,7 @@ public final class KitchenSink: Model, Content {
 
     //MARK: Grouped Fields
 
-    @Group(key: .group)
+    @Group(key: .groupedFields)
     public var groupedFields: TestGroupedFieldsModel
 
     //MARK: Enum Fields
@@ -205,64 +199,6 @@ public final class KitchenSink: Model, Content {
 
 }
 
-//MARK: Migration
-extension KitchenSink: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-
-        database.schema(KitchenSink.schema)
-            .field(.id, .int, .identifier(auto: true))
-
-            //MARK: Basic Data Type Fields Schema
-            .field(.stringField, .string, .required)
-            .field(.optionalStringField, .string)
-            .field(.intField, .int, .required)
-            .field(.doubleField, .double, .required)
-            .field(.booleanField, .bool, .required)
-            .field(.dateField, .datetime, .required)
-
-            //MARK: Collection Fields Schema
-            .field(.stringArrayField, .array(of: .string), .required)
-            .field(.intArrayField, .array(of: .int), .required)
-            .field(.doubleArrayField, .array(of: .double), .required)
-            .field(.booleanArrayField, .array(of: .bool), .required)
-            .field(.dateArrayField, .array(of: .datetime), .required)
-
-            //MARK: Timestamp Updated Fields Schema
-            .field(.createdAt, .datetime, .required)
-            .field(.updatedAt, .datetime)
-            .field(.deletedAt, .datetime)
-
-            //MARK: Grouped Fields Schema
-            .field(.group(.group, .stringField), .string, .required)
-            .field(.group(.group, .optionalStringField), .string)
-            .field(.group(.group, .intField), .int, .required)
-
-            //MARK: Enum Fields Schema
-            .field(.stringEnum, .enum(TestStringEnum.self), .required)
-            .field(.optionalStringEnum, .enum(TestStringEnum.self))
-            .field(.rawStringEnum, .string, .required)
-            .field(.optionalRawStringEnum, .string)
-            .field(.rawIntEnum, .int, .required)
-            .field(.optionalRawIntEnum, .int)
-
-            //MARK: Enum Array Fields Schema
-            .field(.stringEnumArray, .array(of: .string), .required)
-            .field(.rawStringEnumArray, .array(of: .string), .required)
-            .field(.rawIntEnumArray, .array(of: .int), .required)
-
-            //MARK: Dictionary Fields
-            .field(.stringDictionary, .dictionary(of: .string), .required)
-            .field(.intDictionary, .dictionary(of: .int), .required)
-            .field(.enumDictionary, .dictionary(of: .enum(TestStringEnum.self)), .required)
-            .create()
-
-    }
-
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(KitchenSink.schema).delete()
-    }
-}
-
 public final class TestGroupedFieldsModel: Fields {
 
     @Field(key: .stringField)
@@ -310,4 +246,66 @@ public enum TestRawIntEnum: Int, Codable, CaseIterable {
     case case1
     case case2
     case case3
+}
+
+
+//MARK: Reflection-based migration
+class KitchenSinkReflectionMigration: AutoMigration<KitchenSink> {}
+
+//MARK: Manual migration
+public class KitchenSinkMigration: Migration {
+    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+
+        database.schema(KitchenSink.schema)
+            .field(.id, .int, .identifier(auto: true))
+
+            //MARK: Basic Data Type Fields Schema
+            .field(.stringField, .string, .required)
+            .field(.optionalStringField, .string)
+            .field(.intField, .int, .required)
+            .field(.doubleField, .double, .required)
+            .field(.booleanField, .bool, .required)
+            .field(.dateField, .datetime, .required)
+
+            //MARK: Collection Fields Schema
+            .field(.stringArrayField, .array(of: .string), .required)
+            .field(.intArrayField, .array(of: .int), .required)
+            .field(.doubleArrayField, .array(of: .double), .required)
+            .field(.booleanArrayField, .array(of: .bool), .required)
+            .field(.dateArrayField, .array(of: .datetime), .required)
+
+            //MARK: Timestamp Updated Fields Schema
+            .field(.createdAt, .datetime, .required)
+            .field(.updatedAt, .datetime)
+            .field(.deletedAt, .datetime)
+
+            //MARK: Grouped Fields Schema
+            .field(.group(.groupedFields, .stringField), .string, .required)
+            .field(.group(.groupedFields, .optionalStringField), .string)
+            .field(.group(.groupedFields, .intField), .int, .required)
+
+            //MARK: Enum Fields Schema
+            .field(.stringEnum, .enum(TestStringEnum.self), .required)
+            .field(.optionalStringEnum, .enum(TestStringEnum.self))
+            .field(.rawStringEnum, .string, .required)
+            .field(.optionalRawStringEnum, .string)
+            .field(.rawIntEnum, .int, .required)
+            .field(.optionalRawIntEnum, .int)
+
+            //MARK: Enum Array Fields Schema
+            .field(.stringEnumArray, .array(of: .string), .required)
+            .field(.rawStringEnumArray, .array(of: .string), .required)
+            .field(.rawIntEnumArray, .array(of: .int), .required)
+
+            //MARK: Dictionary Fields
+            .field(.stringDictionary, .dictionary(of: .string), .required)
+            .field(.intDictionary, .dictionary(of: .int), .required)
+            .field(.enumDictionary, .dictionary(of: .enum(TestStringEnum.self)), .required)
+            .create()
+
+    }
+
+    public func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.schema(KitchenSink.schema).delete()
+    }
 }
