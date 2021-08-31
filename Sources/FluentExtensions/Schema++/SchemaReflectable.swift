@@ -59,7 +59,6 @@ public protocol ReflectionMigration: Migration  {
     func customize(schema: SchemaBuilder) -> SchemaBuilder
     var fieldKeyMap: [String: FieldKey] { get}
     func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool
-    init()
 }
 
 public extension ReflectionMigration {
