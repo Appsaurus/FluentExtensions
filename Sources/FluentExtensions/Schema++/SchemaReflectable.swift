@@ -190,76 +190,150 @@ public extension CaseIterable {
     }
 }
 
+public protocol DatabaseSchemaDataTypeProviding {
+    static var dataType: DatabaseSchema.DataType { get }
+}
+
+extension Int: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .int
+    }
+}
+extension Int8: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .int8
+    }
+}
+extension Int16: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .int16
+    }
+}
+extension Int32: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .int32
+    }
+}
+extension Int64: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .int64
+    }
+}
+extension UInt: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uint
+    }
+}
+extension UInt8: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uint8
+    }
+}
+extension UInt16: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uint16
+    }
+}
+extension UInt32: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uint32
+    }
+}
+extension UInt64: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uint64
+    }
+}
+extension Bool: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .bool
+    }
+}
+extension String: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .string
+    }
+}
+extension Date: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .datetime
+    }
+}
+extension Float: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .float
+    }
+}
+extension Double: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .double
+    }
+}
+extension Data: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .data
+    }
+}
+extension UUID: DatabaseSchemaDataTypeProviding {
+    public static var dataType: DatabaseSchema.DataType {
+        .uuid
+    }
+}
+// Might be able to cut down on some reflection, but not sure how to handle enum elements yet.
+//extension Array: DatabaseSchemaDataTypeProviding where Element: DatabaseSchemaDataTypeProviding {
+//    public static var dataType: DatabaseSchema.DataType {
+//        .array(of: Element.dataType)
+//    }
+//}
+//
+//extension Dictionary: DatabaseSchemaDataTypeProviding where Key == String, Value: DatabaseSchemaDataTypeProviding {
+//    public static var dataType: DatabaseSchema.DataType {
+//        .dictionary(of: Value.dataType)
+//    }
+//}
+//
+//extension Dictionary where Key == String, Value: CaseIterable & RawRepresentable, Value.RawValue: DatabaseSchemaDataTypeProviding {
+//    public static var dataType: DatabaseSchema.DataType {
+//        .dictionary(of: Value.RawValue.dataType)
+//    }
+//}
+
 
 public extension DatabaseSchema.DataType {
     init(_ swiftType: Any.Type, defineAsEnum: Bool = false) {
         do {
-            self = try Self.reflectDatabaseSchemaDataType(for: swiftType, defineAsEnum: defineAsEnum)
+            self = try Self.reflect(for: swiftType, defineAsEnum: defineAsEnum)
         }
         catch {
             fatalError()
         }
     }
 
-    static func reflectRawDatabaseSchemaDataType(for type: Any.Type) -> DatabaseSchema.DataType {
-
-        switch type {
-        case is Int.Type: return .int
-        case is Int8.Type: return .int8
-        case is Int16.Type: return .int16
-        case is Int32.Type: return .int32
-        case is Int64.Type: return .int64
-        case is UInt.Type: return .uint
-        case is UInt8.Type: return .uint8
-        case is UInt16.Type: return .uint16
-        case is UInt32.Type: return .uint32
-        case is UInt64.Type: return .uint64
-        case is Bool.Type: return .bool
-        case is String.Type: return .string
-        //        case is Time.Type: return .time
-        //        case is [Time].Type: return .array(of: .time)
-        case is Date.Type: return .datetime
-        //        case is Datetime.Type: return .datetime
-        //        case is [Datetime].Type: return .array(of: .datetime)
-        case is Float.Type: return .float
-        case is Double.Type: return .double
-        case is Data.Type: return .data
-        case is UUID.Type: return .uuid
-
-        //            public static var json: DataType {
-        //                .dictionary
-        //            }
-        //            public static var dictionary: DataType {
-        //                .dictionary(of: nil)
-        //            }
-        //            case dictionary(of: DataType?)
-
-        //            public static var array: DataType {
-        //                .array(of: nil)
-        //            }
-        //            case array(of: DataType?)
-        //            case custom(Any)
-
-        default: fatalError()
+    static func reflected(for type: Any.Type) -> DatabaseSchema.DataType {
+        if let provider = type as? DatabaseSchemaDataTypeProviding.Type {
+            return provider.dataType
         }
+        fatalError("\(type) does not implement DatabaseSchemaDataTypeProviding.")
     }
-    static func reflectDatabaseSchemaDataType(for type: Any.Type, defineAsEnum: Bool = false) throws -> DatabaseSchema.DataType {
+
+    static func reflect(for type: Any.Type, defineAsEnum: Bool = false) throws -> DatabaseSchema.DataType {
         let typeInfo = try Runtime.typeInfo(of: type)
         if let elementType = typeInfo.arrayElementType {
-            return .array(of: try reflectDatabaseSchemaDataType(for: elementType))
+            return .array(of: try reflect(for: elementType, defineAsEnum: true))
         }
+
         if defineAsEnum, let enumDefinition = typeInfo.enumDefinition() {
-                return .enum(enumDefinition)
+            return .enum(enumDefinition)
         }
 
         if let valueType = typeInfo.dictionaryValueType {
             guard typeInfo.dictionaryKeyType == String.self else {
                 fatalError("Fluent only supports Dictionary types with String keys.")
             }
-            return .dictionary(of: try reflectDatabaseSchemaDataType(for: valueType,
-                                                                     defineAsEnum: true))
+            return .dictionary(of: try reflect(for: valueType, defineAsEnum: true))
         }
-        return reflectRawDatabaseSchemaDataType(for: type)
+
+        return reflected(for: type)
     }
 }
 

@@ -5,7 +5,6 @@
 //  Created by Brian Strobach on 6/28/18.
 //
 
-import Foundation
 import FluentKit
 
 public extension Model{
@@ -39,30 +38,3 @@ public extension QueryBuilder {
         }
     }
 }
-
-public extension QueryBuilder{
-	func emptyResults() -> Future<[Model]> {
-        return self.database.eventLoop.future([Model]())
-	}
-	func emptyResult() -> Future<Model?> {
-		return self.database.eventLoop.future(nil)
-	}
-}
-
-//public extension QueryBuilder {
-//	func or(_ values: Database.QueryFilter...) -> Self {
-//		return group(Database.queryFilterRelationOr) { (or) in
-//			for value in values{
-//				or.filter(custom: value)
-//			}
-//		}
-//	}
-//
-//	func and(_ values: Database.QueryFilter...) -> Self {
-//		return group(Database.queryFilterRelationAnd) { (and) in
-//			for value in values{
-//				and.filter(custom: value)
-//			}
-//		}
-//	}
-//}

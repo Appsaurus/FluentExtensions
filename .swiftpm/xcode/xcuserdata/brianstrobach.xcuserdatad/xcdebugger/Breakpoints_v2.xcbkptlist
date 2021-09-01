@@ -46,8 +46,8 @@
             filePath = "Sources/FluentExtensions/Schema++/SchemaReflectable.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "365"
-            endingLineNumber = "365"
+            startingLineNumber = "439"
+            endingLineNumber = "439"
             landmarkName = "reflectSchema(with:to:)"
             landmarkType = "7">
          </BreakpointContent>
