@@ -1,11 +1,11 @@
 //
 //  ChildrenExtensions.swift
-//  Servasaurus
+//
 //
 //  Created by Brian Strobach on 12/18/17.
 //
 
-import Foundation
+import VaporExtensions
 import Fluent
 
 extension ChildrenProperty {

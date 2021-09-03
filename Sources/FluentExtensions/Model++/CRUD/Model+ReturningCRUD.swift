@@ -6,6 +6,7 @@
 //
 
 import FluentKit
+import VaporExtensions
 
 public extension Model{
 

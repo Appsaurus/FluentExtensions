@@ -37,6 +37,7 @@ let package = Package(
             dependencies: [.product(name: "Vapor", package: "vapor"),
                            .product(name: "Fluent", package: "fluent"),
                            .product(name: "SQLKit", package: "sql-kit"),
+                           .product(name: "VaporExtensions", package: "VaporExtensions"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions")]),
         .target(

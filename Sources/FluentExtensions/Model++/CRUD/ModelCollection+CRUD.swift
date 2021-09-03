@@ -5,9 +5,8 @@
 //  Created by Brian Strobach on 7/2/18.
 //
 
-import Foundation
+import VaporExtensions
 import Fluent
-import Vapor
 
 extension Collection where Element: Model {
 

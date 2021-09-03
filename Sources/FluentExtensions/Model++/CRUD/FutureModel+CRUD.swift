@@ -5,6 +5,7 @@
 //  Created by Brian Strobach on 8/9/21.
 //
 
+import VaporExtensions
 import FluentKit
 
 extension Future where Value: Model{

@@ -6,7 +6,7 @@
 //
 
 import FluentKit
-import Vapor
+import VaporExtensions
 
 public typealias ModelInitializer<M: Model> = () -> M
 extension Model where Self: Decodable{
