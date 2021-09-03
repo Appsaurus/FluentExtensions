@@ -10,7 +10,7 @@ import Runtime
 
 public extension PropertyInfo {
     var fieldName: String {
-        name.fieldName
+        name.droppingUnderscorePrefix
     }
 
 
@@ -22,7 +22,7 @@ public extension PropertyInfo {
 
 extension TypeInfo {
     var fieldName: String {
-        name.fieldName
+        name.droppingUnderscorePrefix
     }
 
     var fieldKey: FieldKey {
@@ -32,7 +32,7 @@ extension TypeInfo {
 
 //Converts underscore-prefixed wrapped property names
 fileprivate extension String {
-    var fieldName: String {
+    var droppingUnderscorePrefix: String {
         if self.starts(with: "_") {
             return String(self.dropFirst())
         }

@@ -364,35 +364,35 @@ protocol SchemaReflectable {
 
 extension IDProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.self, .identifier(auto: true))
     }
 }
 
 extension FieldProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.self, .required)
     }
 }
 
 extension OptionalFieldProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.WrappedType.self)
     }
 }
 
 extension EnumProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.self, isEnum: true, .required)
     }
 }
 
 extension OptionalEnumProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.WrappedType.self, isEnum: true)
     }
 }
@@ -404,7 +404,7 @@ public extension FieldKey {
 }
 extension GroupProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         //MARK: Grouped Fields Schema
 //        .field(.group(.group, .stringField), .string, .required)
 //        .field(.group(.group, .optionalStringField), .string)
@@ -419,7 +419,7 @@ extension GroupProperty: SchemaReflectable {
 
 extension TimestampProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         switch Format.self {
             case is ISO8601TimestampFormat.Type:
                 return builder.field(key, String.self)
@@ -436,7 +436,7 @@ extension TimestampProperty: SchemaReflectable {
 extension ParentProperty: SchemaReflectable {
 
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self), .required)
             .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
@@ -445,7 +445,7 @@ extension ParentProperty: SchemaReflectable {
 
 extension OptionalParentProperty: SchemaReflectable {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self))
             .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
@@ -476,7 +476,7 @@ extension OptionalParentProperty: SchemaReflectable {
 
 public extension Collection {
     @discardableResult
-    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, .array(of: .init(Element.self)), .required)
     }
 }
@@ -490,14 +490,14 @@ protocol EnumSchemaReflectable {
 
 extension FieldProperty: EnumSchemaReflectable where Value: CaseIterable & RawRepresentable {
     @discardableResult
-    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.AllCases.Element.RawValue.self, .required)
     }
 }
 
 extension OptionalFieldProperty: EnumSchemaReflectable where Value.WrappedType: CaseIterable & RawRepresentable {
     @discardableResult
-    static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectEnumSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, Value.WrappedType.AllCases.Element.RawValue.self, .required)
     }
 }
@@ -511,14 +511,14 @@ protocol EnumCollectionSchemaReflectable {
 
 extension FieldProperty: EnumCollectionSchemaReflectable where Value: Collection, Value.Element: CaseIterable & RawRepresentable {
     @discardableResult
-    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, [Value.Element.RawValue].self, .required)
     }
 }
 
 extension OptionalFieldProperty: EnumCollectionSchemaReflectable where Value.WrappedType: Collection, Value.WrappedType.Element: CaseIterable & RawRepresentable {
     @discardableResult
-    static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    public static func reflectEnumCollectionSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, [Value.WrappedType.Element.RawValue].self, .required)
     }
 }
