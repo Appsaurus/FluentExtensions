@@ -12,9 +12,9 @@ import CodableExtensions
 import RuntimeExtensions
 
 //TODO: Revisit this with testing
-//extension Future where Value: Collection, Value.Element: Model/* & Reflectable*/ {
+//public extension Future where Value: Collection, Value.Element: Model/* & Reflectable*/ {
 //
-//	public func update(with request: Request) throws -> Future<Value> {
+//	func update(with request: Request) throws -> Future<Value> {
 //
 //		let decoder: JSONDecoder = .default
 //
@@ -23,7 +23,7 @@ import RuntimeExtensions
 //        return try update(with: jsonArray, keyedBy: Value.Element.idKeyStringPath, on: request)
 //	}
 //
-//	public func update(with json: [AnyCodableDictionary], keyedBy keyPath: String, on database: Request) throws -> Future<Value> {
+//	func update(with json: [AnyCodableDictionary], keyedBy keyPath: String, on database: Request) throws -> Future<Value> {
 //		let jsonMap: [String : AnyCodableDictionary] = try json.indexed { (dictionary) in
 //			guard let id: Any = dictionary[keyPath] else { throw Abort(.badRequest) }
 //			return "\(id)"

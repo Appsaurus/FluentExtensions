@@ -39,10 +39,6 @@ private extension FieldKey {
 
 public final class KitchenSink: Model, Content {
 
-    public static var schema: String {
-        "KitchenSink"
-    }
-
     @ID(custom: .id)
 	public var id: Int?
 
@@ -305,7 +301,7 @@ public class KitchenSinkMigration: Migration {
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
+    public func revert(on database: Database) -> EventLoopFuture<Void> { 
         return database.schema(KitchenSink.schema).delete()
     }
 }

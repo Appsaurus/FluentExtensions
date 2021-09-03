@@ -10,8 +10,8 @@ import Fluent
 import Vapor
 
 
-extension Collection where Element: Model{
-    public func save(on database: Database) -> EventLoopFuture<Void> {
+public extension Collection where Element: Model{
+    func save(on database: Database) -> EventLoopFuture<Void> {
         guard self.count > 0 else {
             return database.eventLoop.makeSucceededFuture(())
         }
@@ -19,7 +19,7 @@ extension Collection where Element: Model{
         return compactMap({$0.save(on: database)}).flatten(on: database.eventLoop)
     }
 
-    public func update(on database: Database) -> EventLoopFuture<Void> {
+    func update(on database: Database) -> EventLoopFuture<Void> {
         guard self.count > 0 else {
             return database.eventLoop.makeSucceededFuture(())
         }
@@ -67,15 +67,15 @@ public extension Future where Value: Collection, Value.Element: Model{
 }
 
 
-//extension Future where Value: Collection, Value.Element: Model{
+//public extension Future where Value: Collection, Value.Element: Model{
 //
-//	public func updateIfExists(on database: Database, transaction: Bool) -> Future<Value>{
+//	func updateIfExists(on database: Database, transaction: Bool) -> Future<Value>{
 //		return flatMap { elements in
 //			return elements.updateIfExists(on: database, transaction: transaction)
 //		}
 //	}
 //
-//	public func upsert(on database: Database, transaction: Bool) -> Future<Value>{
+//	func upsert(on database: Database, transaction: Bool) -> Future<Value>{
 //		return flatMap { elements in
 //			return elements.upsert(on: database, transaction: transaction)
 //		}

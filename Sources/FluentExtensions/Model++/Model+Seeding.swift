@@ -9,9 +9,9 @@ import FluentKit
 import VaporExtensions
 
 public typealias ModelInitializer<M: Model> = () -> M
-extension Model where Self: Decodable{
+public extension Model where Self: Decodable{
     @discardableResult
-    static public func create(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) -> Future<Self>{
+    static func create(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) -> Future<Self>{
         let model: Self = initializer()
         if let id = id {
             model.id = id
@@ -20,19 +20,19 @@ extension Model where Self: Decodable{
     }
 
     @discardableResult
-    static public func createSync(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) throws -> Self{
+    static func createSync(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) throws -> Self{
         return try create(id: id, on: database, initializer).wait()
     }
 
     @discardableResult
-    static public func createBatchSync(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
+    static func createBatchSync(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
         return try createBatch(size: size, on: database, initializer).wait()
     }
 
 
 
     @discardableResult
-    static public func createBatch(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]> {
+    static func createBatch(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]> {
 
         var models: [Future<Self>] = []
         if size > 0{
@@ -44,14 +44,14 @@ extension Model where Self: Decodable{
     }
 
     @discardableResult
-    static public func findOrCreate(id: IDValue, on database: Database,  _ initializer: @escaping ModelInitializer<Self>) -> Future<Self>{
+    static func findOrCreate(id: IDValue, on database: Database,  _ initializer: @escaping ModelInitializer<Self>) -> Future<Self>{
         return find(id, on: database).unwrapOr {
             create(id: id, on: database, initializer)
         }
     }
 
     @discardableResult
-    static public func findOrCreateBatch(ids: [IDValue], on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]>{
+    static func findOrCreateBatch(ids: [IDValue], on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]>{
         var models: [Future<Self>] = []
         for id in ids{
             models.append(self.findOrCreate(id: id, on: database, initializer))
@@ -60,14 +60,14 @@ extension Model where Self: Decodable{
     }
 
     @discardableResult
-    static public func findOrCreateSync(id: IDValue, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> Self{
+    static func findOrCreateSync(id: IDValue, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> Self{
         let futureModel: Future<Self> = findOrCreate(id: id, on: database, initializer)
         let model: Self = try futureModel.wait()
         return model
     }
 
     @discardableResult
-    static public func findOrCreateBatchSync(ids: [IDValue],
+    static func findOrCreateBatchSync(ids: [IDValue],
                                              on database: Database,
                                              _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
         return try findOrCreateBatch(ids: ids, on: database, initializer).wait()

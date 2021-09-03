@@ -7,8 +7,8 @@
 
 import Fluent
 
-extension IDProperty{
-    public func toString() -> String{
+public extension IDProperty{
+    func toString() -> String{
         switch self.value{
         case let stringType as String:
             return stringType

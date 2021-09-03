@@ -9,9 +9,9 @@ import VaporExtensions
 import Fluent
 
 //MARK: Existence checks
-extension Model {
+public extension Model {
 
-    public func existingEntityWithId(on database: Database) -> Future<Self?>{
+    func existingEntityWithId(on database: Database) -> Future<Self?>{
         guard let id = self.id else {
             return database.eventLoop.makeSucceededFuture(nil)
         }
@@ -19,16 +19,16 @@ extension Model {
     }
 
     @discardableResult
-    public func assertExistingEntityWithId(on database: Database) throws -> Future<Self>{
+    func assertExistingEntityWithId(on database: Database) throws -> Future<Self>{
         return existingEntityWithId(on: database)
             .unwrap(or: Abort(.notFound, reason: "An entity with that ID could not be found."))
     }
 }
 
-extension Collection where Element: Model{
+public extension Collection where Element: Model{
 
     @discardableResult
-    public func assertExistingEntitiesWithIds(on database: Database) throws -> Future<[Element]>{
+    func assertExistingEntitiesWithIds(on database: Database) throws -> Future<[Element]>{
         var entities: [Future<Element>] = []
         for entity in self{
             entities.append(try entity.assertExistingEntityWithId(on: database))

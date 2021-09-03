@@ -13,7 +13,6 @@ private extension FieldKey {
 }
 public final class TestChildModel: Model, Content {
 
-
     @ID(key: .id)
     public var id: UUID?
 

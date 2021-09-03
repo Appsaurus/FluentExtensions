@@ -126,8 +126,8 @@ public extension Model {
     }
 }
 
-extension FieldKey {
-    public static var reflectionBuilder: (PropertyInfo) -> FieldKey = { property in
+public extension FieldKey {
+    static var reflectionBuilder: (PropertyInfo) -> FieldKey = { property in
         return property.fieldKey
     }
 }
@@ -169,7 +169,7 @@ public extension DatabaseSchema.DataType {
     }
 }
 
-extension TypeInfo {
+public extension TypeInfo {
     func enumDefinition(name: String? = nil) -> DatabaseSchema.DataType.Enum? {
         guard isEnum else { return nil }
         let name = name ?? self.fieldName
@@ -237,6 +237,7 @@ extension UInt16: DatabaseSchemaDataTypeProviding {
 extension UInt32: DatabaseSchemaDataTypeProviding {
     public static var dataType: DatabaseSchema.DataType {
         .uint32
+
     }
 }
 extension UInt64: DatabaseSchemaDataTypeProviding {
@@ -451,21 +452,21 @@ extension OptionalParentProperty: SchemaReflectable {
     }
 }
 //
-//extension ChildrenProperty: SchemaReflectable {
+//public extension ChildrenProperty: SchemaReflectable {
 //    @discardableResult
 //    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
 //        return builder//No schema required
 //    }
 //}
 //
-//extension OptionalChildProperty: SchemaReflectable {
+//public extension OptionalChildProperty: SchemaReflectable {
 //    @discardableResult
 //    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
 //        return builder//No schema required
 //    }
 //}
 //
-//extension SiblingsProperty: SchemaReflectable {
+//public extension SiblingsProperty: SchemaReflectable {
 //    @discardableResult
 //    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
 //        return builder//No schema required
@@ -473,7 +474,7 @@ extension OptionalParentProperty: SchemaReflectable {
 //}
 
 
-extension Collection {
+public extension Collection {
     @discardableResult
     static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, .array(of: .init(Element.self)), .required)

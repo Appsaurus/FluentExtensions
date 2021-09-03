@@ -8,10 +8,10 @@
 import VaporExtensions
 import Fluent
 
-extension ChildrenProperty {
+public extension ChildrenProperty {
 	/// Returns true if the supplied model is a child
 	/// to this relationship.
-	public func includes(_ model: To, on database: Database) throws -> Future<Bool> {
+	func includes(_ model: To, on database: Database) throws -> Future<Bool> {
         let id = try model.requireID()
 		return query(on: database)
 			.filter(\._$id == id)
@@ -22,10 +22,10 @@ extension ChildrenProperty {
 	}
 }
 
-extension Model {
+public extension Model {
 	/// Returns true if this model is a child
 	/// to the supplied relationship.
-	public func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, on database: Database) throws -> Future<Bool> {
+	func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, on database: Database) throws -> Future<Bool> {
 		return try children.includes(self, on: database)
 	}
 }

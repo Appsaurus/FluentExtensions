@@ -10,17 +10,17 @@ import Fluent
 import Vapor
 import RuntimeExtensions
 
-//extension Future where Value: Model & Reflectable  {
-//	public func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on database: Database) throws -> Future<Value> {
+//public extension Future where Value: Model & Reflectable  {
+//	func update<M: HTTPMessageContainer>(with container: ContentContainer<M>, on database: Database) throws -> Future<Value> {
 //		return self.map(to: Value.self) { (model) in
 //			return try model.updateReflectively(with: container)
 //			}.update(on: database)
 //	}
 //
 //}
-//extension Model where Self: Reflectable{
+//public extension Model where Self: Reflectable{
 //
-//	public func setTypedValue<M: HTTPMessageContainer>(for property: ReflectedProperty, from container: ContentContainer<M>) throws{
+//	func setTypedValue<M: HTTPMessageContainer>(for property: ReflectedProperty, from container: ContentContainer<M>) throws{
 //		let key = property.path.first!
 //		var anyValue: Any?
 //		switch property.type{
@@ -73,12 +73,12 @@ import RuntimeExtensions
 //	}
 //
 //	@discardableResult
-//	public func updateReflectively<M: HTTPMessageContainer>(with container: ContentContainer<M>) throws -> Self{
+//	func updateReflectively<M: HTTPMessageContainer>(with container: ContentContainer<M>) throws -> Self{
 //		return try reflectivelyInstantiate(with: container)
 //	}
 //
 //	@discardableResult
-//	public func reflectivelyInstantiate<M: HTTPMessageContainer>(with container: ContentContainer<M>) throws -> Self{
+//	func reflectivelyInstantiate<M: HTTPMessageContainer>(with container: ContentContainer<M>) throws -> Self{
 //		//		self.id = try json.get(idKey)
 //		for property in try type(of: self).reflectProperties(){
 //			do{
@@ -92,8 +92,8 @@ import RuntimeExtensions
 //	}
 //}
 
-extension Model where Self: KVC {
-	public func updateWithKeyValues(of model: Self, on database: Database) throws -> Future<Self> {
+public extension Model where Self: KVC {
+	func updateWithKeyValues(of model: Self, on database: Database) throws -> Future<Self> {
         return try updateWithKeyValues(of: model).save(on: database).transform(to: self)
 	}
 }

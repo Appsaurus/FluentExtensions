@@ -8,9 +8,9 @@
 import Fluent
 
 //MARK: Destructive
-extension Model {
+public extension Model {
     /// Deletes all rows in a table
-    public static func delete(force: Bool = false, on database: Database, transaction: Bool = true) throws -> Future<Void> {
+    static func delete(force: Bool = false, on database: Database, transaction: Bool = true) throws -> Future<Void> {
         return query(on: database).all().delete(force: force, on: database, transaction: transaction)
     }
 }

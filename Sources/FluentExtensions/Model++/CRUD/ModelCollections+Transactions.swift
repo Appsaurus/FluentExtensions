@@ -10,9 +10,9 @@ import FluentKit
 public typealias BatchAction<V> = (Database) -> Future<V>
 public typealias ThrowingBatchAction<V> = (Database) throws -> Future<V>
 
-extension Collection where Element: Model {
+public extension Collection where Element: Model {
 
-    public func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
+    func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
         guard transaction else {
             return action(database)
         }
@@ -23,8 +23,8 @@ extension Collection where Element: Model {
 }
 
 
-extension Future where Value: Collection, Value.Element: Model {
-    public func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
+public extension Future where Value: Collection, Value.Element: Model {
+    func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool) -> Future<V>{
         return flatMap { elements in
             return elements.performBatch(action: action, on: database, transaction: transaction)
         }

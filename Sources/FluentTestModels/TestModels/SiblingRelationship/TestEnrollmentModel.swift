@@ -29,7 +29,7 @@ public final class TestEnrollmentModel: Model, Content {
 //MARK: Reflection-based migration
 class TestEnrollmentModelReflectionMigration: AutoMigration<TestEnrollmentModel> {
     @discardableResult
-    override public func customize(schema: SchemaBuilder) -> SchemaBuilder {
+    override func customize(schema: SchemaBuilder) -> SchemaBuilder {
         schema.unique(on: .student, .`class`)
     }
 }

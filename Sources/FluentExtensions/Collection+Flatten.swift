@@ -8,7 +8,7 @@
 import Fluent
 
 extension Collection {
-    public func flatten<Value>(on database: Database) -> EventLoopFuture<[Value]>
+    func flatten<Value>(on database: Database) -> EventLoopFuture<[Value]>
     where Element == EventLoopFuture<Value>
     {
         return flatten(on: database.eventLoop)

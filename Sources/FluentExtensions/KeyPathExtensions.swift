@@ -7,11 +7,11 @@
 
 import Foundation
 import FluentKit
-extension KeyPath where Root: Model, Value: QueryableProperty{
-//	public func querySort(_ direction: Root.Database.QuerySortDirection = Root.Database.querySortDirectionAscending)-> Root.Database.QuerySort{
+public extension KeyPath where Root: Model, Value: QueryableProperty{
+//	func querySort(_ direction: Root.Database.QuerySortDirection = Root.Database.querySortDirectionAscending)-> Root.Database.QuerySort{
 //		return Root.Database.querySort(queryField, direction)
 //	}
-	public var fluentProperty: [FieldKey]{        
+	var fluentProperty: [FieldKey]{
         return Root.path(for: self)
 	}
 //
@@ -19,7 +19,7 @@ extension KeyPath where Root: Model, Value: QueryableProperty{
 //		return Root.Database.queryField(fluentProperty)
 //	}
 
-	public var propertyName: String{
+	var propertyName: String{
         return fluentProperty.map({$0.description}).joined(separator: ".")
 	}
 }

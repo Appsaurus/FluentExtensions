@@ -9,65 +9,65 @@ import Foundation
 import XCTest
 import Fluent
 
-public func XCTAssert<M>(query: QueryBuilder<M>, hasCount count: Int) {
+func XCTAssert<M>(query: QueryBuilder<M>, hasCount count: Int) {
     XCTAssertEqual(try query.count().wait(), count)
 }
 
-public func XCTAssert<M: Model>(model: M.Type, hasCount count: Int, on database: Database){
+func XCTAssert<M: Model>(model: M.Type, hasCount count: Int, on database: Database){
     XCTAssert(query: M.query(on: database), hasCount: count)
 }
-public func XCTAssertJSONEqual<E: Encodable>(_ source: E, candidates: E...) {
+func XCTAssertJSONEqual<E: Encodable>(_ source: E, candidates: E...) {
     XCTAssert(jsonIsEqual(source, candidates: candidates))
 }
 
-public func XCTAssertJSONNotEqual<E: Encodable>(_ source: E, candidates: E...) {
+func XCTAssertJSONNotEqual<E: Encodable>(_ source: E, candidates: E...) {
     XCTAssertFalse(jsonIsEqual(source, candidates: candidates))
 }
 
-public func jsonIsEqual<E: Encodable>(_ source: E, candidates: [E]) -> Bool{
+func jsonIsEqual<E: Encodable>(_ source: E, candidates: [E]) -> Bool{
 //    let encoder = JSONEncoder()
     let sourceData = try! source.encodeAsJSONString()
 //    let sourceData: Data = try! encoder.encode(source)
     return !candidates.contains(where: {try! $0.encodeAsJSONString() != sourceData})
 }
 
-public func XCTAssertReferencingSameEntity<RE: Model>(_ target: RE, _ testCandidates: RE...) {
+func XCTAssertReferencingSameEntity<RE: Model>(_ target: RE, _ testCandidates: RE...) {
     testCandidates.forEach { (testCandidate) in
         XCTAssert(target.isReferencingSameEntity(as: testCandidate))
     }
 }
 
-public func XCTAssertAllReferencingSameEntity<RE: Model>(_ target: [RE], _ testCandidate: [RE])
+func XCTAssertAllReferencingSameEntity<RE: Model>(_ target: [RE], _ testCandidate: [RE])
     where RE.IDValue: Comparable {
         XCTAssert(target.areReferencingSameEntities(as: testCandidate))
 }
 
 
-extension Collection where Element: Model, Element.IDValue: Comparable {
-    public func areReferencingSameEntities(as otherEntities: Self) -> Bool{
+public extension Collection where Element: Model, Element.IDValue: Comparable {
+    func areReferencingSameEntities(as otherEntities: Self) -> Bool{
         return hasEqualValues(at: \.id, as: otherEntities)
     }
 }
 
-extension Model {
-    public func isReferencingSameEntity(as entityReference: Self) -> Bool {
+public extension Model {
+    func isReferencingSameEntity(as entityReference: Self) -> Bool {
         return self.id == entityReference.id
     }
 }
 
 //TODO: Refactor into general Swift library
-extension Collection{
-    public func values<C: Comparable>(at keyPath: KeyPath<Element, C>) -> [C]{
+public extension Collection{
+    func values<C: Comparable>(at keyPath: KeyPath<Element, C>) -> [C]{
         return self.map({$0[keyPath: keyPath]})
     }
-    public func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C>) -> [C]{
+    func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C>) -> [C]{
         return values(at: keyPath).sorted()
     }
-    public func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C>, by sorter: (C, C) throws -> Bool) throws -> [C]{
+    func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C>, by sorter: (C, C) throws -> Bool) throws -> [C]{
         return try values(at: keyPath).sorted(by: sorter)
     }
 
-    public func hasEqualValues<C: Comparable>(at keyPath: KeyPath<Element, C>, as otherCollection: Self) -> Bool{
+    func hasEqualValues<C: Comparable>(at keyPath: KeyPath<Element, C>, as otherCollection: Self) -> Bool{
         let targetSorted = sortedValues(at: keyPath)
         let candidateSorted = otherCollection.sortedValues(at: keyPath)
         guard targetSorted.count == candidateSorted.count else { return false }
@@ -78,21 +78,21 @@ extension Collection{
     }
 
     //Optional value KeyPaths
-    public func values<C: Comparable>(at keyPath: KeyPath<Element, C?>) -> [C]{
+    func values<C: Comparable>(at keyPath: KeyPath<Element, C?>) -> [C]{
         return self.map({$0[keyPath: keyPath]}).compactMap({$0})
     }
 
-    public func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C?>) -> [C]{
+    func sortedValues<C: Comparable>(at keyPath: KeyPath<Element, C?>) -> [C]{
         return values(at: keyPath).sorted()
     }
 
-    public func hasEqualValues<C: Comparable>(at keyPath: KeyPath<Element, C?>, as otherCollection: Self) -> Bool{
+    func hasEqualValues<C: Comparable>(at keyPath: KeyPath<Element, C?>, as otherCollection: Self) -> Bool{
         return self.values(at: keyPath).containsSameElements(as: otherCollection.values(at: keyPath))
     }
 }
 
-extension Collection where Element: Comparable{
-    public func containsSameElements(as other: Self) -> Bool {
+public extension Collection where Element: Comparable{
+    func containsSameElements(as other: Self) -> Bool {
         return self.count == other.count && self.sorted() == other.sorted()
     }
 }

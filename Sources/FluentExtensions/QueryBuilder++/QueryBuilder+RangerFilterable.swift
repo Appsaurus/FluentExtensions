@@ -10,7 +10,7 @@ import SQLKit
 
 public typealias RangeFilterable = Strideable & Codable & QueryableProperty
 
-extension QueryBuilder  {
+public extension QueryBuilder  {
     @discardableResult
     func filter<V: RangeFilterable>(_ keyPath: KeyPath<Model, FieldProperty<Model, V>>, to range: Range<V>) -> Self {
         return group(.and) {
@@ -73,7 +73,7 @@ extension QueryBuilder  {
 
 }
 
-extension URLQueryContainer {
+public extension URLQueryContainer {
     func range<V: RangeFilterable>(at parameter: String) -> ClosedRange<V>? {
         return try? rangeThrowing(at: parameter)
     }
@@ -103,9 +103,9 @@ public final class MalformedRangeQueryError: AbortError {
         return "MalformedRangeQueryError"
     }
 }
-extension ClosedRange where Bound: Codable & Strideable {
+public extension ClosedRange where Bound: Codable & Strideable {
 
-    public init?(string: String) throws {
+    init?(string: String) throws {
         let pattern = #"\.\.\.|\.\.\<|\<\.\.|\<\.\<"#
 //        let pattern = RangeOperators.allCases.map({
 //            return $0.rawValue.charactersArray.map({String($0)}).joined(separator: #"\"#)
@@ -147,7 +147,7 @@ extension ClosedRange where Bound: Codable & Strideable {
     }
 }
 
-extension JSONDecoder.DateDecodingStrategy {
+public extension JSONDecoder.DateDecodingStrategy {
 
     /// The strategy that formats dates according to the ISO 8601 standard.
     /// - Note: This includes the fractional seconds, unlike the standard `.iso8601`, which fails to decode those.
@@ -167,7 +167,7 @@ extension JSONDecoder.DateDecodingStrategy {
 
 }
 
-enum RangeOperators: String, ExpressibleByStringLiteral, CaseIterable {
+public enum RangeOperators: String, ExpressibleByStringLiteral, CaseIterable {
     case betweenInclusive = "..."
     case betweenExclusive = "<.<"
     case betweenExclusiveLessThan = "..<"

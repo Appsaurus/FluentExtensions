@@ -9,8 +9,8 @@ import FluentKit
 import Foundation
 import SQLKit
 
-extension Model {
-    public typealias SelfSiblings<Through> = SelfSiblingsProperty<Self, Through>
+public extension Model {
+    typealias SelfSiblings<Through> = SelfSiblingsProperty<Self, Through>
         where IDValue: Comparable, Through: Model
 }
 
@@ -179,7 +179,7 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
     /// - Parameters:
     ///     - tos: An array of models to detach from this model.
     ///     - database: The database to perform the attachment on.
-//    public func detach(_ tos: [M], on database: Database) -> EventLoopFuture<Void> {
+//    func detach(_ tos: [M], on database: Database) -> EventLoopFuture<Void> {
 //        guard let fromID = self.idValue else {
 //            fatalError("Cannot detach siblings relation to unsaved model.")
 //        }
@@ -215,7 +215,7 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
     }
 
 //    /// Detach all models by deleting all pivots from this model.
-//    public func detachAll(on database: Database) -> EventLoopFuture<Void> {
+//    func detachAll(on database: Database) -> EventLoopFuture<Void> {
 //        guard let fromID = self.idValue else {
 //            fatalError("Cannot detach siblings relation from unsaved model.")
 //        }
@@ -256,11 +256,11 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
         return idValue
     }
 
-    var fromKeyPath: KeyPath<Through, FieldProperty<Through, M.IDValue>> {
+    public var fromKeyPath: KeyPath<Through, FieldProperty<Through, M.IDValue>> {
         self.from.appending(path: \.$id)
     }
 
-    var toKeyPath: KeyPath<Through, FieldProperty<Through, M.IDValue>> {
+    public var toKeyPath: KeyPath<Through, FieldProperty<Through, M.IDValue>> {
         self.to.appending(path: \.$id)
     }
 
@@ -333,8 +333,8 @@ extension SelfSiblingsProperty: Relation {
 //
 //// MARK: Eager Loadable
 //
-//extension SelfSiblingsProperty: EagerLoadable {
-//    public static func eagerLoad<Builder>(
+//public extension SelfSiblingsProperty: EagerLoadable {
+//    static func eagerLoad<Builder>(
 //        _ relationKey: KeyPath<M, M.Siblings<M, Through>>,
 //        to builder: Builder
 //    )
@@ -345,7 +345,7 @@ extension SelfSiblingsProperty: Relation {
 //    }
 //
 //
-//    public static func eagerLoad<Loader, Builder>(
+//    static func eagerLoad<Loader, Builder>(
 //        _ loader: Loader,
 //        through: KeyPath<M, M.Siblings<M, Through>>,
 //        to builder: Builder
@@ -404,9 +404,9 @@ extension SelfSiblingsProperty: Relation {
 //}
 
 
-extension SelfSiblingsProperty {
+public extension SelfSiblingsProperty {
     /// Returns a `QueryBuilder` that can be used to query the siblings.
-    public func sqlQuery(on database: Database) -> SQLSelectBuilder {
+    func sqlQuery(on database: Database) -> SQLSelectBuilder {
         guard let sqlDatabase = database as? SQLDatabase else {
             fatalError(#function + " can only be uses with an SQLDatabase ")
         }

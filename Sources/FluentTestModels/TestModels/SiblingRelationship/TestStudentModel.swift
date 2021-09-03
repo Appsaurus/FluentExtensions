@@ -9,8 +9,6 @@ import FluentExtensions
 
 public final class TestStudentModel: Model, Content {
 
-    public static let schema: String = "TestStudentModel"
-
     @ID(key: .id)
     public var id: UUID?
 
