@@ -31,7 +31,7 @@ extension TypeInfo {
 }
 
 //Converts underscore-prefixed wrapped property names
-fileprivate extension String {
+internal extension String {
     var droppingUnderscorePrefix: String {
         if self.starts(with: "_") {
             return String(self.dropFirst())

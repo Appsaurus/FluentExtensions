@@ -476,7 +476,7 @@ extension OptionalParentProperty: SchemaReflectable {
 
 public extension Collection {
     @discardableResult
-    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+    static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder.field(key, .array(of: .init(Element.self)), .required)
     }
 }

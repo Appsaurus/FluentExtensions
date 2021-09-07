@@ -19,9 +19,10 @@ public extension Model {
     }
 
     @discardableResult
-    func assertExistingEntityWithId(on database: Database) throws -> Future<Self>{
-        return existingEntityWithId(on: database)
-            .unwrap(or: Abort(.notFound, reason: "An entity with that ID could not be found."))
+    func assertExistingEntityWithId(on database: Database) -> Future<Self>{
+        return existingEntityWithId(on: database) .unwrap(or: {
+            database.eventLoop.makeFailedFuture(Abort(.notFound, reason: "An entity with that ID could not be found."))
+        })
     }
 }
 
