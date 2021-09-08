@@ -124,10 +124,10 @@ public extension QueryBuilder {
     @discardableResult
     func filter(_ queryParameterFilter: QueryParameterFilter, as type: Any.Type) throws -> QueryBuilder<Model>{
         let queryField = queryParameterFilter.queryField(for: Model.schema)
-        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
+//        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
         switch (queryParameterFilter.method, queryParameterFilter.value) {
         case let (.equal, .single(value)): // Equal
-            return self.filter(queryField, .equal, encodableValue)
+            return self.filter(queryField, .equal, value)
         case let (.notEqual, .single(value)): // Not Equal
             return self.filter(queryField, .notEqual, value)
         case let (.greaterThan, .single(value)): // Greater Than
@@ -138,10 +138,10 @@ public extension QueryBuilder {
             return self.filter(queryField, .lessThan, value)
         case let (.lessThanOrEqual, .single(value)): // Less Than Or Equal
             return self.filter(queryField, .lessThanOrEqual, value)
-//        case let (.in, .multiple(value)): // In
-//            return self.filter(queryField, .inSubSet, value)
-//        case let (.notIn, .multiple(value)): // Not In
-//            return self.filter(queryField, .notInSubset, value)
+        case let (.in, .multiple(value)): // In
+            return self.filter(queryField, .inSubSet, value)
+        case let (.notIn, .multiple(value)): // Not In
+            return self.filter(queryField, .notInSubSet, value)
         default:
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
@@ -175,10 +175,10 @@ public extension QueryBuilder {
             return self.filter(queryField, .lessThan, value.bool)
         case let (.lessThanOrEqual, .single(value)): // Less Than Or Equal
             return self.filter(queryField, .lessThanOrEqual, value.bool)
-//        case let (.in, .multiple(value)): // In
-//            return self.filter(queryField, .inSubSet, value.map({ $0.bool}))
-//        case let (.notIn, .multiple(value)): // Not In
-//            return self.filter(queryField, .notInSubset, value.map({ $0.bool}))
+        case let (.in, .multiple(value)): // In
+            return self.filter(queryField, .inSubSet, value.map({ $0.bool}))
+        case let (.notIn, .multiple(value)): // Not In
+            return self.filter(queryField, .notInSubSet, value.map({ $0.bool}))
         default:
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
@@ -189,8 +189,16 @@ public extension QueryBuilder {
     fileprivate func filter<E: Encodable>(_ field: DatabaseQuery.Field,
                                           _ method: DatabaseQuery.Filter.Method,
                                           _ value: E) -> QueryBuilder<Model>{
+        self.filter(.value(field, method, DatabaseQuery.Value.bind(value)))
+        return self
+    }
 
-        self.filter(.value(field, method, DatabaseQuery.Value.custom(value)))
+    @discardableResult
+    fileprivate func filter<E: Encodable>(_ field: DatabaseQuery.Field,
+                                          _ method: DatabaseQuery.Filter.Method,
+                                          _ value: [E]) -> QueryBuilder<Model>{
+        let values = value.map({DatabaseQuery.Value.bind($0)})
+        self.filter(.value(field, method, DatabaseQuery.Value.array(values)))
         return self
     }
 }

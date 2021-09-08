@@ -12,7 +12,34 @@ import FluentSQLiteDriver
 import FluentKit
 @testable import FluentTestModels
 
+
+class QueryParameterSortTestSeeder: Migration {
+    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+        seedModels(on: database)
+    }
+
+    public func revert(on database: Database) -> EventLoopFuture<Void> {
+        return database.eventLoop.makeSucceededFuture({}())
+    }
+
+    func seedModels(on database: Database) -> EventLoopFuture<Void> {
+        var kitchenSinks: [KitchenSink] = []
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        for (index, letter) in letters.enumerated() {
+            let createUser = KitchenSink()
+            createUser.stringField += "_\(letter)"
+            createUser.intField = index
+            createUser.optionalStringField = index < 3 ? String(letter) : nil
+            kitchenSinks.append(createUser)
+        }
+        return kitchenSinks.create(on: database)
+    }
+}
 class QueryParameterSortTests: FluentTestModels.TestCase {
+    let queryParamSortPath = "query-parameters-sort"
+    let valueA = "StringValue_A"
+    let valueB = "StringValue_B"
+    let valueC = "StringValue_C"
 
     override func configureTestModelDatabase(_ databases: Databases) {
         databases.use(.sqlite(.memory, connectionPoolTimeout: .minutes(2)), as: .sqlite)
@@ -23,37 +50,38 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
         app.logger.logLevel = .debug
     }
 
+    override func migrate(_ migrations: Migrations) throws {
+        try super.migrate(migrations)
+        migrations.add(QueryParameterSortTestSeeder())
+    }
+
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get("query-parameters-sort") { request -> EventLoopFuture<[KitchenSink]> in
-            var query = KitchenSink.query(on: request.db)
-
-//            guard let filter = try request.queryParameterFilter(name: "stringProperty") else {
-//                return request.fail(with: Abort(.badRequest))
-//            }
-            let response = try query.filterByQueryParameters(request: request).all()
-            return response
+        router.get("\(queryParamSortPath)") { request -> EventLoopFuture<[KitchenSink]> in
+            try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
         }
     }
 
-    func testKitchenSink() throws {
-        var kitchenSinks: [KitchenSink] = []
-        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        for (index, letter) in letters.enumerated() {
-            let createUser = KitchenSink()
-            createUser.stringField += "_\(letter)"
-            createUser.intField = index
-            createUser.optionalStringField = Bool.random() ? String(letter) : nil
-            kitchenSinks.append(createUser)
-        }
-        try kitchenSinks.create(on: app.db).wait()
+    func testEqualsFieldQuery() throws {
 
-        let fetchedModels = try KitchenSink.query(on: app.db).all().wait()
-
-        try app.test(.GET, "query-parameters-sort?stringField=eq:stringField_A") { response in
+        try app.test(.GET, "\(queryParamSortPath)?stringField=eq:\(valueA)") { response in
             XCTAssertEqual(response.status, .ok)
-            XCTAssert(response.has(content: "is super easy"))
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 1)
+            XCTAssertEqual(models[0].stringField, valueA)
+        }
+    }
+
+    func testSubsetQueries() throws {
+        let values = [valueA, valueB, valueC]
+        try app.test(.GET, "\(queryParamSortPath)?stringField=in:\(values.joined(separator: ","))") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 3)
+            XCTAssertEqual(models[0].stringField, valueA)
+            XCTAssertEqual(models[1].stringField, valueB)
+            XCTAssertEqual(models[2].stringField, valueC)
         }
     }
 
