@@ -127,7 +127,8 @@ public struct StringKeyPathFilter {
     var filter: QueryParameterFilter
 }
 
-public struct QueryParameterFilter {
+public class QueryParameterFilter {
+
     var name: String
     var method: QueryFilterMethod
     var value: FilterValue<String, [String]>
@@ -136,7 +137,12 @@ public struct QueryParameterFilter {
     func queryField(for schema: String) -> DatabaseQuery.Field {
         return .path([name.fieldKey], schema: schema)
     }
-
+    internal init(name: String, method: QueryFilterMethod, value: FilterValue<String, [String]>, queryValueType: Any.Type? = nil) {
+        self.name = name
+        self.method = method
+        self.value = value
+        self.queryValueType = queryValueType
+    }
 //
 //    func databaseQueryFilter(for schema: String) -> DatabaseQuery.Filter {
 //        DatabaseQuery.Filter.value(.path([name.fieldKey], schema: schema), <#T##DatabaseQuery.Filter.Method#>, <#T##DatabaseQuery.Value#>)
@@ -194,7 +200,7 @@ internal extension String {
 }
 
 
-internal enum FilterValue<S, M> {
+enum FilterValue<S, M> {
     case single(S)
     case multiple(M)
 
@@ -234,7 +240,7 @@ extension FilterValue where S == String, M == [String] {
     //    }
 }
 
-internal enum QueryFilterMethod: String {
+enum QueryFilterMethod: String {
     case equal = "eq"
     case notEqual = "neq"
     case `in` = "in"

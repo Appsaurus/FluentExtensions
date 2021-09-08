@@ -71,6 +71,13 @@ public extension QueryBuilder {
 public extension QueryBuilder {
     @discardableResult
     func filter<V: QueryableProperty>(keyPath: KeyPath<Model,V>,
+                                      queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model> {
+        queryParameterFilter.name = keyPath.propertyName
+        return try filter(queryParameterFilter)
+    }
+
+    @discardableResult
+    func filter<V: QueryableProperty>(keyPath: KeyPath<Model,V>,
                                       at queryParameter: String? = nil,
                                       on req: Request) throws -> QueryBuilder<Model> {
         guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, using: queryParameter) else {
