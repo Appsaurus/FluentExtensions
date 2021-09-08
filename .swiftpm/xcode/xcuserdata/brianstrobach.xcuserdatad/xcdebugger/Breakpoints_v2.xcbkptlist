@@ -14,8 +14,8 @@
             filePath = "Sources/FluentExtensions/Request++/Request+QueryParameterFilters/QueryBuilder+QueryParameterFilters.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
+            startingLineNumber = "122"
+            endingLineNumber = "122"
             landmarkName = "filter(_:as:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "Sources/FluentExtensions/Request++/Request+QueryParameterFilters/QueryBuilder+QueryParameterFilters.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "179"
-            endingLineNumber = "179"
+            startingLineNumber = "154"
+            endingLineNumber = "154"
             landmarkName = "filterAsBool(_:)"
             landmarkType = "7">
             <Locations>
@@ -66,22 +66,6 @@
                   offsetFromSymbolStart = "23">
                </Location>
             </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "262AD558-E725-40A0-BFA6-C900D13D7772"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/Request++/Request+QueryParameterFilters/QueryBuilder+QueryParameterFilters.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
-            landmarkName = "filter(query:with:)"
-            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

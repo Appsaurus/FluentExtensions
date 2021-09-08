@@ -36,10 +36,20 @@ public struct QueryParameterSearchFilter {
 
 
 public extension Request {
+    @discardableResult
+    func stringKeyPathFilter<V: QueryableProperty, M: Model>(for keyPath: KeyPath<M,V>,
+                                                             using queryParameter: String? = nil) throws -> StringKeyPathFilter? {
+        try stringKeyPathFilter(for: keyPath.codingKeys, using: queryParameter)
+    }
 
     func stringKeyPathFilter(for keyPath: CodingKeyRepresentable...,
-                             at queryParameterName: String? = nil) throws -> StringKeyPathFilter? {
-        let name = queryParameterName ?? "\(String(describing: keyPath.last))"
+                             using queryParameter: String? = nil) throws -> StringKeyPathFilter? {
+        try stringKeyPathFilter(for: keyPath, using: queryParameter)
+
+    }
+    func stringKeyPathFilter(for keyPath: [CodingKeyRepresentable],
+                             using queryParameter: String? = nil) throws -> StringKeyPathFilter? {
+        let name = queryParameter ?? keyPath.map({$0.codingKey.stringValue}).joined(separator: ".")
         guard let filter = try queryParameterFilter(name: name) else {
             return nil
         }
@@ -47,7 +57,6 @@ public extension Request {
     }
 
     func queryParameterFilter(name: String) throws -> QueryParameterFilter? {
-
 
         let decoder = URLEncodedFormDecoder()
 
@@ -122,6 +131,7 @@ public struct QueryParameterFilter {
     var name: String
     var method: QueryFilterMethod
     var value: FilterValue<String, [String]>
+    var queryValueType: Any.Type? = nil
 
     func queryField(for schema: String) -> DatabaseQuery.Field {
         return .path([name.fieldKey], schema: schema)

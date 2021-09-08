@@ -10,42 +10,15 @@ import CodableExtensions
 import Codability
 
 
-protocol QueryParamFilterableProperty {
-    static func filter<M: FluentKit.Model>(query: QueryBuilder<M>, with queryFilter: StringKeyPathFilter) -> QueryBuilder<M>
-}
-
-extension FieldProperty: QueryParamFilterableProperty {
-
-    @discardableResult
-    public static func filter<M: FluentKit.Model>(query: QueryBuilder<M>, with queryFilter: StringKeyPathFilter) -> QueryBuilder<M> {
-        var query = query
-        if Value.self == Bool.self {
-            if let booleanQuery = try? query.filterAsBool(queryFilter) {
-                query = booleanQuery
-            }
-        }
-        else if Value.self == Int.self {
-            if let booleanQuery = try? query.filterAsBool(queryFilter) {
-                query = booleanQuery
-            }
-        }
-        else if let filteredQuery = try? query.filter(queryFilter, as: Value.self) {
-            query = filteredQuery
-        }
-        return query
-    }
-}
-
-
 public extension QueryBuilder {
 
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
         for property in try properties(Model.self) {
             let parameterName: String = property.name
-            if let queryFilter = try? request.stringKeyPathFilter(for: parameterName, at: parameterName.droppingUnderscorePrefix),
-               let filterable = property.type as? QueryParamFilterableProperty.Type {
-                query = filterable.filter(query: query, with: queryFilter)
+            if let filterable = property.type as? AnyProperty.Type,
+               let queryFilter = try? request.stringKeyPathFilter(for: parameterName, using: parameterName.droppingUnderscorePrefix) {
+                query = try filter(queryFilter, as: filterable.anyValueType)
             }
         }
         return query
@@ -73,23 +46,8 @@ public extension QueryBuilder {
 //    }
 //}
 
-public enum QueryParameterFilterError: Error, LocalizedError, CustomStringConvertible {
-    case invalidFilterConfiguration
 
-
-    public var description: String {
-        switch self {
-        case .invalidFilterConfiguration:
-            return "Invalid filter config."
-        }
-    }
-
-    public var errorDescription: String? {
-        return self.description
-    }
-}
 public extension QueryBuilder {
-
 
     func sorted(byQueryParamsAt key: String = "sort", on req: Request) throws -> Self {
         for sort in try sorts(byQueryParamsAt: key, on: req) {
@@ -105,26 +63,48 @@ public extension QueryBuilder {
         }
         return sorts
     }
-//
-//    @discardableResult
-//    func filter(_ keyPath: String, at parameter: String? = nil, on req: Request) throws -> QueryBuilder<Model> {
-//        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, at: parameter) else {
-//            return self
-//        }
-//        guard let property = AnyProperty
-//        return try filter(queryFilter)
-//    }
+
+}
+
+
+
+public extension QueryBuilder {
+    @discardableResult
+    func filter<V: QueryableProperty>(keyPath: KeyPath<Model,V>,
+                                      at queryParameter: String? = nil,
+                                      on req: Request) throws -> QueryBuilder<Model> {
+        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, using: queryParameter) else {
+            return self
+        }
+        return try filter(queryFilter)
+    }
+
 
     @discardableResult
-    func filter(_ stringKeyPathFilter: StringKeyPathFilter, as type: Any.Type) throws -> QueryBuilder<Model> {
-//        let property = FieldProperty<Model, Any>(key: FieldKey(stringKeyPathFilter.filter.name))
+    func filter(_ keyPath: String,
+                at queryParameter: String? = nil,
+                on req: Request) throws -> QueryBuilder<Model> {
+        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, using: queryParameter) else {
+            return self
+        }
+        return try filter(queryFilter)
+    }
+
+
+    @discardableResult
+    func filter(_ stringKeyPathFilter: StringKeyPathFilter, as type: Any.Type? = nil) throws -> QueryBuilder<Model> {
         return try filter(stringKeyPathFilter.filter, as: type)
     }
 
     @discardableResult
-    func filter(_ queryParameterFilter: QueryParameterFilter, as type: Any.Type) throws -> QueryBuilder<Model>{
+    func filter(_ queryParameterFilter: QueryParameterFilter, as type: Any.Type? = nil) throws -> QueryBuilder<Model>{
+        switch type {
+            case is Bool.Type, is Int.Type:
+                return try filterAsBool(queryParameterFilter)
+            default: break
+        }
         let queryField = queryParameterFilter.queryField(for: Model.schema)
-//        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
+        //        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
         switch (queryParameterFilter.method, queryParameterFilter.value) {
         case let (.equal, .single(value)): // Equal
             return self.filter(queryField, .equal, value)
@@ -147,22 +127,17 @@ public extension QueryBuilder {
         }
     }
 
-//    @discardableResult
-//    func filter<R, V>(keyPath: KeyPath<R,V>, queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model>{
-//        let property = FluentProperty.keyPath(keyPath)
-//        return try filter(property: property, queryParameterFilter: queryParameterFilter)
-//    }
-//    @discardableResult
-//    func filterAs(_ type: Any.Type, _ stringkeyPathFilter: StringKeyPathFilter) throws -> QueryBuilder<Model> {
-//
-//    }
+
+    //    @discardableResult
+    //    func filterAs(_ type: Any.Type, _ stringkeyPathFilter: StringKeyPathFilter) throws -> QueryBuilder<Model> {
+    //
+    //    }
 
     @discardableResult
-    func filterAsBool(_ stringKeyPathFilter: StringKeyPathFilter) throws -> QueryBuilder<Model> {
-//        let propertyName = stringKeyPathFilter.filter.name
-        let queryField = stringKeyPathFilter.filter.queryField(for: Model.schema)
-//        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type(of: property).anyValueType)
-        switch (stringKeyPathFilter.filter.method, stringKeyPathFilter.filter.value) {
+    func filterAsBool(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model> {
+        let queryField = queryParameterFilter.queryField(for: Model.schema)
+        //        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type(of: property).anyValueType)
+        switch (queryParameterFilter.method, queryParameterFilter.value) {
         case let (.equal, .single(value)): // Equal
             return self.filter(queryField, .equal, value.bool)
         case let (.notEqual, .single(value)): // Not Equal
@@ -202,6 +177,23 @@ public extension QueryBuilder {
         return self
     }
 }
+
+public enum QueryParameterFilterError: Error, LocalizedError, CustomStringConvertible {
+    case invalidFilterConfiguration
+
+
+    public var description: String {
+        switch self {
+        case .invalidFilterConfiguration:
+            return "Invalid filter config."
+        }
+    }
+
+    public var errorDescription: String? {
+        return self.description
+    }
+}
+
 
 fileprivate extension String {
     /// Converts the string to a `Bool` or returns `nil`.
