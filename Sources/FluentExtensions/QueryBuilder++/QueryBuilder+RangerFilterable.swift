@@ -8,55 +8,55 @@ import FluentKit
 import Fluent
 import SQLKit
 
-public typealias RangeFilterable = Strideable & Codable & QueryableProperty
+public typealias RangeFilterable = Strideable & Codable
 
 public extension QueryBuilder  {
     @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath: KeyPath<Model, FieldProperty<Model, V>>, to range: Range<V>) -> Self {
+    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, to range: Range<P.Value>) -> Self where P.Value: Strideable {
         return group(.and) {
             $0.filter(keyPath >= range.lowerBound)
             $0.filter(keyPath <= range.upperBound)
         }
     }
+//    @discardableResult
+//    func filter<V: QueryableProperty>(_ keyPath: KeyPath<Model, V?>, to range: Range<V.Value>) -> Self {
+//        return group(.and) {
+//            $0.filter(keyPath >= range.lowerBound)
+//            $0.filter(keyPath <= range.upperBound)
+//        }
+//    }
     @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath: KeyPath<Model, FieldProperty<Model, V?>>, to range: Range<V>) -> Self {
+    func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, P>, to range: ClosedRange<P.Value>) -> Self where P.Value: Strideable {
         return group(.and) {
             $0.filter(keyPath >= range.lowerBound)
             $0.filter(keyPath <= range.upperBound)
         }
     }
-    @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V>>, to range: ClosedRange<V>) -> Self {
-        return group(.and) {
-            $0.filter(keyPath >= range.lowerBound)
-            $0.filter(keyPath <= range.upperBound)
-        }
-    }
-    @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V?>>, to range: ClosedRange<V>) -> Self {
-        return group(.and) {
-            $0.filter(keyPath >= range.lowerBound)
-            $0.filter(keyPath <= range.upperBound)
-        }
-    }
+//    @discardableResult
+//    func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V?>>, to range: ClosedRange<V>) -> Self {
+//        return group(.and) {
+//            $0.filter(keyPath >= range.lowerBound)
+//            $0.filter(keyPath <= range.upperBound)
+//        }
+//    }
+
+//    @discardableResult
+//    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
+//        if let param = request.query[String.self, at: parameter],
+//           let range = try? ClosedRange<P.Value>(string: param) {
+//            filter(keyPath, to: range)
+//        }
+//        return self
+//    }
 
     @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V>>, toRangeAt parameter: String, on request: Request) -> Self {
-        if let param = request.query[String.self, at: parameter],
-           let range = try? ClosedRange<V>(string: param) {
-            filter(keyPath, to: range)
-        }
-        return self
-    }
-
-    @discardableResult
-    func filter<V: RangeFilterable>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V?>>, toRangeAt parameter: String, on request: Request) -> Self {
+    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
         let logFailedParse = {
             let stringParam: String? = try? request.query.get(at: parameter)
             request.logger.info("Failed to decode range query parameter for parameter \(parameter). Found \(String(describing: stringParam))")
         }
         do {
-            guard let range: ClosedRange<V> = try request.query.rangeThrowing(at: parameter) else {
+            guard let range: ClosedRange<P.Value> = try request.query.rangeThrowing(at: parameter) else {
                 logFailedParse()
                 return self
             }
