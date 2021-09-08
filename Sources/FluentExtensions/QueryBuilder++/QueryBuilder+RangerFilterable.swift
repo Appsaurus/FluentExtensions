@@ -18,6 +18,15 @@ public extension QueryBuilder  {
             $0.filter(keyPath <= range.upperBound)
         }
     }
+
+    @discardableResult
+    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, to range: Range<P.Value>) -> Self
+    where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
+        return group(.and) {
+            $0.filter(keyPath >= range.lowerBound)
+            $0.filter(keyPath <= range.upperBound)
+        }
+    }
 //    @discardableResult
 //    func filter<V: QueryableProperty>(_ keyPath: KeyPath<Model, V?>, to range: Range<V.Value>) -> Self {
 //        return group(.and) {
@@ -32,43 +41,54 @@ public extension QueryBuilder  {
             $0.filter(keyPath <= range.upperBound)
         }
     }
-//    @discardableResult
-//    func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, FieldProperty<Model, V?>>, to range: ClosedRange<V>) -> Self {
-//        return group(.and) {
-//            $0.filter(keyPath >= range.lowerBound)
-//            $0.filter(keyPath <= range.upperBound)
-//        }
-//    }
-
-//    @discardableResult
-//    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
-//        if let param = request.query[String.self, at: parameter],
-//           let range = try? ClosedRange<P.Value>(string: param) {
-//            filter(keyPath, to: range)
-//        }
-//        return self
-//    }
+    @discardableResult
+    func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, P>, to range: ClosedRange<P.Value>) -> Self
+    where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
+        return group(.and) {
+            $0.filter(keyPath >= range.lowerBound)
+            $0.filter(keyPath <= range.upperBound)
+        }
+    }
 
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
-        let logFailedParse = {
-            let stringParam: String? = try? request.query.get(at: parameter)
-            request.logger.info("Failed to decode range query parameter for parameter \(parameter). Found \(String(describing: stringParam))")
-        }
-        do {
-            guard let range: ClosedRange<P.Value> = try request.query.rangeThrowing(at: parameter) else {
-                logFailedParse()
-                return self
-            }
-            request.logger.info("Decoded range query parameter: \(range) for parameter \(parameter)")
+        if let param = request.query[String.self, at: parameter],
+           let range = try? ClosedRange<P.Value>(string: param) {
             filter(keyPath, to: range)
-        }
-        catch {
-            logFailedParse()
-            request.logger.error("Failed to decode range query parameter with error: \(error.localizedDescription)")
         }
         return self
     }
+
+    @discardableResult
+    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self
+    where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
+        if let param = request.query[String.self, at: parameter],
+           let range = try? ClosedRange<P.Value>(string: param) {
+            filter(keyPath, to: range)
+        }
+        return self
+    }
+
+//    @discardableResult
+//    func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
+//        let logFailedParse = {
+//            let stringParam: String? = try? request.query.get(at: parameter)
+//            request.logger.info("Failed to decode range query parameter for parameter \(parameter). Found \(String(describing: stringParam))")
+//        }
+//        do {
+//            guard let range: ClosedRange<P.Value> = try request.query.rangeThrowing(at: parameter) else {
+//                logFailedParse()
+//                return self
+//            }
+//            request.logger.info("Decoded range query parameter: \(range) for parameter \(parameter)")
+//            filter(keyPath, to: range)
+//        }
+//        catch {
+//            logFailedParse()
+//            request.logger.error("Failed to decode range query parameter with error: \(error.localizedDescription)")
+//        }
+//        return self
+//    }
 
 
 }
