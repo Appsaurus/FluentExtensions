@@ -20,19 +20,17 @@ public extension Model {
 
     @discardableResult
     func assertExistingEntityWithId(on database: Database) -> Future<Self>{
-        return existingEntityWithId(on: database) .unwrap(or: {
-            database.eventLoop.makeFailedFuture(Abort(.notFound, reason: "An entity with that ID could not be found."))
-        })
+        return existingEntityWithId(on: database).unwrap(orError: Abort(.notFound, reason: "An entity with that ID could not be found."))
     }
 }
 
 public extension Collection where Element: Model{
 
     @discardableResult
-    func assertExistingEntitiesWithIds(on database: Database) throws -> Future<[Element]>{
+    func assertExistingEntitiesWithIds(on database: Database) -> Future<[Element]>{
         var entities: [Future<Element>] = []
         for entity in self{
-            entities.append(try entity.assertExistingEntityWithId(on: database))
+            entities.append(entity.assertExistingEntityWithId(on: database))
         }
         return entities.flatten(on: database)
     }

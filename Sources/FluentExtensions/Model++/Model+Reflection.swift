@@ -93,7 +93,13 @@ import RuntimeExtensions
 //}
 
 public extension Model where Self: KVC {
-	func updateWithKeyValues(of model: Self, on database: Database) throws -> Future<Self> {
-        return try updateWithKeyValues(of: model).save(on: database).transform(to: self)
+	func updateWithKeyValues(of model: Self, on database: Database) -> Future<Self> {
+        do {
+            return try updateWithKeyValues(of: model).save(on: database).transform(to: self)
+        }
+        catch {
+            return database.fail(with: error)
+        }
+
 	}
 }

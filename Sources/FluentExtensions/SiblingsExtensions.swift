@@ -22,8 +22,8 @@ public extension SiblingsProperty{
 public extension SiblingsProperty{
 
     /// Pure sugar wrapping isAttached() in order to match child API name
-    func includes(_ model: Through, on database: Database) throws -> Future<Bool> {
-        return try self.$pivots.includes(model, on: database)
+    func includes(_ model: Through, on database: Database) -> Future<Bool> {
+        return self.$pivots.includes(model, on: database)
     }
 }
 

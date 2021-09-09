@@ -58,8 +58,8 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get("\(queryParamSortPath)") { request -> EventLoopFuture<[KitchenSink]> in
-            try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
+        router.get(queryParamSortPath, KitchenSink.parameter) { (request, model) -> EventLoopFuture<KitchenSink> in
+            return request.toFuture(model)
         }
     }
 

@@ -38,8 +38,8 @@ public extension Collection where Element: Model{
     func upsert(on database: Database) -> Future<Void>{
         compactMap { $0.upsert(on: database) }.flatten(on: database.eventLoop).flattenVoid()
     }
-    func updateIfExists(on database: Database) throws -> Future<Void>{
-        try compactMap { try $0.updateIfExists(on: database) }.flatten(on: database.eventLoop).flattenVoid()
+    func updateIfExists(on database: Database) -> Future<Void>{
+        compactMap { $0.updateIfExists(on: database) }.flatten(on: database.eventLoop).flattenVoid()
     }
 
 

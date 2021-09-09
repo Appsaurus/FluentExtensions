@@ -29,8 +29,8 @@ public extension Model {
         return delete(on: database).flatMap { model.create(on: database)}
     }
 
-    func updateIfExists(on database: Database) throws -> Future<Void>{
-        return try assertExistingEntityWithId(on: database).flatMap { future in
+    func updateIfExists(on database: Database) -> Future<Void>{
+        return assertExistingEntityWithId(on: database).flatMap { future in
             future.update(on: database)
         }
     }
@@ -47,8 +47,8 @@ public extension Model {
         replace(with: model, on: database).transform(to: self)
     }
 
-    func updateIfExistsAndReturn(on database: Database) throws -> Future<Self>{
-        try updateIfExists(on: database).transform(to: self)
+    func updateIfExistsAndReturn(on database: Database) -> Future<Self>{
+        updateIfExists(on: database).transform(to: self)
     }
 }
 
@@ -76,9 +76,9 @@ public extension Future where Value: Model{
         }.flattenVoid()
     }
 
-    func updateIfExists(on database: Database) throws -> Future<Void>{
-        return self.flatMapThrowing { (model) in
-            return try model.updateIfExists(on: database)
+    func updateIfExists(on database: Database) -> Future<Void>{
+        return self.flatMap { (model) in
+            return model.updateIfExists(on: database)
         }.flattenVoid()
     }
 }
