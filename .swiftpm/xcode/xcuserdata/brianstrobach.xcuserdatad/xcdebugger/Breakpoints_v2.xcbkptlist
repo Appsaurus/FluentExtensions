@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "AA751AE9-5115-4519-B921-1C704F811CA1"
+            uuid = "3845AAC9-D423-4F86-B90C-1B977A8371F5"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Tests/FluentExtensionsTests/SQLKitExtensionTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
-            landmarkName = "testEqualsFieldQuery()"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "testSubsetQueries()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

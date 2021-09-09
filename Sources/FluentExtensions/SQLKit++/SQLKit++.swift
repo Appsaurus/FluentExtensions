@@ -36,30 +36,6 @@ public extension SQLExpression {
     }
 }
 public extension SQLSelectBuilder {
-    func labeledCountOfValues<M: Model, V: QueryableProperty>(groupedBy keyPath: KeyPath<M, V>,
-                                                              label: String = "label",
-                                                              valueLabel: String = "value",
-                                                              defaultValue: String = "Unknown") -> SQLSelectBuilder {
-
-
-        return self
-            .column(coalesece(keyPath, defaultValue: defaultValue).cast(as: "text").as(label))
-            .columns(count(as: valueLabel))
-            .from(M.schema)
-            .groupBy(keyPath.propertyName)
-
-    }
-
-    func count(_ args: [String] = ["*"], as label: String = "value") -> SQLExpression {
-        SQLFunction("COUNT", args: args).as(label)
-    }
-
-    func coalesece<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>,
-                                                    defaultValue: String = "Unknown") -> SQLFunction {
-
-        .coalesce(SQLColumn(keyPath.propertyName), SQLLiteral.string(defaultValue))
-    }
-
     func countGroupedBy<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>) throws -> Future<[String: Int]> {
         try labeledCountsGroupedBy(keyPath).map({$0.asDictionary})
     }
@@ -67,7 +43,43 @@ public extension SQLSelectBuilder {
     func labeledCountsGroupedBy<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>) throws -> Future<[LabeledCount]> {
         labeledCountOfValues(groupedBy: keyPath).all(decoding: LabeledCount.self)
     }
+    
+    func labeledCountOfValues<M: Model, V: QueryableProperty>(groupedBy keyPath: KeyPath<M, V>,
+                                                              label: String = "label",
+                                                              valueLabel: String = "value",
+                                                              defaultValue: String = "Unknown") -> SQLSelectBuilder {
 
+
+        return self.labeledCountOfValues(groupedBy: keyPath.sqlColumn,
+                                         of: SQLLiteral.string(M.schemaOrAlias),
+                                         label: label,
+                                         valueLabel: valueLabel,
+                                         defaultValue: defaultValue)
+
+    }
+    func labeledCountOfValues(groupedBy keyPath: SQLExpression,
+                              of table: SQLExpression,
+                              label: String = "label",
+                              valueLabel: String = "value",
+                              defaultValue: String = "Unknown") -> SQLSelectBuilder {
+
+
+        return self
+            .column(coalesece(keyPath, defaultValue: defaultValue).cast(as: "text").as(label))
+            .columns(count(as: valueLabel))
+            .from(table)
+            .groupBy(keyPath)
+
+    }
+
+    func count(_ args: [String] = ["*"], as label: String = "value") -> SQLExpression {
+        SQLFunction("COUNT", args: args).as(label)
+    }
+
+    func coalesece(_ keyPath: SQLExpression, defaultValue: String = "Unknown") -> SQLFunction {
+
+        .coalesce(keyPath, SQLLiteral.string(defaultValue))
+    }
 }
 
 
@@ -94,6 +106,18 @@ public struct SQLCast: SQLExpression {
         self.type.serialize(to: &serializer)
         serializer.write(")")
     }
+}
+
+extension SQLSelectBuilder {
+
+    //TODO: Probably need to limit this to SQL/PostgreSQL
+    public func groupByRollup(_ args: SQLExpression...) -> Self {
+        return groupBy(SQLFunction("ROLLUP", args: args))
+//        self.select.groupBy.append(SQLFunction("ROLLUP", args: args))
+    }
+//    public func groupByRollup<M: Model, V: QueryableProperty>(_ keyPaths: KeyPath<M, V>...) -> Self {
+//        return groupBy(SQLFunction("ROLLUP", args: keyPaths))
+//    }
 }
 
 

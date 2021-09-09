@@ -47,12 +47,16 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
             .sqlSelect()
             .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).wait()
         print("Counts: \(counts)")
-            
 
     }
 
     func testSubsetQueries() throws {
 
+        let rollup = try app.db
+            .sqlSelect(from: KitchenSink.sqlTable)
+            .column("*")
+            .groupByRollup(\KitchenSink.$intField, \KitchenSink.$stringField).all().wait()
+        print("Rollup: \(rollup)")
     }
 }
 

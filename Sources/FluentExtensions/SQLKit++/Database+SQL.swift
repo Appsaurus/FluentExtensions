@@ -13,7 +13,15 @@ public extension Database {
         return try (self as? SQLDatabase).unwrapped(or: Abort(.internalServerError))
     }
 
-    func sqlSelect() throws -> SQLSelectBuilder  {
-        return try sql().select()
+    func sqlSelect(from table: SQLExpression? = nil) throws -> SQLSelectBuilder  {
+        let builder = try sql().select()
+        guard let table = table else {
+            return builder
+        }
+        return builder.from(table)
+    }
+
+    func sqlSelect<M: Model>(_ modelType: M.Type = M.self) throws -> SQLSelectBuilder  {
+        return try sqlSelect().from(M.sqlTable)
     }
 }
