@@ -58,10 +58,11 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get(queryParamSortPath, KitchenSink.parameter) { (request, model) -> EventLoopFuture<KitchenSink> in
-            return request.toFuture(model)
+        router.get(queryParamSortPath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
+            return try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
         }
     }
+
 
     func testEqualsFieldQuery() throws {
 
@@ -84,18 +85,5 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
             XCTAssertEqual(models[2].stringField, valueC)
         }
     }
-
-//    func applyFilter(for property: PropertyInfo, to query: QueryBuilder<M.Database, M>, on request: Request) throws {
-//        let parameter: String = property.name
-//        if let queryFilter = try? request.stringKeyPathFilter(for: property.name, at: parameter) {
-//            let _ = try? query.filter(queryFilter)
-////            if property.type == Bool.self {
-////                let _ = try? query.filterAsBool(queryFilter)
-////            }
-////            else  {
-////                let _ = try? query.filter(queryFilter)
-////            }
-//        }
-//    }
 }
 

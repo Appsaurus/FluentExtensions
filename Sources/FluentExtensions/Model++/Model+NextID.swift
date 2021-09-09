@@ -44,6 +44,8 @@ public extension QueryBuilder {
 }
 
 public extension QueryBuilder {
+
+    @discardableResult
     func groupBy<T>(_ field: KeyPath<Model, T>?) -> Self {
         guard let field = field else { return self }
         return groupBy(field)

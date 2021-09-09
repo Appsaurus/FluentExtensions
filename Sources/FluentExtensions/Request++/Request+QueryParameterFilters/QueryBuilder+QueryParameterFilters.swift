@@ -33,7 +33,7 @@ public extension QueryBuilder {
 //        return try self.page(for: req, sorts: sorts, {$0.all()}).map { Paginated<Model>(from: $0) }
 //    }
 //
-//
+
 //
 //    func paginate<R, T>(
 //        on req: Request,
