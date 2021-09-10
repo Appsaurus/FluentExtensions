@@ -15,7 +15,7 @@ public struct LabeledValue<V: Codable>: Codable {
 }
 
 public extension Collection where Element == LabeledCount {
-    public var asDictionary: [String: Int] {
+    var asDictionary: [String: Int] {
         var dict: [String: Int] = [:]
         for item in self {
             dict[item.label] = item.value
