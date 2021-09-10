@@ -1,5 +1,5 @@
 //
-//  ChildrenExtensions.swift
+//  ChildrenProperty++.swift
 //
 //
 //  Created by Brian Strobach on 12/18/17.

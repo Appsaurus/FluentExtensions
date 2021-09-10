@@ -26,13 +26,9 @@ public extension Collection where Element == LabeledCount {
 public typealias LabeledCount = LabeledValue<Int>
 
 
-public extension SQLExpression {
-    func `as`(_ alias: String) -> SQLAlias {
-        SQLAlias(self, as: SQLLiteral.string(alias))
-    }
-
-    func cast(as type: String) -> SQLCast {
-        return SQLCast(self, as: type)
+public extension SQLSelectBuilder {
+    func from<M: Model>(_ modelType: M.Type) -> Self {
+        return from(modelType.sqlTable)
     }
 }
 public extension SQLSelectBuilder {
@@ -45,68 +41,36 @@ public extension SQLSelectBuilder {
     }
     
     func labeledCountOfValues<M: Model, V: QueryableProperty>(groupedBy keyPath: KeyPath<M, V>,
-                                                              label: String = "label",
-                                                              valueLabel: String = "value",
-                                                              defaultValue: String = "Unknown") -> SQLSelectBuilder {
+                                                              label: SQLExpression = "label",
+                                                              valueLabel: SQLExpression = "value",
+                                                              defaultValue: SQLExpression = "Unknown") -> SQLSelectBuilder {
 
 
-        return self.labeledCountOfValues(groupedBy: keyPath.sqlColumn,
-                                         of: SQLLiteral.string(M.schemaOrAlias),
+        return self.labeledCountOfValues(groupedBy: keyPath,
+                                         of: M.schemaOrAlias,
                                          label: label,
                                          valueLabel: valueLabel,
                                          defaultValue: defaultValue)
 
     }
+
     func labeledCountOfValues(groupedBy keyPath: SQLExpression,
                               of table: SQLExpression,
-                              label: String = "label",
-                              valueLabel: String = "value",
-                              defaultValue: String = "Unknown") -> SQLSelectBuilder {
+                              label: SQLExpression = "label",
+                              valueLabel: SQLExpression = "value",
+                              defaultValue: SQLExpression = "Unknown") -> SQLSelectBuilder {
 
 
         return self
-            .column(coalesece(keyPath, defaultValue: defaultValue).cast(as: "text").as(label))
+            .column(coalesce(keyPath, defaultValue).cast(as: "text").as(label))
             .columns(count(as: valueLabel))
             .from(table)
             .groupBy(keyPath)
 
     }
-
-    func count(_ args: [String] = ["*"], as label: String = "value") -> SQLExpression {
-        SQLFunction("COUNT", args: args).as(label)
-    }
-
-    func coalesece(_ keyPath: SQLExpression, defaultValue: String = "Unknown") -> SQLFunction {
-
-        .coalesce(keyPath, SQLLiteral.string(defaultValue))
-    }
 }
 
 
-
-
-public struct SQLCast: SQLExpression {
-    public var expression: SQLExpression
-    public var type: SQLExpression
-
-    public init(_ expression: SQLExpression, as type: String) {
-        self.expression = expression
-        self.type = SQLLiteral.string(type)
-    }
-
-    public init(_ expression: SQLExpression, as type: SQLExpression) {
-        self.expression = expression
-        self.type = type
-    }
-
-    public func serialize(to serializer: inout SQLSerializer) {
-        serializer.write("CAST(")
-        self.expression.serialize(to: &serializer)
-        serializer.write(" AS ")
-        self.type.serialize(to: &serializer)
-        serializer.write(")")
-    }
-}
 
 extension SQLSelectBuilder {
 

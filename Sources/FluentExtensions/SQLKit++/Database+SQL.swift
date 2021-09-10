@@ -22,6 +22,7 @@ public extension Database {
     }
 
     func sqlSelect<M: Model>(_ modelType: M.Type = M.self) throws -> SQLSelectBuilder  {
-        return try sqlSelect().from(M.sqlTable)
+        return try sqlSelect().from(M.self)
     }
 }
+
