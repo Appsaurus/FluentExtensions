@@ -12,6 +12,11 @@ import FluentSQL
 public struct LabeledValue<V: Codable>: Codable {
     public var label: String
     public var value: V
+
+    public init(label: String, value: V) {
+        self.label = label
+        self.value = value
+    }
 }
 
 public extension Collection where Element == LabeledCount {
