@@ -25,6 +25,10 @@ public extension SiblingsProperty{
     func includes(_ model: Through, on database: Database) -> Future<Bool> {
         return self.$pivots.includes(model, on: database)
     }
+
+    func all(on database: Database) -> Future<[To]> {
+        return query(on: database).all()
+    }
 }
 
 ///// Left-side

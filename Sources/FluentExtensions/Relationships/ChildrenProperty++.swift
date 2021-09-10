@@ -26,6 +26,10 @@ public extension ChildrenProperty {
         }
 
 	}
+
+    func all(on database: Database) -> Future<[To]> {
+        return query(on: database).all()
+    }
 }
 
 public extension Model {
