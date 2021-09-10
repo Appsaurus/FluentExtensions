@@ -10,12 +10,12 @@ import Fluent
 import FluentSQL
 
 public struct LabeledValue<V: Codable>: Codable {
-    var label: String
-    var value: V
+    public var label: String
+    public var value: V
 }
 
 public extension Collection where Element == LabeledCount {
-    var asDictionary: [String: Int] {
+    public var asDictionary: [String: Int] {
         var dict: [String: Int] = [:]
         for item in self {
             dict[item.label] = item.value
