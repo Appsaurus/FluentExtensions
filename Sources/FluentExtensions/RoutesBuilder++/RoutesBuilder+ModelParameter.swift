@@ -19,7 +19,22 @@ public extension RoutesBuilder {
     }
 
     @discardableResult
+    func get<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                 params: P.Type = P.self,
+                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.GET, path, params: params, use: closure)
+
+    }
+
+    @discardableResult
     func put<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                 params: P.Type = P.self,
+                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.PUT, path, params: params, use: closure)
+    }
+
+    @discardableResult
+    func put<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
                                                  params: P.Type = P.self,
                                                  use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.PUT, path, params: params, use: closure)
@@ -34,6 +49,14 @@ public extension RoutesBuilder {
     }
 
     @discardableResult
+    func post<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                  params: P.Type = P.self,
+                                                  use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.POST, path, params: params, use: closure)
+
+    }
+
+    @discardableResult
     func patch<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
                                                    params: P.Type = P.self,
                                                    use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
@@ -41,7 +64,21 @@ public extension RoutesBuilder {
     }
 
     @discardableResult
+    func patch<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                   params: P.Type = P.self,
+                                                   use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.PATCH, path, params: params, use: closure)
+    }
+
+    @discardableResult
     func delete<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                    params: P.Type = P.self,
+                                                    use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.DELETE, path, params: params, use: closure)
+    }
+
+    @discardableResult
+    func delete<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
                                                     params: P.Type = P.self,
                                                     use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.DELETE, path, params: params, use: closure)
