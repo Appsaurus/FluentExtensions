@@ -9,20 +9,23 @@ import SQLKit
 
 public extension Database {
 
-    func sql() throws -> SQLDatabase  {
-        return try (self as? SQLDatabase).unwrapped(or: Abort(.internalServerError))
+    func sql() -> SQLDatabase  {
+        guard let sqlDatabase = self as? SQLDatabase else {
+            fatalError("\(self) is not an SQLDatabase")
+        }
+        return sqlDatabase
     }
 
-    func sqlSelect(from table: SQLExpression? = nil) throws -> SQLSelectBuilder  {
-        let builder = try sql().select()
+    func sqlSelect(from table: SQLExpression? = nil) -> SQLSelectBuilder  {
+        let builder = sql().select()
         guard let table = table else {
             return builder
         }
         return builder.from(table)
     }
 
-    func sqlSelect<M: Model>(_ modelType: M.Type = M.self) throws -> SQLSelectBuilder  {
-        return try sqlSelect().from(M.self)
+    func sqlSelect<M: Model>(_ modelType: M.Type = M.self) -> SQLSelectBuilder  {
+        return sqlSelect().from(M.self)
     }
 }
 
