@@ -9,6 +9,7 @@ import SQLKit
 import Fluent
 import FluentSQL
 
+
 public struct LabeledValue<V: Codable>: Codable {
     public var label: String
     public var value: V
