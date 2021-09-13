@@ -83,3 +83,37 @@ public extension Future where Value: Model{
     }
 }
 
+
+
+
+public extension Future where Value: Model{
+
+    @discardableResult
+    func upsertAndReturn(on database: Database) -> Future<Void>{
+        return self.flatMap { (model) in
+            return model.upsertAndReturn(on: database)
+        }.flattenVoid()
+    }
+
+    /// Overwrites the receiver with a replacement entity
+    ///
+    /// - Parameter replacementEntity: The entity to be saved in place of the receiver.
+    /// - Returns: The saved entity.
+    @discardableResult
+    func replaceAndReturn(with replacementEntity: Future<Value>, on database: Database) -> Future<Void>{
+
+        return flatMap{ model in
+            return model.delete(on: database).flatMap {
+                return replacementEntity.saveAndReturn(on: database)
+            }
+
+        }.flattenVoid()
+    }
+
+    func updateIfExistsAndReturn(on database: Database) -> Future<Void>{
+        return self.flatMap { (model) in
+            return model.updateIfExistsAndReturn(on: database)
+        }.flattenVoid()
+    }
+}
+

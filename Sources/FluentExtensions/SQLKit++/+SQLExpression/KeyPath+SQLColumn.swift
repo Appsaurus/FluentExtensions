@@ -8,7 +8,7 @@
 import FluentSQL
 
 
-public extension KeyPath where Root: Model, Value: QueryableProperty {
+public extension KeyPath where Root: Schema, Value: QueryableProperty {
 
     var sqlColumn: SQLColumn {
         SQLColumn(self)
@@ -21,7 +21,7 @@ public extension KeyPath where Root: Model, Value: QueryableProperty {
 
 
 public extension SQLColumn {
-    init<M: Model, V: QueryableProperty, KP: KeyPath<M,V>>(_ keyPath: KP)  {
+    init<M: Schema, V: QueryableProperty, KP: KeyPath<M,V>>(_ keyPath: KP)  {
         self.init(keyPath.propertyName, table: M.schemaOrAlias)
     }
 }

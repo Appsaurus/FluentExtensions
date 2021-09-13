@@ -10,7 +10,7 @@ import FluentKit
 import SQLKit
 
 
-public extension KeyPath where Root: Model, Value: QueryableProperty {
+public extension KeyPath where Root: Schema, Value: QueryableProperty {
     var propertyName: String{
         return fieldKey.map({$0.description}).joined(separator: ".")
     }

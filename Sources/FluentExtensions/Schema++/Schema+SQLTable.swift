@@ -1,5 +1,5 @@
 //
-//  Model+SQLTable.swift
+//  Schema+SQLTable.swift
 //
 //
 //  Created by Brian Strobach on 9/9/21.
@@ -7,7 +7,7 @@
 
 import FluentSQL
 
-public extension Model {
+public extension Schema {
     static var sqlTable: SQLExpression {
         return schemaOrAlias
     }
