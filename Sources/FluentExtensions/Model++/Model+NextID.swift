@@ -21,17 +21,8 @@ public extension Model where IDValue == Int{
 
 
 public extension QueryBuilder {
+
     // MARK: Range
-
-    /// Limits the results of this query to the specified maximum.
-    ///
-    ///     query.limit(5) // returns at most 5 results
-    ///
-    /// - returns: Query builder for chaining.
-    func limit(_ max: Int) -> Self {
-        return self.range(0..<max)
-    }
-
     func at(most max: Int) -> Future<[Model]> {
         return limit(max).all()
     }
