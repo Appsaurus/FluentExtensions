@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  QueryBuilder+EmptyResult.swift
 //  
 //
 //  Created by Brian Strobach on 9/1/21.
@@ -16,20 +16,3 @@ public extension QueryBuilder{
     }
 }
 
-//public extension QueryBuilder {
-//    func or(_ values: Database.QueryFilter...) -> Self {
-//        return group(Database.queryFilterRelationOr) { (or) in
-//            for value in values{
-//                or.filter(custom: value)
-//            }
-//        }
-//    }
-//
-//    func and(_ values: Database.QueryFilter...) -> Self {
-//        return group(Database.queryFilterRelationAnd) { (and) in
-//            for value in values{
-//                and.filter(custom: value)
-//            }
-//        }
-//    }
-//}
