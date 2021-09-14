@@ -24,4 +24,20 @@ public extension QueryBuilder {
             }
         }
     }
+
+    func or(_ values: ModelValueFilter<Model>...) -> Self {
+        return group(.or) { (or) in
+            for value in values{
+                or.filter(value)
+            }
+        }
+    }
+
+    func and(_ values: ModelValueFilter<Model>...) -> Self {
+        return group(.and) { (and) in
+            for value in values{
+                and.filter(value)
+            }
+        }
+    }
 }
