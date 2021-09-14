@@ -123,18 +123,18 @@ fileprivate extension String {
 }
 
 public struct StringKeyPathFilter {
-    var keyPath: [CodingKeyRepresentable]
-    var filter: QueryParameterFilter
+    public var keyPath: [CodingKeyRepresentable]
+    public var filter: QueryParameterFilter
 }
 
 public class QueryParameterFilter {
 
-    var name: String
-    var method: QueryFilterMethod
-    var value: FilterValue<String, [String]>
-    var queryValueType: Any.Type? = nil
+    public var name: String
+    public var method: QueryFilterMethod
+    public var value: FilterValue<String, [String]>
+    public var queryValueType: Any.Type? = nil
 
-    func queryField(for schema: String) -> DatabaseQuery.Field {
+    public func queryField(for schema: String) -> DatabaseQuery.Field {
         return .path([name.fieldKey], schema: schema)
     }
     internal init(name: String, method: QueryFilterMethod, value: FilterValue<String, [String]>, queryValueType: Any.Type? = nil) {
@@ -151,8 +151,8 @@ public class QueryParameterFilter {
 
 
 struct FilterConfig {
-    var method: QueryFilterMethod
-    var value: String
+    public var method: QueryFilterMethod
+    public var value: String
 }
 
 internal let FILTER_CONFIG_REGEX = "(\(QueryFilterMethod.allCases.map { $0.rawValue }.joined(separator: "|")))?:?(.*)"
@@ -200,7 +200,7 @@ internal extension String {
 }
 
 
-enum FilterValue<S, M> {
+public enum FilterValue<S, M> {
     case single(S)
     case multiple(M)
 
@@ -240,7 +240,7 @@ extension FilterValue where S == String, M == [String] {
     //    }
 }
 
-enum QueryFilterMethod: String {
+public enum QueryFilterMethod: String {
     case equal = "eq"
     case notEqual = "neq"
     case `in` = "in"
