@@ -11,17 +11,17 @@ import Fluent
 import Runtime
 import RuntimeExtensions
 
-extension Migrations {
-    public func add(_ model: Migratable.Type, to id: DatabaseID? = nil) {
+public extension Migrations {
+    func add(_ model: Migratable.Type, to id: DatabaseID? = nil) {
         add(model.migration)
     }
 
     @inlinable
-    public func add(_ model: Migratable.Type..., to id: DatabaseID? = nil) {
+    func add(_ model: Migratable.Type..., to id: DatabaseID? = nil) {
         self.add(model, to: id)
     }
 
-    public func add(_ models: [Migratable.Type], to id: DatabaseID? = nil) {
+     func add(_ models: [Migratable.Type], to id: DatabaseID? = nil) {
         models.forEach { model in
             add(model, to: id)
         }
@@ -31,7 +31,7 @@ public protocol Migratable {
     static var migration: Migration { get }
 }
 
-extension Migratable where Self: Model {
+public extension Migratable where Self: Model {
     static var migration: Migration {
         return AutoMigration<Self>()
     }
