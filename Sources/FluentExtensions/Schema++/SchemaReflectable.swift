@@ -11,10 +11,32 @@ import Fluent
 import Runtime
 import RuntimeExtensions
 
+extension Migrations {
+    public func add(_ model: Migratable.Type, to id: DatabaseID? = nil) {
+        add(model.migration)
+    }
 
-extension Model {
-    public typealias Migration = AutoMigration<Self>
+    @inlinable
+    public func add(_ model: Migratable.Type..., to id: DatabaseID? = nil) {
+        self.add(model, to: id)
+    }
+
+    public func add(_ models: [Migratable.Type], to id: DatabaseID? = nil) {
+        models.forEach { model in
+            add(model, to: id)
+        }
+    }
 }
+public protocol Migratable {
+    static var migration: Migration { get }
+}
+
+extension Migratable where Self: Model {
+    static var migration: Migration {
+        return AutoMigration<Self>()
+    }
+}
+
 open class AutoMigration<M: Model>: ReflectionMigration {
     public typealias ModelType = M
     public required init(){}
@@ -86,10 +108,6 @@ public extension ReflectionMigration {
     func revert(on database: Database) -> EventLoopFuture<Void> {
         return database.schema(ModelType.schema).delete()
     }
-}
-
-public extension ReflectionMigration where Self: Model {
-    typealias ModelType = Self
 }
 
 public extension Database {
