@@ -42,14 +42,16 @@ public extension SQLSelectBuilder {
         try labeledCountsGroupedBy(keyPath).map({$0.asDictionary})
     }
 
-    func labeledCountsGroupedBy<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>) throws -> Future<[LabeledCount]> {
-        labeledCountOfValues(groupedBy: keyPath).all(decoding: LabeledCount.self)
+    func labeledCountsGroupedBy<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>,
+                                                                defaultValue: SQLExpression? = nil) throws -> Future<[LabeledCount]> {
+        labeledCountOfValues(groupedBy: keyPath, defaultValue: defaultValue)
+            .all(decoding: LabeledCount.self)
     }
     
     func labeledCountOfValues<M: Model, V: QueryableProperty>(groupedBy keyPath: KeyPath<M, V>,
-                                                              label: SQLExpression = "label",
-                                                              valueLabel: SQLExpression = "value",
-                                                              defaultValue: SQLExpression = "Unknown") -> SQLSelectBuilder {
+                                                              label: SQLExpression? = nil,
+                                                              valueLabel: SQLExpression? = nil,
+                                                              defaultValue: SQLExpression? = nil) -> SQLSelectBuilder {
 
 
         return self.labeledCountOfValues(groupedBy: keyPath,
@@ -62,14 +64,14 @@ public extension SQLSelectBuilder {
 
     func labeledCountOfValues(groupedBy keyPath: SQLExpression,
                               of table: SQLExpression,
-                              label: SQLExpression = "label",
-                              valueLabel: SQLExpression = "value",
-                              defaultValue: SQLExpression = "Unknown") -> SQLSelectBuilder {
+                              label: SQLExpression? = nil,
+                              valueLabel: SQLExpression? = nil,
+                              defaultValue: SQLExpression? = nil) -> SQLSelectBuilder {
 
 
         return self
-            .column(coalesce(keyPath, defaultValue).cast(as: "text").as(label))
-            .columns(count(as: valueLabel))
+            .column(coalesce(keyPath, defaultValue ?? "Unknown").cast(as: "text").as(label ?? "label"))
+            .columns(count(as: valueLabel ?? "value"))
             .from(table)
             .groupBy(keyPath)
 

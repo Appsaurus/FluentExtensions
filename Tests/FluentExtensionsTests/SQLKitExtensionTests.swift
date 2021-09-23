@@ -46,8 +46,16 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
         let counts = try app.db
             .sqlSelect()
             .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).wait()
-        print("Counts: \(counts)")
+        XCTAssert(counts.count > 0)
+        for count in counts {
+            XCTAssert(count.value > 0)
+        }
 
+    }
+
+    func testSum() throws {
+        let sum = try app.db.sqlSelect().sum(\KitchenSink.$intField).wait()
+        XCTAssertEqual(sum, 325)
     }
 
     //TODO: Probably need to limit this to MySQL/PostgreSQL
