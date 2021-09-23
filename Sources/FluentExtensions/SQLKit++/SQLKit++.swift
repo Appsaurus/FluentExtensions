@@ -49,8 +49,8 @@ public extension SQLSelectBuilder {
     }
     
     func labeledCountOfValues<M: Model, V: QueryableProperty>(groupedBy keyPath: KeyPath<M, V>,
-                                                              label: SQLExpression? = nil,
-                                                              valueLabel: SQLExpression? = nil,
+                                                              label: String? = nil,
+                                                              valueLabel: String? = nil,
                                                               defaultValue: SQLExpression? = nil) -> SQLSelectBuilder {
 
 
@@ -64,8 +64,8 @@ public extension SQLSelectBuilder {
 
     func labeledCountOfValues(groupedBy keyPath: SQLExpression,
                               of table: SQLExpression,
-                              label: SQLExpression? = nil,
-                              valueLabel: SQLExpression? = nil,
+                              label: String? = nil,
+                              valueLabel: String? = nil,
                               defaultValue: SQLExpression? = nil) -> SQLSelectBuilder {
 
 

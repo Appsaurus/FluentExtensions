@@ -8,12 +8,8 @@
 import SQLKit
 
 public extension SQLExpression {
-    func `as`(_ alias: SQLExpression) -> SQLAlias {
-        SQLAlias(self, as: alias)
-    }
-
-    func identifier(_ string: String) -> SQLIdentifier {
-        SQLIdentifier(string)
+    func `as`(_ alias: String) -> SQLAlias {
+        SQLAlias(self, as: SQLIdentifier(alias))
     }
 }
 
