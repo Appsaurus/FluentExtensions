@@ -10,6 +10,8 @@ import XCTVapor
 import Fluent
 import FluentSQLiteDriver
 import FluentKit
+import FluentExtensions
+
 @testable import FluentTestModels
 
 
@@ -44,7 +46,7 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
 
     func testLabeledCountsGroupedBy() throws {
         let counts = try app.db
-            .sqlSelect()
+            .select()
             .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).wait()
         XCTAssert(counts.count > 0)
         for count in counts {
@@ -54,8 +56,8 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
     }
 
     func testSum() throws {
-        let sum = try app.db.sqlSelect().sum(\KitchenSink.$intField).wait()
-        XCTAssertEqual(sum, 325)
+        let sum1 = try app.db.select().sum(\KitchenSink.$intField).wait()
+        XCTAssertEqual(sum1, 325)
     }
 
     //TODO: Probably need to limit this to MySQL/PostgreSQL

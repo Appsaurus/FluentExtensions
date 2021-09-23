@@ -7,42 +7,22 @@
 
 import SQLKit
 
-
-public struct SQLCount: SQLExpression {
-    public var args: [SQLExpression] = [SQLLiteral.all]
-    public var label: String = "count"
-
-    public init(_ args: [SQLExpression]? = nil, as label: String? = nil) {
-        if let args = args, args.count > 0 {
-            self.args = args
-        }
-        if let label = label {
-            self.label = label
-        }
+extension SQLFunction {
+    public static func count(_ expressions: [SQLExpression] = [SQLLiteral.all]) -> SQLFunction {
+        return SQLFunction("COUNT", args: expressions)
     }
 
-    public init(_ args: SQLExpression..., as label: String? = nil) {
-        if args.count > 0 {
-            self.args = args
-        }
-        if let label = label {
-            self.label = label
-        }
-
-    }
-
-    public func serialize(to serializer: inout SQLSerializer) {
-        SQLFunction("COUNT", args: args).as(label).serialize(to: &serializer)
+    public static func count(_ expressions: SQLExpression...) -> SQLFunction {
+        return SQLFunction("COUNT", args: expressions)
     }
 }
 
-public func count(_ args: [SQLExpression]? = nil, as label: String? = nil) -> SQLExpression {
-    SQLCount(args, as: label)
+public func COUNT(_ expression: SQLExpression...) -> SQLFunction {
+    .count(expression)
 }
 
-public func count(_ args: SQLExpression..., as label: String? = nil) -> SQLExpression {
-    SQLCount(args, as: label)
+public func COUNT(_ expression: [SQLExpression] = [SQLLiteral.all]) -> SQLFunction {
+    .count(expression)
 }
-
 
 

@@ -29,6 +29,11 @@ public struct SQLUnion: SQLExpression {
     }
 }
 
-public func union(_ args: SQLExpression...) -> SQLUnion {
+public func UNION(_ args: [SQLExpression]) -> SQLUnion {
+    SQLUnion(args)
+}
+
+
+public func UNION(_ args: SQLExpression...) -> SQLUnion {
     SQLUnion(args)
 }

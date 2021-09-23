@@ -36,10 +36,10 @@ public struct SQLCase: SQLExpression {
 }
 
 public extension SQLExpression {
-    func `case`(when cases: [(condition: SQLExpression, predicate: SQLExpression)], `else`: SQLExpression? = nil) -> SQLCase {
-        return SQLCase(when: cases, else: `else`)
+    func `CASE`(WHEN cases: [(condition: SQLExpression, THEN: SQLExpression)], `ELSE`: SQLExpression? = nil) -> SQLCase {
+        return SQLCase(when: cases, else: ELSE)
     }
-    func `case`(when cases: (condition: SQLExpression, predicate: SQLExpression)..., `else`: SQLExpression? = nil) -> SQLCase {
-        return SQLCase(when: cases, else: `else`)
+    func `CASE`(WHEN cases: (condition: SQLExpression, THEN: SQLExpression)..., `ELSE`: SQLExpression? = nil) -> SQLCase {
+        return SQLCase(when: cases, else: ELSE)
     }
 }

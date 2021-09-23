@@ -27,6 +27,10 @@ public struct SQLCast: SQLExpression {
 
 public extension SQLExpression {
     func cast(as type: SQLDataType) -> SQLCast {
-        return SQLCast(self, as: type)
+        SQLCast(self, as: type)
     }
+}
+
+public func CAST(_ expression: SQLExpression, as type: SQLDataType) -> SQLCast {
+    SQLCast(expression, as: type)
 }
