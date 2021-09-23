@@ -8,7 +8,7 @@
 import FluentSQL
 
 public extension Schema {
-    static var sqlTable: SQLExpression {
-        return schemaOrAlias
+    static var sqlTable: SQLIdentifier {
+        return SQLIdentifier(schema)
     }
 }

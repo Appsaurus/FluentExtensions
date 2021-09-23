@@ -11,6 +11,10 @@ public extension SQLExpression {
     func `as`(_ alias: SQLExpression) -> SQLAlias {
         SQLAlias(self, as: alias)
     }
+
+    func identifier(_ string: String) -> SQLLiteral {
+        SQLIdentifier(self)
+    }
 }
 
 public func coalesce(_ expressions: SQLExpression...) -> SQLFunction {
