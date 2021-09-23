@@ -16,16 +16,15 @@ public extension Database {
         return sqlDatabase
     }
 
-    func select(from table: SQLExpression? = nil) -> SQLSelectBuilder  {
-        let builder = sql().select()
-        guard let table = table else {
-            return builder
-        }
-        return builder.from(table)
+    func select() -> SQLSelectBuilder  {
+        sql().select()
+    }
+    func select(from table: SQLExpression) -> SQLSelectBuilder  {
+        select().from(table)
     }
 
-    func select<M: Model>(_ modelType: M.Type = M.self) -> SQLSelectBuilder  {
-        return select().from(M.self)
+    func select<M: Model>(_ modelType: M.Type) -> SQLSelectBuilder  {
+        select().from(M.self)
     }
 }
 
