@@ -70,7 +70,7 @@ public extension SQLSelectBuilder {
 
 
         return self
-            .column(coalesce(keyPath, defaultValue ?? "Unknown").cast(as: "text").as(label ?? "label"))
+            .column(coalesce(keyPath, defaultValue ?? "Unknown").cast(as: .text).as(label ?? "label"))
             .columns(count(as: valueLabel ?? "value"))
             .from(table)
             .groupBy(keyPath)

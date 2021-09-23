@@ -9,9 +9,9 @@ import SQLKit
 
 public struct SQLCast: SQLExpression {
     public var expression: SQLExpression
-    public var type: SQLExpression
+    public var type: SQLDataType
 
-    public init(_ expression: SQLExpression, as type: SQLExpression) {
+    public init(_ expression: SQLExpression, as type: SQLDataType) {
         self.expression = expression
         self.type = type
     }
@@ -26,7 +26,7 @@ public struct SQLCast: SQLExpression {
 }
 
 public extension SQLExpression {
-    func cast(as type: SQLExpression) -> SQLCast {
+    func cast(as type: SQLDataType) -> SQLCast {
         return SQLCast(self, as: type)
     }
 }
