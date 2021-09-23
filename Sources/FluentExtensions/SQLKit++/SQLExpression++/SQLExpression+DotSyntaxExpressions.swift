@@ -12,8 +12,8 @@ public extension SQLExpression {
         SQLAlias(self, as: alias)
     }
 
-    func identifier(_ string: String) -> SQLLiteral {
-        SQLIdentifier(self)
+    func identifier(_ string: String) -> SQLIdentifier {
+        SQLIdentifier(string)
     }
 }
 
