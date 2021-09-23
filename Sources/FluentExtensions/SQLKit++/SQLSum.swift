@@ -18,12 +18,10 @@ import SQLKit
 //}
 public extension SQLSelectBuilder {
 
-    func sum(_ expression: SQLExpression, as castedType: Any.Type = Double.self, labeled label: String) -> SQLSelectBuilder {
+    func sum(_ expression: SQLExpression, as castedType: SQLDataType? = nil, labeled label: String) -> SQLSelectBuilder {
         var function: SQLExpression = SQLFunction.sum(expression)
-        switch castedType {
-            case is Int.Type:
-                function = function.cast(as: .int)
-            default: break
+        if let cast = castedType {
+            function = function.cast(as: cast)
         }
         return column(function.as(label))
     }
@@ -33,7 +31,7 @@ public extension SQLSelectBuilder {
             Field: QueryableProperty,
             Field.Model == M
     {
-        self.sum(key, as: Field.Value.self, labeled: "sum")
+        self.sum(key, labeled: "sum")
             .from(M.sqlTable)
             .all(decoding: SumRow<Field.Value>.self)
             .map { values in
