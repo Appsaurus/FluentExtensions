@@ -11,19 +11,16 @@ import Fluent
 
 
 open class FluentTestCase: VaporTestCase {
-
-    open override func setUpWithError() throws {
-        try super.setUpWithError()
-        try app.autoRevert().wait()
-        try app.autoMigrate().wait()
-    }
-
+    open var autoReverts: Bool = true
+    open var autoMigrates: Bool = true
 
     open override func addConfiguration(to app: Application) throws {
+        try super.addConfiguration(to: app)
         try configure(app.databases)
         try configure(app.databases.middleware)
         try migrate(app.migrations)
-        try super.addConfiguration(to: app)
+        if autoReverts { try app.autoRevert().wait() }
+        if autoMigrates { try app.autoMigrate().wait() }
     }
 
     open func configure(_ databases: Databases) throws{}
