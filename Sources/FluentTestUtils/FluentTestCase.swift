@@ -12,11 +12,10 @@ import Fluent
 
 open class FluentTestCase: VaporTestCase {
 
-    override open func setUp() {
-        super.setUp()
-        try! app.autoRevert().wait()
-        try! app.autoMigrate().wait()
-
+    open override func setUpWithError() throws {
+        try super.setUpWithError()
+        try app.autoRevert().wait()
+        try app.autoMigrate().wait()
     }
 
 

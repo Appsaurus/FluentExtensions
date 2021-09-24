@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/vapor/async-kit.git",
         "state": {
           "branch": null,
-          "revision": "2a198346c4403d6c120a5fe43b70101800c878ff",
-          "version": "1.6.0"
+          "revision": "8ec02e274b70afe9e6d2f39c49b7491d76cbc128",
+          "version": "1.8.0"
         }
       },
       {
@@ -60,8 +60,8 @@
         "repositoryURL": "https://github.com/vapor/fluent-kit.git",
         "state": {
           "branch": null,
-          "revision": "7d9982a788dc0bbc80937537a0e2b0a42d282202",
-          "version": "1.15.1"
+          "revision": "176f2b4b7c35a89dd756a5d6d8d5a8473bf92410",
+          "version": "1.15.2"
         }
       },
       {
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/vapor/multipart-kit.git",
         "state": {
           "branch": null,
-          "revision": "c9ea04017b7fb3b1f034ad7a77f8e53d3e080be5",
-          "version": "4.2.1"
+          "revision": "30f53439b52587b016a5e5b3dce7f50f686681be",
+          "version": "4.4.0"
         }
       },
       {
@@ -177,8 +177,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "fb48bdd8279799f655da5f8b4e0a21430eca6012",
-          "version": "2.32.3"
+          "revision": "6aa9347d9bc5bbfe6a84983aec955c17ffea96ef",
+          "version": "2.33.0"
         }
       },
       {
@@ -204,8 +204,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "77a3bf17884d2c87ba400f4d93b9a6f27b078651",
-          "version": "2.15.1"
+          "revision": "044f90dfa0a7015446b40f5e578b06343ae1affe",
+          "version": "2.16.0"
         }
       },
       {
@@ -231,8 +231,8 @@
         "repositoryURL": "https://github.com/vapor/vapor.git",
         "state": {
           "branch": null,
-          "revision": "21af9d0935733ffaa2832e473779d01edcf6ed84",
-          "version": "4.48.6"
+          "revision": "f9f68e5f417ef1de56222a80079a72605fbfde8d",
+          "version": "4.48.8"
         }
       },
       {
@@ -240,7 +240,7 @@
         "repositoryURL": "https://github.com/Appsaurus/VaporExtensions.git",
         "state": {
           "branch": "vapor-4",
-          "revision": "881daf0cd62fb10c875ceed9d00bfcd874778f0d",
+          "revision": "69ec593bff19c505b1cbb574365f3b12edb8b34a",
           "version": null
         }
       },
