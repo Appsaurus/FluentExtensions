@@ -11,8 +11,8 @@ import Fluent
 
 
 open class FluentTestCase: VaporTestCase {
-    open var autoReverts: Bool = true
-    open var autoMigrates: Bool = true
+    open lazy var autoReverts: Bool = true
+    open lazy var autoMigrates: Bool = true
 
     open override func addConfiguration(to app: Application) throws {
         try super.addConfiguration(to: app)
