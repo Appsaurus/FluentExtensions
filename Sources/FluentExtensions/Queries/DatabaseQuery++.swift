@@ -16,3 +16,11 @@ extension DatabaseQuery.Filter.Method {
         .subset(inverse: true)
     }
 }
+
+
+extension DatabaseQuery.Sort {
+    static func sort<M: Model, V: QueryableProperty>(_ keyPath: KeyPath<M, V>, _
+                                                        direction: DatabaseQuery.Sort.Direction = .descending) -> DatabaseQuery.Sort {
+        DatabaseQuery.Sort.sort(keyPath.databaseQueryField, direction)
+    }
+}

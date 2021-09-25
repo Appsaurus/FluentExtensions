@@ -73,16 +73,3 @@ public extension Model where Self: Decodable{
         return try findOrCreateBatch(ids: ids, on: database, initializer).wait()
     }
 }
-
-public extension Future where Value: Vapor.OptionalType {
-    /// Unwraps an optional value contained inside a Future's expectation.
-    /// If the optional resolves to `nil` (`.none`), the supplied error will be thrown instead.
-    func unwrapOr(or resolve: @escaping () -> Future<Value.WrappedType>) -> Future<Value.WrappedType> {
-        return flatMap { optional in
-            guard let _ = optional.wrapped else {
-                return resolve()
-            }
-            return self.unwrap(or: Abort(.internalServerError))
-        }
-    }
-}
