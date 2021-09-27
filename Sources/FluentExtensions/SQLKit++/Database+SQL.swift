@@ -26,5 +26,14 @@ public extension Database {
     func select<M: Model>(_ modelType: M.Type) -> SQLSelectBuilder  {
         select().from(M.self)
     }
+
+    func sqlRaw(_ query: String) ->  SQLRawBuilder{
+        sql().raw(query)
+    }
 }
 
+public extension SQLDatabase {
+    func raw(_ sql: String) -> SQLRawBuilder {
+        return raw(SQLQueryString(sql))
+    }
+}
