@@ -16,16 +16,6 @@ public enum PaginationError: Error {
 extension SQLSelectBuilder: QueryPaginating {
     public typealias PaginatedData = SQLRow
 
-    public func paginate(
-        for request: Request,
-        pageKey: String = Pagination.Defaults.pageKey,
-        perPageKey: String = Pagination.Defaults.perPageKey
-    ) throws -> Future<Page<SQLRow>> {
-
-        let pageRequest = try request.query.decodePageRequest()
-        return self.paginate(pageRequest)
-    }
-
     public func paginate(_ request: PageRequest) -> Future<Page<SQLRow>> {
         let page = request.page
         let per = request.per
@@ -41,7 +31,6 @@ extension SQLSelectBuilder: QueryPaginating {
         }
 
         // Return a full count
-
         return self.count(query: self.select).tryFlatMap { total in
             let lowerBound = (page - 1) * per
             self.apply(limit: per, offset: lowerBound)
@@ -64,7 +53,6 @@ extension SQLSelectBuilder: QueryPaginating {
         builder.select = query
 
         return builder.column(COUNT("*")).first(decoding: CountResult.self).map({$0?.count}).unwrap(orElse: {0})
-//        return builder.column(SQLCount()).first().tryMap({try $0?.decode(column: "count", as: Int.self)}).unwrap(orElse: {0})
     }
 }
 
