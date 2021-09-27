@@ -7,7 +7,7 @@
 
 import SQLKit
 
-extension SQLRawBuilder {
+extension SQLRawBuilder: QueryPaginating {
 
     public func paginate(_ request: PageRequest) -> Future<Page<SQLRow>> {
 
