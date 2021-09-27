@@ -46,7 +46,7 @@ extension SQLRawBuilder: QueryPaginating {
     func count(rawQuery: String) -> EventLoopFuture<Int> {
         let countQuery = "SELECT COUNT(*) FROM (\(rawQuery)) countQuery;"
         print("COUNT QUERY: \(countQuery)")
-        return self.database.raw(.init(stringLiteral: countQuery)).all(decoding: CountResult.self).map({ output in
+        return self.database.raw(SQLQueryString(stringLiteral: countQuery)).all(decoding: CountResult.self).map({ output in
             return output.first?.count ?? 0
         })
     }
