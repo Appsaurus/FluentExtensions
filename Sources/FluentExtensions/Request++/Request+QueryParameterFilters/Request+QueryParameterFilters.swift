@@ -93,12 +93,8 @@ extension Model {
 
             let field = split[0]
 
-            let direction = split.count == 1 ? "asc" : split[1]
-
-            let querySortDirection = DatabaseQuery.Sort.Direction.custom(direction)
-//            guard let querySortDirection = DatabaseQuery.Sort.Direction.string(direction) else {
-//                continue
-//            }
+            let directionParam = split.count == 1 ? "asc" : split[1]
+            var querySortDirection = DatabaseQuery.Sort.Direction.init(directionParam)
 
             let queryField = DatabaseQuery.Field.path([field.fieldKey], schema: schema)
             sorts.append(DatabaseQuery.Sort.sort(queryField, querySortDirection))
@@ -108,14 +104,17 @@ extension Model {
 
 }
 
-//public extension DatabaseQuery.Sort.Direction {
-//    init?(_ string: String) {
-//        guard ["asc", "desc"].contains(string) else {
-//            return
-//        }
-//        self = (string == "asc" ? .ascending : .descending)
-//    }
-//}
+public extension DatabaseQuery.Sort.Direction {
+    init(_ string: String) {
+        switch string {
+        case "asc":
+            self = .ascending
+        case "desc":
+            self = .descending
+        default: self = .custom(string)
+        }
+    }
+}
 fileprivate extension String {
     var fieldKey: FieldKey{
         FieldKey(self)
