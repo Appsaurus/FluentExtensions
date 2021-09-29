@@ -15,14 +15,14 @@ public extension QueryBuilder {
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
         for property in try properties(Model.self) {
-            query = try filterByQueryParameter(for: property, on: request)
+            query = try filter(property, on: request)
         }
         return query
     }
 
-    func filterByQueryParameter(for property: PropertyInfo,
-                                withQueryValueAt queryParameterKey: String? = nil,
-                                on request: Request) throws -> QueryBuilder<Model> {
+    func filter(_ property: PropertyInfo,
+                withQueryValueAt queryParameterKey: String? = nil,
+                on request: Request) throws -> QueryBuilder<Model> {
         var query = self
         let propertyName: String = property.name
         let queryParameterKey = queryParameterKey ?? propertyName.droppingUnderscorePrefix
