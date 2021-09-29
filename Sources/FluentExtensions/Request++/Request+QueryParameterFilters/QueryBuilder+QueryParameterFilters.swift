@@ -15,7 +15,7 @@ public extension QueryBuilder {
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
         for property in try properties(Model.self) {
-            filterByQueryParameter(for: property, on: request)
+            query = try filterByQueryParameter(for: property, on: request)
         }
         return query
     }
