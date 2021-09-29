@@ -6,12 +6,12 @@
 //
 
 import SQLKit
-
-extension String: SQLExpression  {
-    public func serialize(to serializer: inout SQLSerializer) {
-        SQLLiteral.string(self).serialize(to: &serializer)
-    }
-}
+import Vapor
+//extension String: SQLExpression  {
+//    public func serialize(to serializer: inout SQLSerializer) {
+//        SQLRaw(self).serialize(to: &serializer)
+//    }
+//}
 
 extension Bool: SQLExpression  {
     public func serialize(to serializer: inout SQLSerializer) {

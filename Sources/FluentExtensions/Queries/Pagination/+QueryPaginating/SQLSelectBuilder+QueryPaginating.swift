@@ -52,7 +52,7 @@ extension SQLSelectBuilder: QueryPaginating {
         let builder = SQLSelectBuilder(on: self.database)
         builder.select = query
 
-        return builder.column(COUNT("*")).first(decoding: CountResult.self).map({$0?.count}).unwrap(orElse: {0})
+        return builder.column(COUNT()).first(decoding: CountResult.self).map({$0?.count}).unwrap(orElse: {0})
     }
 }
 

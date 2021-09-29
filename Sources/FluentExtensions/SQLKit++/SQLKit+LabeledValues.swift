@@ -49,14 +49,14 @@ public extension SQLSelectBuilder {
     }
 
     func labeledCountOfValues(groupedBy keyPath: SQLExpression,
-                              of table: SQLExpression,
+                              of table: String,
                               label: String? = nil,
                               valueLabel: String? = nil,
                               defaultValue: SQLExpression? = nil) -> SQLSelectBuilder {
 
 
         return self
-            .column(COALESCE(keyPath, defaultValue ?? "Unknown").cast(as: .text).as(label ?? "label"))
+            .column(COALESCE(keyPath, defaultValue ?? SQLLiteral.string("Unknown")).cast(as: .text).as(label ?? "label"))
             .columns(COUNT().as(valueLabel ?? "value"))
             .from(table)
             .groupBy(keyPath)
