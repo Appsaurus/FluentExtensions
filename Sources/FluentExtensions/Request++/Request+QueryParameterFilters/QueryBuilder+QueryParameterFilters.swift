@@ -12,6 +12,7 @@ import Codability
 
 public extension QueryBuilder {
 
+    @discardableResult
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
         for property in try properties(Model.self) {
@@ -20,6 +21,7 @@ public extension QueryBuilder {
         return query
     }
 
+    @discardableResult
     func filter(_ property: PropertyInfo,
                 withQueryValueAt queryParameterKey: String? = nil,
                 on request: Request) throws -> QueryBuilder<Model> {
@@ -32,6 +34,7 @@ public extension QueryBuilder {
         return query
     }
 
+    @discardableResult
     func filter(_ keyPath: CodingKeyRepresentable,
                 withQueryValueAt queryParameterKey: String,
                 as type: Any.Type,
