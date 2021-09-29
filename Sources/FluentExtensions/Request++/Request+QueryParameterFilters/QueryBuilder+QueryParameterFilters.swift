@@ -26,8 +26,8 @@ public extension QueryBuilder {
                 withQueryValueAt queryParameterKey: String? = nil,
                 on request: Request) throws -> QueryBuilder<Model> {
         var query = self
-        let propertyName: String = property.name
-        let queryParameterKey = queryParameterKey ?? propertyName.droppingUnderscorePrefix
+        let propertyName: String = property.fieldName
+        let queryParameterKey = queryParameterKey ?? propertyName
         if let filterable = property.type as? AnyProperty.Type {
             query = try filter(propertyName, withQueryValueAt: queryParameterKey, as: filterable.anyValueType, on: request)
         }
@@ -40,7 +40,7 @@ public extension QueryBuilder {
                 as type: Any.Type,
                 on request: Request) throws -> QueryBuilder<Model> {
         var query = self
-        if let queryFilter = try? request.stringKeyPathFilter(for: keyPath, using: queryParameterKey.droppingUnderscorePrefix) {
+        if let queryFilter = try? request.stringKeyPathFilter(for: keyPath, using: queryParameterKey) {
             query = try filter(queryFilter, as: type)
         }
         return query
