@@ -15,11 +15,17 @@ public extension QueryBuilder {
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
         for property in try properties(Model.self) {
-            let parameterName: String = property.name
-            if let filterable = property.type as? AnyProperty.Type,
-               let queryFilter = try? request.stringKeyPathFilter(for: parameterName, using: parameterName.droppingUnderscorePrefix) {
-                query = try filter(queryFilter, as: filterable.anyValueType)
-            }
+            filterByQueryParameter(for: property, on: request)
+        }
+        return query
+    }
+
+    func filterByQueryParameter(for property: PropertyInfo, on request: Request) throws -> QueryBuilder<Model> {
+        var query = self
+        let parameterName: String = property.name
+        if let filterable = property.type as? AnyProperty.Type,
+           let queryFilter = try? request.stringKeyPathFilter(for: parameterName, using: parameterName.droppingUnderscorePrefix) {
+            query = try filter(queryFilter, as: filterable.anyValueType)
         }
         return query
     }

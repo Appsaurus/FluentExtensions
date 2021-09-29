@@ -30,6 +30,7 @@ class QueryParameterSortTestSeeder: Migration {
             createUser.stringField += "_\(letter)"
             createUser.intField = index
             createUser.optionalStringField = index < 3 ? String(letter) : nil
+            createUser.booleanField = index % 2 == 0
             kitchenSinks.append(createUser)
         }
         return kitchenSinks.create(on: database)
@@ -83,6 +84,25 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
             XCTAssertEqual(models[0].stringField, valueA)
             XCTAssertEqual(models[1].stringField, valueB)
             XCTAssertEqual(models[2].stringField, valueC)
+        }
+    }
+
+    func testBooleanEqualityQuery() throws {
+
+        try app.test(.GET, "\(queryParamSortPath)?booleanField=eq:true") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+
+            XCTAssert(models.count == 13)
+            models.forEach({XCTAssert($0.booleanField == true)})
+        }
+
+        try app.test(.GET, "\(queryParamSortPath)?booleanField=eq:false") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+
+            XCTAssert(models.count == 13)
+            models.forEach({XCTAssert($0.booleanField == false)})
         }
     }
 }
