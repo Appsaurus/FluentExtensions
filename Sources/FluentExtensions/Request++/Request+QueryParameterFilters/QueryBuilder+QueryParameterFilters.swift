@@ -37,37 +37,15 @@ public extension QueryBuilder {
     @discardableResult
     func filter(_ keyPath: CodingKeyRepresentable,
                 withQueryValueAt queryParameterKey: String,
-                as type: Any.Type,
+                as queryValueType: Any.Type? = nil,
                 on request: Request) throws -> QueryBuilder<Model> {
         var query = self
-        if let queryFilter = try? request.stringKeyPathFilter(for: keyPath, using: queryParameterKey) {
-            query = try filter(queryFilter, as: type)
+        if let queryFilter = try? request.stringKeyPathFilter(for: keyPath, withQueryValueAt: queryParameterKey, as: queryValueType) {
+            query = try filter(queryFilter)
         }
         return query
     }
 }
-
-//public extension QueryBuilder where Model: Content {
-//
-//    func paginate(
-//        on req: Request,
-//        sorts: [DatabaseQuery.Sort]) throws -> Future<Paginated<Model>> {
-//        return try self.page(for: req, sorts: sorts, {$0.all()}).map { Paginated<Model>(from: $0) }
-//    }
-//
-
-//
-//    func paginate<R, T>(
-//        on req: Request,
-//        response type: T.Type = T.self,
-//        sorts: [DatabaseQuery.Sort],
-//        _ transformation: @escaping (QueryBuilder<Model>) throws -> Future<[R]>
-//    ) throws -> Future<T> where T: PaginatedResponse, T.DataType == R {
-//
-//        return try self.page(for: req, sorts: sorts, transformation).map(to: type.self) { type.init(from: $0) }
-//    }
-//}
-
 
 public extension QueryBuilder {
 
@@ -85,10 +63,7 @@ public extension QueryBuilder {
         }
         return sorts
     }
-
 }
-
-
 
 public extension QueryBuilder {
     @discardableResult
@@ -100,9 +75,9 @@ public extension QueryBuilder {
 
     @discardableResult
     func filter<V: QueryableProperty>(keyPath: KeyPath<Model,V>,
-                                      at queryParameter: String? = nil,
+                                      withQueryValueAt queryParameterKey: String? = nil,
                                       on req: Request) throws -> QueryBuilder<Model> {
-        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, using: queryParameter) else {
+        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, withQueryValueAt: queryParameterKey) else {
             return self
         }
         return try filter(queryFilter)
@@ -111,9 +86,9 @@ public extension QueryBuilder {
 
     @discardableResult
     func filter(_ keyPath: String,
-                at queryParameter: String? = nil,
+                withQueryValueAt queryParameterKey: String? = nil,
                 on req: Request) throws -> QueryBuilder<Model> {
-        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, using: queryParameter) else {
+        guard let queryFilter = try req.stringKeyPathFilter(for: keyPath, withQueryValueAt: queryParameterKey) else {
             return self
         }
         return try filter(queryFilter)
@@ -121,17 +96,20 @@ public extension QueryBuilder {
 
 
     @discardableResult
-    func filter(_ stringKeyPathFilter: StringKeyPathFilter, as type: Any.Type? = nil) throws -> QueryBuilder<Model> {
-        return try filter(stringKeyPathFilter.filter, as: type)
+    func filter(_ stringKeyPathFilter: StringKeyPathFilter) throws -> QueryBuilder<Model> {
+        return try filter(stringKeyPathFilter.filter)
     }
 
     @discardableResult
-    func filter(_ queryParameterFilter: QueryParameterFilter, as type: Any.Type? = nil) throws -> QueryBuilder<Model>{
-        switch type {
-            case is Bool.Type, is Int.Type:
-                return try filterAsBool(queryParameterFilter)
-            default: break
+    func filter(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model>{
+        if let valueType = queryParameterFilter.queryValueType {
+            switch valueType {
+                case is Bool.Type, is Int.Type:
+                    return try filterAsBool(queryParameterFilter)
+                default: break
+            }
         }
+
         let queryField = queryParameterFilter.queryField(for: Model.schema)
         //        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
         switch (queryParameterFilter.method, queryParameterFilter.value) {
@@ -155,12 +133,6 @@ public extension QueryBuilder {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
     }
-
-
-    //    @discardableResult
-    //    func filterAs(_ type: Any.Type, _ stringkeyPathFilter: StringKeyPathFilter) throws -> QueryBuilder<Model> {
-    //
-    //    }
 
     @discardableResult
     func filterAsBool(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model> {
