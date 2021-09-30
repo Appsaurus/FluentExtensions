@@ -16,7 +16,7 @@ public class QueryParameterFilterParser {
     
 }
 public extension URLQueryContainer {
-    @discardableResult
+    
     func parseFilter<V: QueryableProperty, M: Model>(for keyPath: KeyPath<M,V>,
                                                      withQueryValueAt queryParameterKey: String? = nil,
                                                      as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
