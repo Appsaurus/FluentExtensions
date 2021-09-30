@@ -12,55 +12,37 @@ import RuntimeExtensions
 import CodableExtensions
 import Codability
 
-
-public extension Request {
+public class QueryParameterFilterParser {
+    
+}
+public extension URLQueryContainer {
     @discardableResult
-    func stringKeyPathFilter<V: QueryableProperty, M: Model>(for keyPath: KeyPath<M,V>,
-                                                             withQueryValueAt queryParameterKey: String? = nil,
-                                                             as queryValueType: Any.Type? = nil) throws -> StringKeyPathFilter? {
-        try stringKeyPathFilter(for: keyPath.codingKeys, withQueryValueAt: queryParameterKey, as: queryValueType)
+    func parseFilter<V: QueryableProperty, M: Model>(for keyPath: KeyPath<M,V>,
+                                                     withQueryValueAt queryParameterKey: String? = nil,
+                                                     as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
+        try parseFilter(for: M.self, at: keyPath.codingKeys,
+                        withQueryValueAt: queryParameterKey,
+                        as: queryValueType)
     }
 
-    func stringKeyPathFilter(for keyPath: CodingKeyRepresentable...,
-                             withQueryValueAt queryParameterKey: String? = nil,
-                             as queryValueType: Any.Type? = nil) throws -> StringKeyPathFilter? {
-        try stringKeyPathFilter(for: keyPath, withQueryValueAt: queryParameterKey, as: queryValueType)
+    func parseFilter(for schema: Schema.Type,
+                     at keyPath: CodingKeyRepresentable...,
+                     withQueryValueAt queryParameterKey: String? = nil,
+                     as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
+        try parseFilter(for: schema, at: keyPath, withQueryValueAt: queryParameterKey, as: queryValueType)
 
     }
-    func stringKeyPathFilter(for keyPath: [CodingKeyRepresentable],
-                             withQueryValueAt queryParameterKey: String? = nil,
-                             as queryValueType: Any.Type? = nil) throws -> StringKeyPathFilter? {
+    func parseFilter(for schema: Schema.Type,
+                     at keyPath: [CodingKeyRepresentable],
+                     withQueryValueAt queryParameterKey: String? = nil,
+                     as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
         let name = queryParameterKey ?? keyPath.map({$0.codingKey.stringValue}).joined(separator: ".")
-        guard let filter = try queryParameterFilter(name: name, as: queryValueType) else {
-            return nil
-        }
-        return StringKeyPathFilter(keyPath: keyPath, filter: filter)
-    }
-
-    func queryParameterFilter(name: String, as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
-
-        let decoder = URLEncodedFormDecoder()
-
-        guard let config = query[String.self, at: name] else {
-            return nil
-        }
-
-        let filterConfig = config.toFilterConfig
-
-        let method = filterConfig.method
-        let value = filterConfig.value
-
-        let multiple = [.in, .notIn].contains(method)
-        var filterValue: QueryParameterFilter.Value<String, [String]>
-
-        if multiple {
-            let str = value.components(separatedBy: ",").map { "\(name)[]=\($0)" }.joined(separator: "&")
-            filterValue = try .multiple(decoder.decode(SingleValueDecoder.self, from: str).get(at: [name.codingKey]))
-        } else {
-            let str = "\(name)=\(value)"
-            filterValue = try .single(decoder.decode(SingleValueDecoder.self, from: str).get(at: [name.codingKey]))
-        }
-        return QueryParameterFilter(name: name, method: method, value: filterValue, queryValueType: queryValueType)
+        return try QueryParameterFilter(schema: schema,
+                                              fieldName: name,
+                                              withQueryValueAt: name,
+                                              as: queryValueType,
+                                              from: self)
+//        return StringKeyPathFilter(keyPath: keyPath, filter: filter)
     }
 }
 

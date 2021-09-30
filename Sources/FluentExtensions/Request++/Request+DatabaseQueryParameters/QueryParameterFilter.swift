@@ -9,7 +9,7 @@ import VaporExtensions
 import Codability
 
 public class QueryParameterFilter {
-
+    public var schema: Schema.Type
     public var name: String
     public var method: QueryParameterFilter.Method
     public var value: Value<String, [String]>
@@ -37,10 +37,17 @@ public class QueryParameterFilter {
         case notContains = "nct"
     }
 
-    public func queryField(for schema: String) -> DatabaseQuery.Field {
-        return .path([FieldKey(name)], schema: schema)
+    public func queryField(for schema: Schema.Type? = nil) -> DatabaseQuery.Field {
+        let schema = schema ?? self.schema
+        return .path([FieldKey(name)], schema: schema.schemaOrAlias)
     }
-    internal init(name: String, method: QueryParameterFilter.Method, value: QueryParameterFilter.Value<String, [String]>, queryValueType: Any.Type? = nil) {
+    
+    internal init(schema: Schema.Type,
+                  name: String,
+                  method: QueryParameterFilter.Method,
+                  value: QueryParameterFilter.Value<String, [String]>,
+                  queryValueType: Any.Type? = nil) {
+        self.schema = schema
         self.name = name
         self.method = method
         self.value = value
@@ -50,6 +57,40 @@ public class QueryParameterFilter {
 //    func databaseQueryFilter(for schema: String) -> DatabaseQuery.Filter {
 //        DatabaseQuery.Filter.value(.path([name.fieldKey], schema: schema), <#T##DatabaseQuery.Filter.Method#>, <#T##DatabaseQuery.Value#>)
 //    }
+
+    convenience init(schema: Schema.Type,
+                     fieldName: String,
+                     withQueryValueAt queryParameterKey: String,
+                     as queryValueType: Any.Type? = nil,
+                     from queryContainer: URLQueryContainer) throws {
+
+                let decoder = URLEncodedFormDecoder()
+
+                guard let config = queryContainer[String.self, at: queryParameterKey] else {
+                    throw QueryParameterFilterError.invalidFilterConfiguration
+                }
+
+                let filterConfig = config.toFilterConfig
+
+                let method = filterConfig.method
+                let value = filterConfig.value
+
+                let multiple = [.in, .notIn].contains(method)
+                var filterValue: QueryParameterFilter.Value<String, [String]>
+
+                if multiple {
+                    let str = value.components(separatedBy: ",").map { "\(queryParameterKey)[]=\($0)" }.joined(separator: "&")
+                    filterValue = try .multiple(decoder.decode(SingleValueDecoder.self, from: str).get(at: [queryParameterKey.codingKey]))
+                } else {
+                    let str = "\(queryParameterKey)=\(value)"
+                    filterValue = try .single(decoder.decode(SingleValueDecoder.self, from: str).get(at: [queryParameterKey.codingKey]))
+                }
+                self.init(schema: schema,
+                          name: queryParameterKey,
+                          method: method,
+                          value: filterValue,
+                          queryValueType: queryValueType)
+    }
 
 }
 
