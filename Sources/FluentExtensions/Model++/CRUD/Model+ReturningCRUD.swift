@@ -9,7 +9,7 @@ import FluentKit
 import VaporExtensions
 
 public extension Model{
-
+    
     func createAndReturn(on database: Database) -> Future<Self>{
         create(on: database).transform(to: self)
     }
@@ -19,7 +19,7 @@ public extension Model{
     }
 
     func updateAndReturn(on database: Database) -> Future<Self>{
-        update(on: database).transform(to: self)
+        update(on: database, force: true).transform(to: self)
     }
 }
 
@@ -51,6 +51,6 @@ public extension Collection where Element: Model{
     }
 
     func updateAndReturn(on database: Database) -> Future<Self>{
-        return self.update(on: database).transform(to: self)
+        return self.update(on: database, force: true).transform(to: self)
     }
 }

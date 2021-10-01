@@ -9,7 +9,13 @@ import VaporExtensions
 import Fluent
 
 public extension Collection where Element: Model {
-
+    @discardableResult
+    func update(on database: Database, force: Bool) -> Future<Void>{
+        if force {
+            self.forEach({$0._$id.exists = true})
+        }
+        return self.update(on: database)
+    }
 	func create(on database: Database, transaction: Bool = true) -> Future<Void> {
 		return performBatch(action: create, on: database, transaction: transaction)
 	}
@@ -19,7 +25,9 @@ public extension Collection where Element: Model {
 	}
 
 	func update(on database: Database, transaction: Bool = true) -> Future<Void>{
-		return performBatch(action: update, on: database, transaction: transaction)
+        performBatch(action: { database in
+            update(on: database, force: true)
+        }, on: database, transaction: transaction)
 	}
 
     func delete(force: Bool = false, on database: Database, transaction: Bool = true) -> Future<Void> {

@@ -19,7 +19,9 @@ public extension Future where Value: Model{
     }
 
     func update(on database: Database) -> Future<Void>{
-        flatMap { $0.update(on: database)}
+        flatMap {
+            $0.update(on: database, force: true)
+        }
     }
 
     func delete(force: Bool = false, on database: Database) -> Future<Void> {

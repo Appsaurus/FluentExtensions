@@ -12,6 +12,14 @@ import RuntimeExtensions
 
 public extension Model {
 
+    @discardableResult
+    func update(on database: Database, force: Bool) -> Future<Void>{
+        if force {
+            self._$id.exists = force
+        }
+        return self.update(on: database)
+    }
+
     /// Performs an upsert with the given entity
     ///
     /// - Returns: Bool indicating whether or not the object was created. True == created, False == updated
@@ -19,7 +27,8 @@ public extension Model {
     func upsert(on database: Database) -> Future<Void> {
         return existingEntityWithId(on: database).flatMap { model in
             guard model == nil else {
-                return self.save(on: database)
+                self._$id.exists = true
+                return self.update(on: database, force: true)
             }
             return self.create(on: database)
         }
@@ -31,7 +40,7 @@ public extension Model {
 
     func updateIfExists(on database: Database) -> Future<Void>{
         return assertExistingEntityWithId(on: database).flatMap { future in
-            future.update(on: database)
+            future.update(on: database, force: true)
         }
     }
 }

@@ -24,11 +24,7 @@ public extension Collection where Element: Model{
             return database.eventLoop.makeSucceededFuture(())
         }
 
-        self.forEach { model in
-            precondition(!model._$id.exists)
-        }
-
-        return compactMap({$0.update(on: database)}).flatten(on: database.eventLoop)
+        return compactMap({$0.update(on: database, force: true)}).flatten(on: database.eventLoop)
     }
 
 }
