@@ -87,9 +87,21 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
         }
     }
 
+
+    func testIntEqualityQuery() throws {
+
+        try app.test(.GET, "\(queryParamSortPath)?intField=eq:2") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+
+            XCTAssert(models.count == 1)
+            models.forEach({XCTAssert($0.intField == 2)})
+        }
+    }
+
     func testBooleanEqualityQuery() throws {
 
-        try app.test(.GET, "\(queryParamSortPath)?booleanField=eq:true") { response in
+        try app.test(.GET, "\(queryParamSortPath)?intField=eq:1") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
 

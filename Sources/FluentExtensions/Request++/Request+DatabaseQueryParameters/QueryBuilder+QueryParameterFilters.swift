@@ -88,7 +88,7 @@ public extension QueryBuilder {
     func filter(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model>{
         if let valueType = queryParameterFilter.queryValueType {
             switch valueType {
-            case is Bool.Type, is Int.Type:
+            case is Bool.Type:
                 return try filterAsBool(queryParameterFilter)
             default: break
             }
