@@ -8,13 +8,30 @@
 import VaporExtensions
 import Codability
 
+
 public class QueryParameterFilter {
     public var schema: Schema.Type
     public var name: String
     public var method: QueryParameterFilter.Method
     public var value: Value<String, [String]>
     public var queryValueType: Any.Type? = nil
+    
+    func encodableValue(for value: String) throws -> Encodable {
+        switch queryValueType {
+            case is Bool.Type:
+                return try value.bool.unwrapped(or: Abort(.badRequest))
+            case is Int.Type:
+                return try Int(value).unwrapped(or: Abort(.badRequest))
+            case is Double.Type:
+                return try Double(value).unwrapped(or: Abort(.badRequest))
+        default: return value
+        }
+    }
 
+    func encodableValue(for values: [String]) throws -> [Encodable] {
+        return try values.map({try encodableValue(for: $0)})
+    }
+    
     public enum Value<S, M> {
         case single(S)
         case multiple(M)
@@ -152,3 +169,15 @@ extension QueryParameterFilter.Value where S == String, M == [String] {
     //        }
     //    }
 }
+
+fileprivate extension String {
+    /// Converts the string to a `Bool` or returns `nil`.
+    var bool: Bool? {
+        switch self {
+        case "true", "yes", "1", "y": return true
+        case "false", "no", "0", "n": return false
+        default: return nil
+        }
+    }
+}
+

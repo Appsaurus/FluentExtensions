@@ -86,77 +86,45 @@ public extension QueryBuilder {
     
     @discardableResult
     func filter(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model>{
-        if let valueType = queryParameterFilter.queryValueType {
-            switch valueType {
-            case is Bool.Type:
-                return try filterAsBool(queryParameterFilter)
-            default: break
-            }
-        }
         
         let queryField = queryParameterFilter.queryField()
         //        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type)
         switch (queryParameterFilter.method, queryParameterFilter.value) {
         case let (.equal, .single(value)): // Equal
-            return self.filter(queryField, .equal, value)
+            return self.filter(queryField, .equal, try queryParameterFilter.encodableValue(for: value))
         case let (.notEqual, .single(value)): // Not Equal
-            return self.filter(queryField, .notEqual, value)
+            return self.filter(queryField, .notEqual, try queryParameterFilter.encodableValue(for: value))
         case let (.greaterThan, .single(value)): // Greater Than
-            return self.filter(queryField, .greaterThan, value)
+            return self.filter(queryField, .greaterThan, try queryParameterFilter.encodableValue(for: value))
         case let (.greaterThanOrEqual, .single(value)): // Greater Than Or Equal
-            return self.filter(queryField, .greaterThanOrEqual, value)
+            return self.filter(queryField, .greaterThanOrEqual, try queryParameterFilter.encodableValue(for: value))
         case let (.lessThan, .single(value)): // Less Than
-            return self.filter(queryField, .lessThan, value)
+            return self.filter(queryField, .lessThan, try queryParameterFilter.encodableValue(for: value))
         case let (.lessThanOrEqual, .single(value)): // Less Than Or Equal
-            return self.filter(queryField, .lessThanOrEqual, value)
+            return self.filter(queryField, .lessThanOrEqual, try queryParameterFilter.encodableValue(for: value))
         case let (.in, .multiple(value)): // In
-            return self.filter(queryField, .inSubSet, value)
+            return self.filter(queryField, .inSubSet, try queryParameterFilter.encodableValue(for: value))
         case let (.notIn, .multiple(value)): // Not In
-            return self.filter(queryField, .notInSubSet, value)
-        default:
-            throw QueryParameterFilterError.invalidFilterConfiguration
-        }
-    }
-    
-    @discardableResult
-    func filterAsBool(_ queryParameterFilter: QueryParameterFilter) throws -> QueryBuilder<Model> {
-        let queryField = queryParameterFilter.queryField()
-        //        let encodableValue: AnyCodable = queryParameterFilter.value.to(type: type(of: property).anyValueType)
-        switch (queryParameterFilter.method, queryParameterFilter.value) {
-        case let (.equal, .single(value)): // Equal
-            return self.filter(queryField, .equal, value.bool)
-        case let (.notEqual, .single(value)): // Not Equal
-            return self.filter(queryField, .notEqual, value.bool)
-        case let (.greaterThan, .single(value)): // Greater Than
-            return self.filter(queryField, .greaterThan, value.bool)
-        case let (.greaterThanOrEqual, .single(value)): // Greater Than Or Equal
-            return self.filter(queryField, .greaterThanOrEqual, value.bool)
-        case let (.lessThan, .single(value)): // Less Than
-            return self.filter(queryField, .lessThan, value.bool)
-        case let (.lessThanOrEqual, .single(value)): // Less Than Or Equal
-            return self.filter(queryField, .lessThanOrEqual, value.bool)
-        case let (.in, .multiple(value)): // In
-            return self.filter(queryField, .inSubSet, value.map({ $0.bool}))
-        case let (.notIn, .multiple(value)): // Not In
-            return self.filter(queryField, .notInSubSet, value.map({ $0.bool}))
+            return self.filter(queryField, .notInSubSet, try queryParameterFilter.encodableValue(for: value))
         default:
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
     }
     
     
+    
     @discardableResult
-    fileprivate func filter<E: Encodable>(_ field: DatabaseQuery.Field,
-                                          _ method: DatabaseQuery.Filter.Method,
-                                          _ value: E) -> QueryBuilder<Model>{
+    fileprivate func filter(_ field: DatabaseQuery.Field,
+                            _ method: DatabaseQuery.Filter.Method,
+                            _ value: Encodable) -> QueryBuilder<Model>{
         self.filter(.value(field, method, DatabaseQuery.Value.bind(value)))
         return self
     }
     
     @discardableResult
-    fileprivate func filter<E: Encodable>(_ field: DatabaseQuery.Field,
-                                          _ method: DatabaseQuery.Filter.Method,
-                                          _ value: [E]) -> QueryBuilder<Model>{
+    fileprivate func filter(_ field: DatabaseQuery.Field,
+                            _ method: DatabaseQuery.Filter.Method,
+                            _ value: [Encodable]) -> QueryBuilder<Model>{
         let values = value.map({DatabaseQuery.Value.bind($0)})
         self.filter(.value(field, method, DatabaseQuery.Value.array(values)))
         return self

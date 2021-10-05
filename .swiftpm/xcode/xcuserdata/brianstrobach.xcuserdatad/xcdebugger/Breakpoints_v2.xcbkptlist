@@ -30,8 +30,8 @@
             filePath = "Tests/FluentExtensionsTests/QueryParameterSortTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "116"
-            endingLineNumber = "116"
+            startingLineNumber = "145"
+            endingLineNumber = "145"
             landmarkName = "testBooleanEqualityQuery()"
             landmarkType = "7">
          </BreakpointContent>

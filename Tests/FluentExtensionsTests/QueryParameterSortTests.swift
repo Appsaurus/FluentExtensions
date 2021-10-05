@@ -29,6 +29,7 @@ class QueryParameterSortTestSeeder: Migration {
             let createUser = KitchenSink()
             createUser.stringField += "_\(letter)"
             createUser.intField = index
+            createUser.doubleField = Double(index)
             createUser.optionalStringField = index < 3 ? String(letter) : nil
             createUser.booleanField = index % 2 == 0
             kitchenSinks.append(createUser)
@@ -87,27 +88,55 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
         }
     }
 
+    func testDoubleFilters() throws {
+        let value = 10.0
 
-    func testIntEqualityQuery() throws {
-
-        try app.test(.GET, "\(queryParamSortPath)?intField=eq:2") { response in
+        try app.test(.GET, "\(queryParamSortPath)?doubleField=eq:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
 
             XCTAssert(models.count == 1)
-            models.forEach({XCTAssert($0.intField == 2)})
+            models.forEach({XCTAssert($0.doubleField == value)})
+        }
+
+        try app.test(.GET, "\(queryParamSortPath)?doubleField=gt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach({XCTAssert($0.doubleField > value)})
+        }
+
+        try app.test(.GET, "\(queryParamSortPath)?doubleField=lt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach({XCTAssert($0.doubleField < value)})
+        }
+    }
+
+    func testIntFilters() throws {
+        let value = 10
+
+        try app.test(.GET, "\(queryParamSortPath)?intField=eq:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+
+            XCTAssert(models.count == 1)
+            models.forEach({XCTAssert($0.intField == value)})
+        }
+
+        try app.test(.GET, "\(queryParamSortPath)?intField=gt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach({XCTAssert($0.intField > value)})
+        }
+
+        try app.test(.GET, "\(queryParamSortPath)?intField=lt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach({XCTAssert($0.intField < value)})
         }
     }
 
     func testBooleanEqualityQuery() throws {
-
-        try app.test(.GET, "\(queryParamSortPath)?intField=eq:1") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-
-            XCTAssert(models.count == 13)
-            models.forEach({XCTAssert($0.booleanField == true)})
-        }
 
         try app.test(.GET, "\(queryParamSortPath)?booleanField=eq:false") { response in
             XCTAssertEqual(response.status, .ok)
