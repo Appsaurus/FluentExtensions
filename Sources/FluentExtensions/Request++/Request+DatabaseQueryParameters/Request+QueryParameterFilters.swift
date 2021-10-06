@@ -36,13 +36,12 @@ public extension URLQueryContainer {
                      at keyPath: [CodingKeyRepresentable],
                      withQueryValueAt queryParameterKey: String? = nil,
                      as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
-        let name = queryParameterKey ?? keyPath.map({$0.codingKey.stringValue}).joined(separator: ".")
+        let fieldName = keyPath.map({$0.codingKey.stringValue}).joined(separator: ".")
         return try QueryParameterFilter(schema: schema,
-                                              fieldName: name,
-                                              withQueryValueAt: name,
+                                              fieldName: fieldName,
+                                              withQueryValueAt: queryParameterKey ?? fieldName,
                                               as: queryValueType,
                                               from: self)
-//        return StringKeyPathFilter(keyPath: keyPath, filter: filter)
     }
 }
 

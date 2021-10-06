@@ -75,7 +75,7 @@ public class QueryParameterFilter {
 //        DatabaseQuery.Filter.value(.path([name.fieldKey], schema: schema), <#T##DatabaseQuery.Filter.Method#>, <#T##DatabaseQuery.Value#>)
 //    }
 
-    convenience init(schema: Schema.Type,
+    public convenience init(schema: Schema.Type,
                      fieldName: String,
                      withQueryValueAt queryParameterKey: String,
                      as queryValueType: Any.Type? = nil,
