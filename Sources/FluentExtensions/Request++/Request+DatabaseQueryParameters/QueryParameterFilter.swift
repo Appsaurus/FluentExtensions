@@ -103,7 +103,7 @@ public class QueryParameterFilter {
                     filterValue = try .single(decoder.decode(SingleValueDecoder.self, from: str).get(at: [queryParameterKey.codingKey]))
                 }
                 self.init(schema: schema,
-                          name: queryParameterKey,
+                          name: fieldName,
                           method: method,
                           value: filterValue,
                           queryValueType: queryValueType)
