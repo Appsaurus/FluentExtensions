@@ -20,9 +20,10 @@ public extension URLQueryContainer {
     func parseFilter<V: QueryableProperty, M: Model>(for keyPath: KeyPath<M,V>,
                                                      withQueryValueAt queryParameterKey: String? = nil,
                                                      as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
-        try parseFilter(for: M.self, at: keyPath.codingKeys,
+        try parseFilter(for: M.self,
+                        at: keyPath.codingKeys,
                         withQueryValueAt: queryParameterKey,
-                        as: queryValueType)
+                        as: queryValueType ?? V.self.Value)
     }
 
     func parseFilter(for schema: Schema.Type,
