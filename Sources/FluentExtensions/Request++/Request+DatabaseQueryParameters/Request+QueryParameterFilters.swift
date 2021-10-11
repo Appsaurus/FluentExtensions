@@ -47,15 +47,20 @@ public extension URLQueryContainer {
 }
 
 
+public typealias QueryParamFieldKeyConverter = (String) -> String
 extension Model {
-    static func sorts(fromQueryParam queryParamString: String) throws -> [DatabaseQuery.Sort] {
+    static func sorts(fromQueryParam queryParamString: String,
+                      convertingKeysWith keyConverter: QueryParamFieldKeyConverter? = nil) throws -> [DatabaseQuery.Sort] {
         var sorts: [DatabaseQuery.Sort] = []
         let sortOpts = queryParamString.components(separatedBy: ",")
         for option in sortOpts {
             let split = option.components(separatedBy: ":")
 
-            let field = split[0]
-//            let fieldKeys = field.components(separatedBy: ".").compactMap({FieldKey($0)})
+            var field = split[0]
+            if let keyConverter = keyConverter {
+                field = keyConverter(field)
+            }
+
             let directionParam = split.count == 1 ? "asc" : split[1]
             let querySortDirection = DatabaseQuery.Sort.Direction(directionParam)
             let queryField = DatabaseQuery.Field.path([FieldKey(field)], schema: schema)
