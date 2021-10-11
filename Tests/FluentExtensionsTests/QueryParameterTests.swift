@@ -1,5 +1,5 @@
 //
-//  QueryParameterSortTests.swift
+//  QueryParameterTests.swift
 //  
 //
 //  Created by Brian Strobach on 9/7/21.
@@ -12,8 +12,7 @@ import FluentSQLiteDriver
 import FluentKit
 @testable import FluentTestModels
 
-
-class QueryParameterSortTestSeeder: Migration {
+class QueryParameterTestSeeder: Migration {
     public func prepare(on database: Database) -> EventLoopFuture<Void> {
         seedModels(on: database)
     }
@@ -32,13 +31,14 @@ class QueryParameterSortTestSeeder: Migration {
             createUser.doubleField = Double(index)
             createUser.optionalStringField = index < 3 ? String(letter) : nil
             createUser.booleanField = index % 2 == 0
+            createUser.groupedFields.intField = index
             kitchenSinks.append(createUser)
         }
         return kitchenSinks.create(on: database)
     }
 }
-class QueryParameterSortTests: FluentTestModels.TestCase {
-    let queryParamSortPath = "query-parameters-sort"
+class QueryParameterTests: FluentTestModels.TestCase {
+    let basePath = "query-parameters"
     let valueA = "StringValue_A"
     let valueB = "StringValue_B"
     let valueC = "StringValue_C"
@@ -54,21 +54,24 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
 
     override func migrate(_ migrations: Migrations) throws {
         try super.migrate(migrations)
-        migrations.add(QueryParameterSortTestSeeder())
+        migrations.add(QueryParameterTestSeeder())
     }
 
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get(queryParamSortPath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
-            return try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
+        router.get(basePath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
+            return try KitchenSink.query(on: request.db)
+                .filterByQueryParameters(request: request)
+                .sorted(on: request)
+                .all()
         }
     }
 
 
     func testEqualsFieldQuery() throws {
 
-        try app.test(.GET, "\(queryParamSortPath)?stringField=eq:\(valueA)") { response in
+        try app.test(.GET, "\(basePath)?stringField=eq:\(valueA)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             XCTAssert(models.count == 1)
@@ -78,7 +81,7 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
 
     func testSubsetQueries() throws {
         let values = [valueA, valueB, valueC]
-        try app.test(.GET, "\(queryParamSortPath)?stringField=in:\(values.joined(separator: ","))") { response in
+        try app.test(.GET, "\(basePath)?stringField=in:\(values.joined(separator: ","))") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             XCTAssert(models.count == 3)
@@ -91,7 +94,7 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
     func testDoubleFilters() throws {
         let value = 10.0
 
-        try app.test(.GET, "\(queryParamSortPath)?doubleField=eq:\(value)") { response in
+        try app.test(.GET, "\(basePath)?doubleField=eq:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
 
@@ -99,13 +102,13 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
             models.forEach({XCTAssert($0.doubleField == value)})
         }
 
-        try app.test(.GET, "\(queryParamSortPath)?doubleField=gt:\(value)") { response in
+        try app.test(.GET, "\(basePath)?doubleField=gt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             models.forEach({XCTAssert($0.doubleField > value)})
         }
 
-        try app.test(.GET, "\(queryParamSortPath)?doubleField=lt:\(value)") { response in
+        try app.test(.GET, "\(basePath)?doubleField=lt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             models.forEach({XCTAssert($0.doubleField < value)})
@@ -115,7 +118,7 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
     func testIntFilters() throws {
         let value = 10
 
-        try app.test(.GET, "\(queryParamSortPath)?intField=eq:\(value)") { response in
+        try app.test(.GET, "\(basePath)?intField=eq:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
 
@@ -123,13 +126,13 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
             models.forEach({XCTAssert($0.intField == value)})
         }
 
-        try app.test(.GET, "\(queryParamSortPath)?intField=gt:\(value)") { response in
+        try app.test(.GET, "\(basePath)?intField=gt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             models.forEach({XCTAssert($0.intField > value)})
         }
 
-        try app.test(.GET, "\(queryParamSortPath)?intField=lt:\(value)") { response in
+        try app.test(.GET, "\(basePath)?intField=lt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
             models.forEach({XCTAssert($0.intField < value)})
@@ -138,7 +141,7 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
 
     func testBooleanEqualityQuery() throws {
 
-        try app.test(.GET, "\(queryParamSortPath)?booleanField=eq:false") { response in
+        try app.test(.GET, "\(basePath)?booleanField=eq:false") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
 
@@ -146,5 +149,44 @@ class QueryParameterSortTests: FluentTestModels.TestCase {
             models.forEach({XCTAssert($0.booleanField == false)})
         }
     }
+
+    func testIntSort() throws {
+
+        try app.test(.GET, "\(basePath)?sort=intField:asc") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.isSorted((\.intField, <)))
+        }
+
+        try app.test(.GET, "\(basePath)?sort=intField:desc") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.isSorted((\.intField, >)))
+        }
+    }
+
+    func testNestedIntSort() throws {
+
+        try app.test(.GET, "\(basePath)?sort=groupedFields_intField:asc") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.isSorted((\.groupedFields.intField, <)))
+        }
+
+        try app.test(.GET, "\(basePath)?sort=groupedFields_intField:desc") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.isSorted((\.groupedFields.intField, >)))
+        }
+    }
 }
 
+
+extension Array {
+    func isSorted<Value: Comparable>(_ predicate: (KeyPath<Element, Value>, (Value, Value) throws -> Bool)) -> Bool {
+        guard count > 1 else { return true }
+        return (try? zip(self, self.dropFirst()).allSatisfy({ (lhs, rhs) in
+            return try predicate.1(lhs[keyPath: predicate.0], rhs[keyPath: predicate.0])
+        })) == true
+    }
+}

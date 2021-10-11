@@ -55,10 +55,10 @@ extension Model {
             let split = option.components(separatedBy: ":")
 
             let field = split[0]
-
+//            let fieldKeys = field.components(separatedBy: ".").compactMap({FieldKey($0)})
             let directionParam = split.count == 1 ? "asc" : split[1]
             let querySortDirection = DatabaseQuery.Sort.Direction(directionParam)
-            let queryField = DatabaseQuery.Field.path([FieldKey(field)], schema: schema)
+            let queryField = DatabaseQuery.Field.path(FieldKey(field), schema: schema)
             sorts.append(DatabaseQuery.Sort.sort(queryField, querySortDirection))
         }
         return sorts

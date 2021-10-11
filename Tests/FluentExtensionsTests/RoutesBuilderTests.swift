@@ -36,7 +36,7 @@ class RoutesBuilderTests: FluentTestModels.TestCase {
 
     override func migrate(_ migrations: Migrations) throws {
         try super.migrate(migrations)
-        migrations.add(QueryParameterSortTestSeeder())
+        migrations.add(QueryParameterTestSeeder())
     }
 
     override func addRoutes(to router: Routes) throws {

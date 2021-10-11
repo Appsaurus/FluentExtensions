@@ -16,7 +16,7 @@ import FluentExtensions
 
 
 class SQLKitExtensionTests: FluentTestModels.TestCase {
-    let queryParamSortPath = "query-parameters-sort"
+    let basePath = "sql-kit-extension-tests"
     let valueA = "StringValue_A"
     let valueB = "StringValue_B"
     let valueC = "StringValue_C"
@@ -32,13 +32,13 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
 
     override func migrate(_ migrations: Migrations) throws {
         try super.migrate(migrations)
-        migrations.add(QueryParameterSortTestSeeder())
+        migrations.add(QueryParameterTestSeeder())
     }
 
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get(queryParamSortPath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
+        router.get(basePath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
             return try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
         }
     }
