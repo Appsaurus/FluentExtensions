@@ -179,6 +179,16 @@ class QueryParameterTests: FluentTestModels.TestCase {
             XCTAssert(models.isSorted((\.groupedFields.intField, >)))
         }
     }
+
+    func testRangeQueryStringParamsParsing() throws {
+        let dateStart: Date = "2016-06-05T16:56:57.019Z"
+        let dateEnd: Date = "2017-06-05T16:56:57.019Z"
+        let dateStringStart = dateStart.iso8601String
+        let dateStringEnd = dateEnd.iso8601String
+        let dateStringRange = "\(dateStringStart)...\(dateStringEnd)"
+        let dateRange = try ClosedRange<Date>(string: dateStringRange)
+        assert(dateRange == dateStart...dateEnd)
+    }
 }
 
 
