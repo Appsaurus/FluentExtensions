@@ -10,6 +10,7 @@ import XCTVapor
 import Fluent
 import FluentSQLiteDriver
 import FluentKit
+import CodableExtensions
 @testable import FluentTestModels
 
 class QueryParameterTestSeeder: Migration {
@@ -69,6 +70,13 @@ class QueryParameterTests: FluentTestModels.TestCase {
     }
 
 
+    func testReflect() throws {
+
+        for property in Mirror(reflecting: TestGroupedFieldsModel()).children {
+            print("name: \(property.label) type: \(type(of: property.value))")
+        }
+
+    }
     func testEqualsFieldQuery() throws {
 
         try app.test(.GET, "\(basePath)?stringField=eq:\(valueA)") { response in
@@ -181,13 +189,13 @@ class QueryParameterTests: FluentTestModels.TestCase {
     }
 
     func testRangeQueryStringParamsParsing() throws {
-        let dateStart: Date = "2016-06-05T16:56:57.019Z"
-        let dateEnd: Date = "2017-06-05T16:56:57.019Z"
-        let dateStringStart = dateStart.iso8601String
-        let dateStringEnd = dateEnd.iso8601String
-        let dateStringRange = "\(dateStringStart)...\(dateStringEnd)"
-        let dateRange = try ClosedRange<Date>(string: dateStringRange)
-        assert(dateRange == dateStart...dateEnd)
+//        let dateStart: Date = "2016-06-05T16:56:57.019Z"
+//        let dateEnd: Date = "2017-06-05T16:56:57.019Z"
+//        let dateStringStart = dateStart.iso8601String
+//        let dateStringEnd = dateEnd.iso8601String
+//        let dateStringRange = "\(dateStringStart)...\(dateStringEnd)"
+//        let dateRange = try ClosedRange<Date>(string: dateStringRange)
+//        assert(dateRange == dateStart...dateEnd)
     }
 }
 
@@ -200,3 +208,4 @@ extension Array {
         })) == true
     }
 }
+

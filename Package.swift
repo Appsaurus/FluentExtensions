@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -39,7 +39,8 @@ let package = Package(
                            .product(name: "SQLKit", package: "sql-kit"),
                            .product(name: "VaporExtensions", package: "VaporExtensions"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
-                           .product(name: "RuntimeExtensions", package: "RuntimeExtensions")]),
+                           .product(name: "RuntimeExtensions", package: "RuntimeExtensions")
+                          ]),
         .target(
             name: "FluentTestUtils",
             dependencies: [.product(name: "Fluent", package: "fluent"),

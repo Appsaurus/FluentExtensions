@@ -8,6 +8,17 @@
 import Fluent
 import Runtime
 
+
+public extension MirroredProperty {
+    var fieldName: String {
+        name.droppingUnderscorePrefix
+    }
+
+    var fieldKey: FieldKey {
+        return FieldKey(fieldName)
+    }
+}
+
 public extension PropertyInfo {
     var fieldName: String {
         name.droppingUnderscorePrefix

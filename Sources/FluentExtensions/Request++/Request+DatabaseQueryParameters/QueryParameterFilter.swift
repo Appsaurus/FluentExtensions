@@ -7,6 +7,7 @@
 
 import VaporExtensions
 import Codability
+import CodableExtensions
 
 
 public class QueryParameterFilter {

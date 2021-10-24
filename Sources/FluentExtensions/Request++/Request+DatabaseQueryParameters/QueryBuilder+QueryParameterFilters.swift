@@ -15,14 +15,14 @@ public extension QueryBuilder {
     @discardableResult
     func filterByQueryParameters(request: Request) throws -> QueryBuilder<Model> {
         var query = self
-        for property in try properties(Model.self) {
+        for property in try Model.reflectedSchemaProperties() {
             query = try filter(property, on: request)
         }
         return query
     }
     
     @discardableResult
-    func filter(_ property: PropertyInfo,
+    func filter(_ property: ReflectedSchemaProperty,
                 withQueryValueAt queryParameterKey: String? = nil,
                 on request: Request) throws -> QueryBuilder<Model> {
         var query = self

@@ -11,6 +11,7 @@ import Fluent
 import Runtime
 import RuntimeExtensions
 
+public typealias ReflectedSchemaProperty = PropertyInfo
 public extension Migrations {
     func add(_ model: Migratable.Type, to id: DatabaseID? = nil) {
         add(model.migration)
@@ -47,7 +48,7 @@ open class AutoMigration<M: Model>: ReflectionMigration {
 
     open var fieldKeyMap: [String: FieldKey] { [:] }
 
-    open func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool { false }
+    open func override(schema: SchemaBuilder, property: ReflectedSchemaProperty) -> Bool { false }
 
     @discardableResult
     open func customize(schema: SchemaBuilder) -> SchemaBuilder {
@@ -66,10 +67,10 @@ open class AutoMigration<M: Model>: ReflectionMigration {
 
 open class ReflectionConfiguration {
     open var fieldKeyMap: [String: FieldKey]
-    open var override: ((SchemaBuilder, PropertyInfo) -> Bool)
+    open var override: ((SchemaBuilder, ReflectedSchemaProperty) -> Bool)
 
     public init(fieldKeyMap: [String : FieldKey] = [:],
-                  overrides: @escaping ((SchemaBuilder, PropertyInfo) -> Bool) = { _ , _ in false }) {
+                  overrides: @escaping ((SchemaBuilder, ReflectedSchemaProperty) -> Bool) = { _ , _ in false }) {
         self.fieldKeyMap = fieldKeyMap
         self.override = overrides
     }
@@ -80,7 +81,7 @@ public protocol ReflectionMigration: Migration  {
     var config: ReflectionConfiguration { get }
     func customize(schema: SchemaBuilder) -> SchemaBuilder
     var fieldKeyMap: [String: FieldKey] { get}
-    func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool
+    func override(schema: SchemaBuilder, property: ReflectedSchemaProperty) -> Bool
 }
 
 public extension ReflectionMigration {
@@ -93,7 +94,7 @@ public extension ReflectionMigration {
 
     var fieldKeyMap: [String: FieldKey] { [:] }
 
-    func override(schema: SchemaBuilder, property: PropertyInfo) -> Bool { false }
+    func override(schema: SchemaBuilder, property: ReflectedSchemaProperty) -> Bool { false }
 
     @discardableResult
     func customize(schema: SchemaBuilder) -> SchemaBuilder {
@@ -120,12 +121,28 @@ public extension Database {
     }
 }
 
+extension Fields {
+    static var mirroredProperties: [MirroredProperty]{
+        return Mirror.properties(of: self)
+    }
+
+    static func propertiesInfo() throws -> [PropertyInfo]{
+        return try RuntimeExtensions.properties(Self.init())
+    }
+
+    static func reflectedSchemaProperties() throws -> [ReflectedSchemaProperty] {
+        try propertiesInfo()
+//        return mirroredProperties
+
+    }
+}
+
 public extension Model {
+
     static func reflectSchema(on database: Database, configuration: ReflectionConfiguration? = nil) -> SchemaBuilder {
         let schema = schema(for: database)
-        var properties: [PropertyInfo] = []
-        if let reflectedProperties = try? RuntimeExtensions.properties(self) {
-            properties = reflectedProperties
+        guard let properties = try? reflectedSchemaProperties() else {
+            return schema
         }
         for property in properties {
             guard configuration?.override(schema, property) != true else {
@@ -145,14 +162,14 @@ public extension Model {
 }
 
 public extension FieldKey {
-    static var reflectionBuilder: (PropertyInfo) -> FieldKey = { property in
+    static var reflectionBuilder: (ReflectedSchemaProperty) -> FieldKey = { property in
         return property.fieldKey
     }
 }
 public extension SchemaBuilder {
     @discardableResult
-    func    reflectSchema(for property: PropertyInfo,
-                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = FieldKey.reflectionBuilder) -> SchemaBuilder {
+    func reflectSchema(for property: ReflectedSchemaProperty,
+                       fieldKeyBuilder: (ReflectedSchemaProperty) -> FieldKey = FieldKey.reflectionBuilder) -> SchemaBuilder {
         let propertyType = property.type
         let fieldKey = fieldKeyBuilder(property)
         if let enumSchemaReflectable = propertyType as? EnumSchemaReflectable.Type {
@@ -168,9 +185,9 @@ public extension SchemaBuilder {
     }
 
     @discardableResult
-    func reflectSchema(of type: Any.Type,
-                       fieldKeyBuilder: (PropertyInfo) -> FieldKey = FieldKey.reflectionBuilder) -> Self {
-        try? RuntimeExtensions.properties(type).forEach { property in
+    func reflectSchema<M: Fields>(of type: M.Type,
+                       fieldKeyBuilder: (ReflectedSchemaProperty) -> FieldKey = FieldKey.reflectionBuilder) -> Self {
+        try? type.reflectedSchemaProperties().forEach { property in
             reflectSchema(for: property, fieldKeyBuilder: fieldKeyBuilder)
         }
         return self

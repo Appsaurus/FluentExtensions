@@ -9,7 +9,7 @@ import Foundation
 import Vapor
 import Fluent
 import Runtime
-import RuntimeExtensions
+// import RuntimeExtensions
 
 public extension SchemaBuilder {
     func intID(auto: Bool = true) -> Self {
