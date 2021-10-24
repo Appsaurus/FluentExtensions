@@ -8,8 +8,6 @@
 import Vapor
 import Foundation
 import Fluent
-// import RuntimeExtensions
-//import CodableExtensions
 import Codability
 
 public class QueryParameterFilterParser {
@@ -21,9 +19,9 @@ public extension URLQueryContainer {
                                                      withQueryValueAt queryParameterKey: String? = nil,
                                                      as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
         try parseFilter(for: M.self,
-                        at: keyPath.codingKeys,
-                        withQueryValueAt: queryParameterKey,
-                        as: queryValueType ?? V.self.Value)
+                           at: keyPath.codingKeys,
+                           withQueryValueAt: queryParameterKey,
+                           as: queryValueType ?? V.self.Value)
     }
 
     func parseFilter(for schema: Schema.Type,
@@ -39,10 +37,10 @@ public extension URLQueryContainer {
                      as queryValueType: Any.Type? = nil) throws -> QueryParameterFilter? {
         let fieldName = keyPath.map({$0.codingKey.stringValue}).joined(separator: ".")
         return try QueryParameterFilter(schema: schema,
-                                              fieldName: fieldName,
-                                              withQueryValueAt: queryParameterKey ?? fieldName,
-                                              as: queryValueType,
-                                              from: self)
+                                        fieldName: fieldName,
+                                        withQueryValueAt: queryParameterKey ?? fieldName,
+                                        as: queryValueType,
+                                        from: self)
     }
 }
 
