@@ -13,7 +13,7 @@ public protocol Timestampable: Model {
     var updatedAt: Timestamp<TimestampFormat> { get }
 }
 
-extension Timestampable {
+public extension Timestampable {
     static var createdAtKeyPath: TimestampPropertyKeyPath<Self, TimestampFormat> {
         return \.createdAt
     }
