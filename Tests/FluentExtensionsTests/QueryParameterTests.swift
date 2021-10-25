@@ -73,7 +73,7 @@ class QueryParameterTests: FluentTestModels.TestCase {
     func testReflect() throws {
 
         for property in Mirror(reflecting: TestGroupedFieldsModel()).children {
-            print("name: \(property.label) type: \(type(of: property.value))")
+            print("name: \(String(describing: property.label)) type: \(type(of: property.value))")
         }
 
     }

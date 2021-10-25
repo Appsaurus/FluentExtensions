@@ -30,6 +30,47 @@ public extension ChildrenProperty {
     func all(on database: Database) -> Future<[To]> {
         return query(on: database).all()
     }
+
+//    @discardableResult
+    func attach(_ children: [To], on database: Database) -> EventLoopFuture<Void> {
+        guard let id = fromId else {
+            fatalError("Cannot query children relation from unsaved model.")
+        }
+        children.forEach {
+            switch self.parentKey {
+            case .required(let keyPath):
+                $0[keyPath: keyPath].id = id
+            case .optional(let keyPath):
+                $0[keyPath: keyPath].id = id
+            }
+        }
+        return children.update(on: database)
+    }
+
+
+    @discardableResult
+    func replace(with children: [To], on database: Database) -> EventLoopFuture<Void> {
+        return self.all(on: database).flatMap { existingChildren in
+            switch self.parentKey {
+            case .required(_):
+                return existingChildren.delete(force: true, on: database)
+                    .flatMap({children.upsert(on: database)})
+            case .optional(let keyPath):
+                existingChildren.forEach({
+                    $0[keyPath: keyPath].id = nil
+                })
+                //Need to use wrapped id since it may not exist yet.
+                children.forEach({ $0[keyPath: keyPath].$id.value = self.fromId})
+                return existingChildren.update(on: database)
+                    .flatMap({children.upsert(on: database)}).future(Void())
+            }
+        }
+
+    }
+
+    func replaceAndReturn(with children: [To], on database: Database) -> EventLoopFuture<[To]> {
+        replace(with: children, on: database).transform(to: children)
+    }
 }
 
 public extension Model {

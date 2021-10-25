@@ -53,4 +53,19 @@ public extension Collection where Element: Model{
     func updateAndReturn(on database: Database) -> Future<Self>{
         return self.update(on: database, force: true).transform(to: self)
     }
+    
+    @discardableResult
+    func upsertAndReturn(on database: Database, transaction: Bool = true) -> Future<Self> {
+        guard transaction else {
+            return upsert(on: database).transform(to: self)
+        }
+        return database.transaction { conn in
+            return upsert(on: database).transform(to: self)
+        }
+
+    }
+}
+
+public extension Collection where Element: Model {
+
 }
