@@ -8,18 +8,10 @@
 import Fluent
 
 public protocol Timestampable: Model {
-    associatedtype TimestampFormat: Fluent.TimestampFormat
-    var createdAt: Timestamp<TimestampFormat> { get }
-    var updatedAt: Timestamp<TimestampFormat> { get }
-}
-
-public extension Timestampable {
-    static var createdAtKeyPath: TimestampPropertyKeyPath<Self, TimestampFormat> {
-        return \.createdAt
-    }
+    var createdAt: Date? { get }
+    var updatedAt: Date? { get }
 }
 
 public protocol SoftDeletable: Model {
-    associatedtype TimestampFormat: Fluent.TimestampFormat
-    var deletedAt: Timestamp<TimestampFormat> { get }
+    var deletedAt: Date? { get }
 }
