@@ -9,8 +9,8 @@ import Fluent
 
 public protocol Timestampable: Model {
     associatedtype TimestampFormat: Fluent.TimestampFormat
-    var createdAt: Timestamp<TimestampFormat> { get set }
-    var updatedAt: Timestamp<TimestampFormat> { get set }
+    var createdAt: Timestamp<TimestampFormat> { get }
+    var updatedAt: Timestamp<TimestampFormat> { get }
 }
 
 public extension Timestampable {
