@@ -8,6 +8,7 @@
 import VaporExtensions
 import Fluent
 
+
 public extension ChildrenProperty {
 	/// Returns true if the supplied model is a child
 	/// to this relationship.
@@ -79,4 +80,15 @@ public extension Model {
 	func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, on database: Database) -> Future<Bool> {
 		return children.includes(self, on: database)
 	}
+
+    @discardableResult
+    func replaceChildren<C: Model>(with children: [C],
+                                          through childKeyPath: ChildrenPropertyKeyPath<Self, C>,
+                                          on database: Database) throws -> Future<[C]> {
+        let _ = try self.requireID()
+        return database.transaction { (database) -> Future<[C]> in
+            let relation = self[keyPath: childKeyPath]
+            return relation.replaceAndReturn(with: children, on: database)
+        }
+    }
 }

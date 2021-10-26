@@ -31,32 +31,23 @@ public extension SiblingsProperty{
     }
 }
 
-///// Left-side
-//public extension SiblingsProperty
-//	where Through: ModifiablePivot, Through.Left == Base, Through.Right == Related, Through.Database: QuerySupporting{
-//	/// Attaches an array  of models to this relationship.
-//	@discardableResult
-//	func attach(_ models: [Related], on database: Database) -> Future<[Through]> {
-//		return Future.flatMap(on: database) {
-//			try models.map({return try Through(self.base, $0)}).save(on: database)
-//		}
-//	}
-//
-//	/// Pure sugar wrapping isAttached() in order to match child API name
-//	func includes(_ model: Through.Right, on database: Database) throws -> Future<Bool> {
-//		return isAttached(model, on: database)
-//	}
-//}
-//
-///// Right-side
-//public extension Siblings
-//	where Through: ModifiablePivot, Through.Left == Related, Through.Right == Base, Through.Database: QuerySupporting{
-//	/// Attaches an array of models to this relationship.
-//	@discardableResult
-//	func attach(_ models: [Related], on database: Database) -> Future<[Through]> {
-//		return Future.flatMap(on: database) {
-//			try models.map({return try Through($0, self.base)}).save(on: database)
-//		}
-//	}
-//}
 
+extension SiblingsProperty {
+    // MARK: Operations
+
+    /// Attach an array model to this model through a pivot.
+    ///
+    /// - Parameters:
+    ///     - tos: An array of models to replace all siblings through a sibling relationship
+    ///     - database: The database to perform the attachment on.
+    ///     - edit: An optional closure to edit the pivot model before saving it.
+    public func replace(
+        with tos: [To],
+        on database: Database,
+        _ edit: @escaping (Through) -> () = { _ in }
+    ) -> EventLoopFuture<Void> {
+        return self.detachAll(on: database).flatMap { _ in
+            self.attach(tos, on: database, edit)
+        }
+    }
+}
