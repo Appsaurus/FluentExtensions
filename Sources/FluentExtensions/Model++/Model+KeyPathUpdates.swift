@@ -1,12 +1,11 @@
 //
-//  File.swift
+//  Model+KeyPathUpdates.swift
 //  
 //
 //  Created by Brian Strobach on 10/26/21.
 //
 
-extension Model{
-
+public extension Model{
         static func updateValue<Property: QueryableProperty>(at keyPath: KeyPath<Self, Property>,
                                                              to value: Property.Value,
                                       where filters: ModelValueFilter<Self>...,
@@ -16,7 +15,7 @@ extension Model{
     }
 }
 
-extension Collection where Element: Model {
+public extension Collection where Element: Model {
     mutating func updateValue<Property: QueryableProperty>(at keyPath: KeyPath<Element, Property>,
                                                            to value: Property.Value,
                                                            on database: Database) throws -> Future<[Element]> {
@@ -29,7 +28,7 @@ extension Collection where Element: Model {
     }
 
 }
-extension Future where Value: Collection, Value.Element: Model {
+public extension Future where Value: Collection, Value.Element: Model {
 
     func updateValue<Property: QueryableProperty>(at keyPath: KeyPath<Value.Element, Property>,
                                                   to value: Property.Value,
