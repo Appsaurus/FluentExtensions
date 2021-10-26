@@ -5,6 +5,7 @@
 //  Created by Brian Strobach on 10/26/21.
 //
 
+
 public extension Model{
         static func updateValue<Property: QueryableProperty>(at keyPath: KeyPath<Self, Property>,
                                                              to value: Property.Value,

@@ -37,3 +37,17 @@ public extension SQLDatabase {
         return raw(SQLQueryString(sql))
     }
 }
+
+public extension Database {
+    func query<R: Decodable>(_ rawQuery: String, decoding result: R.Type = R.self) -> Future<[R]>{
+        sqlRaw(rawQuery).all(decoding: result)
+    }
+}
+
+public extension Request {
+    func query<R: Decodable>(_ rawQuery: String,
+                             decoding result: R.Type = R.self) -> Future<[R]>{
+        db.query(rawQuery, decoding: result)
+    }
+}
+
