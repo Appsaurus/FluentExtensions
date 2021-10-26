@@ -24,7 +24,7 @@ public extension Future where Value: Joinable {
     }
 }
 
-extension Future where Value: Collection, Value.Element: Joinable {
+public extension Future where Value: Collection, Value.Element: Joinable {
     func joined(on request: Request) throws -> Future<[Value.Element.Joined]> {
         return tryFlatMap { joinable in
             return try joinable.joined(on: request)
