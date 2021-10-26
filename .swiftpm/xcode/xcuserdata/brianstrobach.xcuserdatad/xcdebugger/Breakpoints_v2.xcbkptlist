@@ -145,6 +145,21 @@
                   endingLineNumber = "441"
                   offsetFromSymbolStart = "80">
                </Location>
+               <Location
+                  uuid = "1514FADB-4C81-4464-99D5-0E88478251A5 - 5afade4fc6600814"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.GroupProperty.reflectSchema(with: FluentKit.FieldKey, to: FluentKit.SchemaBuilder) -&gt; FluentKit.SchemaBuilder"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Appsaurus/Company/Projects/OpenSource/Swift/Vapor/FluentExtensions/Sources/FluentExtensions/Schema++/SchemaReflectable.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "448"
+                  endingLineNumber = "448"
+                  offsetFromSymbolStart = "78">
+               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
