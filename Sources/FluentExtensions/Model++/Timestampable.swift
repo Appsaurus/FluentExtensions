@@ -8,10 +8,10 @@
 import Fluent
 
 public protocol Timestampable: Model {
-    var createdAt: Date? { get }
-    var updatedAt: Date? { get }
+    var createdAt: Date? { get set }
+    var updatedAt: Date? { get set }
 }
 
 public protocol SoftDeletable: Model {
-    var deletedAt: Date? { get }
+    var deletedAt: Date? { get set }
 }
