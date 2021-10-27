@@ -7,7 +7,7 @@
 
 import Fluent
 
-extension QueryBuilder {
+public extension QueryBuilder {
     func sort(_ sorts: [DatabaseQuery.Sort]) -> Self {
         var mSelf = self
         for sort in sorts {
