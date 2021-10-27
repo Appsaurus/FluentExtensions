@@ -1,6 +1,6 @@
 //
 //  QueryBuilder+Timestampable.swift
-//  
+//
 //
 //  Created by Brian Strobach on 10/26/21.
 //
