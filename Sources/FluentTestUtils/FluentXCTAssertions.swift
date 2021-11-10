@@ -9,35 +9,35 @@ import Foundation
 import XCTest
 import Fluent
 
-func XCTAssert<M>(query: QueryBuilder<M>, hasCount count: Int) {
+public func XCTAssert<M>(query: QueryBuilder<M>, hasCount count: Int) {
     XCTAssertEqual(try query.count().wait(), count)
 }
 
-func XCTAssert<M: Model>(model: M.Type, hasCount count: Int, on database: Database){
+public func XCTAssert<M: Model>(model: M.Type, hasCount count: Int, on database: Database){
     XCTAssert(query: M.query(on: database), hasCount: count)
 }
-func XCTAssertJSONEqual<E: Encodable>(_ source: E, candidates: E...) {
+public func XCTAssertJSONEqual<E: Encodable>(_ source: E, candidates: E...) {
     XCTAssert(jsonIsEqual(source, candidates: candidates))
 }
 
-func XCTAssertJSONNotEqual<E: Encodable>(_ source: E, candidates: E...) {
+public func XCTAssertJSONNotEqual<E: Encodable>(_ source: E, candidates: E...) {
     XCTAssertFalse(jsonIsEqual(source, candidates: candidates))
 }
 
-func jsonIsEqual<E: Encodable>(_ source: E, candidates: [E]) -> Bool{
+public func jsonIsEqual<E: Encodable>(_ source: E, candidates: [E]) -> Bool{
 //    let encoder = JSONEncoder()
     let sourceData = try! source.encodeAsJSONString()
 //    let sourceData: Data = try! encoder.encode(source)
     return !candidates.contains(where: {try! $0.encodeAsJSONString() != sourceData})
 }
 
-func XCTAssertReferencingSameEntity<RE: Model>(_ target: RE, _ testCandidates: RE...) {
+public func XCTAssertReferencingSameEntity<RE: Model>(_ target: RE, _ testCandidates: RE...) {
     testCandidates.forEach { (testCandidate) in
         XCTAssert(target.isReferencingSameEntity(as: testCandidate))
     }
 }
 
-func XCTAssertAllReferencingSameEntity<RE: Model>(_ target: [RE], _ testCandidate: [RE])
+public func XCTAssertAllReferencingSameEntity<RE: Model>(_ target: [RE], _ testCandidate: [RE])
     where RE.IDValue: Comparable {
         XCTAssert(target.areReferencingSameEntities(as: testCandidate))
 }
