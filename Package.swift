@@ -25,11 +25,11 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.0.0")),
 		.package(url: "https://github.com/vapor/fluent.git", .upToNextMajor(from:"4.0.0")),
-        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", .upToNextMajor(from: "0.2.0")),
         .package(url: "https://github.com/vapor/sql-kit.git", .upToNextMajor(from: "3.1.0")),
-		.package(url: "https://github.com/Appsaurus/CodableExtensions", .upToNextMajor(from: "1.0.0")),
-		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", .upToNextMajor(from: "0.1.0")),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", .upToNextMajor(from:"4.0.0")),
+        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", .upToNextMajor(from: "1.0.0")),
+		.package(url: "https://github.com/Appsaurus/CodableExtensions", .upToNextMajor(from: "1.0.0")),
+		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", .upToNextMajor(from: "0.1.0"))
     ],
     targets: [
         .target(
