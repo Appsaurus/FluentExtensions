@@ -92,6 +92,15 @@
         }
       },
       {
+        "package": "RoutingKitExtensions",
+        "repositoryURL": "https://github.com/Appsaurus/RoutingKitExtensions",
+        "state": {
+          "branch": null,
+          "revision": "cdfa7c8ce72526ee02e4657739968893ca82eb4f",
+          "version": "1.0.1"
+        }
+      },
+      {
         "package": "Runtime",
         "repositoryURL": "https://github.com/wickwirew/Runtime",
         "state": {
@@ -240,8 +249,8 @@
         "repositoryURL": "https://github.com/Appsaurus/VaporExtensions.git",
         "state": {
           "branch": null,
-          "revision": "7a7c603ccbb284c26aa60f66c415f8df3e6ecdab",
-          "version": "1.0.0"
+          "revision": "b97fc34f423292f0b387fadba349508b1028d01a",
+          "version": "1.0.2"
         }
       },
       {
