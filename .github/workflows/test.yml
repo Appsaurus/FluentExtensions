@@ -17,7 +17,7 @@ jobs:
         run: apt-get -q update && apt-get -q install -y libsqlite3-dev
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Run tests with Thread Sanitizer
+      - name: Run linux tests
         run: swift test
   macOS:
     strategy:
@@ -34,5 +34,5 @@ jobs:
           xcode-version: ${{ matrix.version }}
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Run tests with Thread Sanitizer
+      - name: Run macOS tests with Thread Sanitizer
         run: swift test --sanitize=thread
