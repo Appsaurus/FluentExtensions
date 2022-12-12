@@ -8,7 +8,7 @@
 import Fluent
 
 
-public typealias QueryablePropertyKeyPath<M: Model> = KeyPath<M, QueryableProperty>
+public typealias QueryablePropertyKeyPath<M: Model> = KeyPath<M, any QueryableProperty>
 
 public typealias IDPropertyKeyPath<M: Model> = KeyPath<M, IDProperty<M, M.IDValue>>
 public typealias ForeignIDPropertyKeyPath<From: Model, To: Model> = KeyPath<From, IDProperty<From, To.IDValue>>

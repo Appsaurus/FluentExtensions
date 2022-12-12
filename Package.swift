@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -23,14 +23,14 @@ let package = Package(
             targets: ["FluentTestModels"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "4.0.0")),
-		.package(url: "https://github.com/vapor/fluent.git", .upToNextMajor(from:"4.0.0")),
-        .package(url: "https://github.com/vapor/fluent-kit.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/vapor/sql-kit.git", .upToNextMajor(from: "3.1.0")),
-        .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", .upToNextMajor(from:"4.0.0")),
-        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", .upToNextMajor(from: "1.0.2")),
-		.package(url: "https://github.com/Appsaurus/CodableExtensions", .upToNextMajor(from: "1.1.0")),
-		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
+		.package(url: "https://github.com/vapor/fluent.git", from:"4.0.0"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from:"1.0.0"),
+        .package(url: "https://github.com/vapor/sql-kit.git", from: "3.1.0"),
+        .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from:"4.0.0"),
+        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.0.2"),
+		.package(url: "https://github.com/Appsaurus/CodableExtensions", from: "1.1.0"),
+		.package(url: "https://github.com/Appsaurus/RuntimeExtensions", from: "1.0.0")
     ],
     targets: [
         .target(
