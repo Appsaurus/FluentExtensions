@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - swift:5.5-focal
+          - swift:5.7-focal
 #          - swiftlang/swift:nightly-main-focal
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
@@ -26,7 +26,7 @@ jobs:
         version:
           - latest
           - latest-stable
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
       - name: Select latest available Xcode
         uses: maxim-lobanov/setup-xcode@v1
