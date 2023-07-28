@@ -275,8 +275,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appsaurus/VaporExtensions.git",
       "state" : {
-        "revision" : "9e9c6aaae1aba4339d6e5736ce55b1e1578e4c26",
-        "version" : "1.0.4"
+        "revision" : "8dc9a3f3f2149b53c6a130ba1fa1399ff5c92ca4",
+        "version" : "1.0.5"
       }
     },
     {
