@@ -468,8 +468,7 @@ extension TimestampProperty: SchemaReflectable {
 }
 
 
-extension ParentProperty: SchemaReflectable  {
-
+extension ParentProperty: SchemaReflectable where To.IDValue == UUID {
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
@@ -478,7 +477,16 @@ extension ParentProperty: SchemaReflectable  {
     }
 }
 
-extension OptionalParentProperty: SchemaReflectable {
+extension ParentProperty where To.IDValue == Int {
+    @discardableResult
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder
+            .field(key, .init(To.IDValue.self), .required)
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
+    }
+}
+
+extension OptionalParentProperty: SchemaReflectable where To.IDValue == UUID {
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
@@ -486,6 +494,16 @@ extension OptionalParentProperty: SchemaReflectable {
             .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
     }
 }
+
+extension OptionalParentProperty where To.IDValue == Int {
+    @discardableResult
+    public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
+        return builder
+            .field(key, .init(To.IDValue.self))
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
+    }
+}
+
 //
 //public extension ChildrenProperty: SchemaReflectable {
 //    @discardableResult
