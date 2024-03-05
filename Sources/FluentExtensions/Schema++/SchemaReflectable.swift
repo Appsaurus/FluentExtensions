@@ -468,13 +468,13 @@ extension TimestampProperty: SchemaReflectable {
 }
 
 
-extension ParentProperty: SchemaReflectable {
+extension ParentProperty: SchemaReflectable  {
 
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self), .required)
-            .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
     }
 }
 
@@ -483,7 +483,7 @@ extension OptionalParentProperty: SchemaReflectable {
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self))
-            .foreignKey(key, references: To.schema, To.ID<To.IDValue>().key)
+            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
     }
 }
 //
