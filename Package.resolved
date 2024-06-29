@@ -104,8 +104,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/wickwirew/Runtime",
       "state" : {
-        "revision" : "dad03135d7701a4e7b3a4051e75d6b37bd8e178e",
-        "version" : "2.2.4"
+        "revision" : "b90e9ab1c66a964a9edf32fe38ea2774c0e5821b",
+        "version" : "2.2.7"
       }
     },
     {
@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appsaurus/RuntimeExtensions",
       "state" : {
-        "revision" : "37e2693e296f21c7c57610e11757eda3c50fda7f",
-        "version" : "1.0.1"
+        "branch" : "1.1.0",
+        "revision" : "221825b8864255392b347725f4afbccfa1cf9662"
       }
     },
     {
