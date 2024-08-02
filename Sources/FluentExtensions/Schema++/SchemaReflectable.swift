@@ -55,13 +55,13 @@ open class AutoMigration<M: Model>: ReflectionMigration {
         return schema
     }
 
-    open func prepare(on database: Database) -> EventLoopFuture<Void> {
+    open func prepare(on database: Database) async throws {
         let schema = database.reflectSchema(ModelType.self, configuration: config)
-        return customize(schema: schema).create()
+        return try await customize(schema: schema).create()
     }
 
-    open func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(ModelType.schema).delete()
+    open func revert(on database: Database) async throws {
+        try await database.schema(ModelType.schema).delete()
     }
 }
 
@@ -76,7 +76,7 @@ open class ReflectionConfiguration {
     }
 }
 
-public protocol ReflectionMigration: Migration  {
+public protocol ReflectionMigration: AsyncMigration  {
     associatedtype ModelType: Model
     var config: ReflectionConfiguration { get }
     func customize(schema: SchemaBuilder) -> SchemaBuilder
@@ -101,13 +101,13 @@ public extension ReflectionMigration {
         return schema
     }
 
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
+    func prepare(on database: Database) async throws {
         let schema = database.reflectSchema(ModelType.self, configuration: config)
-        return customize(schema: schema).create()
+        try await customize(schema: schema).create()
     }
 
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(ModelType.schema).delete()
+    func revert(on database: Database) async throws {
+        try await database.schema(ModelType.schema).delete()
     }
 }
 
@@ -116,8 +116,8 @@ public extension Database {
         return M.reflectSchema(on: self, configuration: configuration)
     }
 
-    func autoMigrate<M: Model>(_ model: M.Type) -> EventLoopFuture<Void> {
-        return M.autoMigrate(on: self)
+    func autoMigrate<M: Model>(_ model: M.Type) async throws {
+        try await M.autoMigrate(on: self)
     }
 }
 
@@ -156,8 +156,8 @@ public extension Model {
         }
         return schema
     }
-    static func autoMigrate(on database: Database) -> EventLoopFuture<Void> {
-        return reflectSchema(on: database).create()
+    static func autoMigrate(on database: Database) async throws {
+        try await reflectSchema(on: database).create()
     }
 }
 

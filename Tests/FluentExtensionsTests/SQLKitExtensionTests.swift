@@ -14,7 +14,6 @@ import FluentExtensions
 
 @testable import FluentTestModels
 
-
 class SQLKitExtensionTests: FluentTestModels.TestCase {
     let basePath = "sql-kit-extension-tests"
     let valueA = "StringValue_A"
@@ -38,36 +37,54 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get(basePath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
-            return try KitchenSink.query(on: request.db).filterByQueryParameters(request: request).all()
+        router.get(basePath) { (request: Request) in
+            return try KitchenSink.query(on: request.db)
+                .filterByQueryParameters(request: request)
+                .all()
         }
     }
 
-
-    func testLabeledCountsGroupedBy() throws {
-        let counts = try app.db
+    func testLabeledCountsGroupedBy() async throws {
+        let counts = try await app.db
             .select()
-            .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).wait()
+            .labeledCountsGroupedBy(\KitchenSink.$optionalStringField)
+            .get()
         XCTAssert(counts.count > 0)
         for count in counts {
             XCTAssert(count.value > 0)
         }
-
     }
 
-    func testSum() throws {
-        let sum1 = try app.db.select().sum(\KitchenSink.$intField).wait()
+    func testSum() async throws {
+        let sum1 = try await app.db.select().sum(\KitchenSink.$intField).get()
         XCTAssertEqual(sum1, 325)
     }
 
-    //TODO: Probably need to limit this to MySQL/PostgreSQL
-//    func testGroupByRollup() throws {
-//
-//        let rollup = try app.db
-//            .sqlSelect(from: KitchenSink.sqlTable)
-//            .column("*")
-//            .groupByRollup(\KitchenSink.$intField, \KitchenSink.$stringField).all().wait()
-//        print("Rollup: \(rollup)")
-//    }
-}
+    // Additional test methods can be added here, following the async/await pattern
 
+    // Example of a test that might involve multiple operations
+    func testMultipleOperations() async throws {
+        // First operation
+        let counts = try await app.db
+            .select()
+            .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).get()
+        XCTAssert(counts.count > 0)
+
+        // Second operation
+        let sum = try await app.db.select().sum(\KitchenSink.$intField).get()
+        XCTAssertEqual(sum, 325)
+
+        // You can add more operations or assertions as needed
+    }
+
+    // Commented out as in the original
+    // func testGroupByRollup() async throws {
+    //     let rollup = try await app.db
+    //         .sqlSelect(from: KitchenSink.sqlTable)
+    //         .column("*")
+    //         .groupByRollup(\KitchenSink.$intField, \KitchenSink.$stringField).all()
+    //     print("Rollup: \(rollup)")
+    // }
+
+    // You can add more test methods here as needed
+}

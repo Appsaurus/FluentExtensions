@@ -1,39 +1,22 @@
-//
-//  ChildrenProperty++.swift
-//
-//
-//  Created by Brian Strobach on 12/18/17.
-//
-
-import VaporExtensions
+import Vapor
 import Fluent
 
-
 public extension ChildrenProperty {
-	/// Returns true if the supplied model is a child
-	/// to this relationship.
-	func includes(_ model: To, on database: Database) -> Future<Bool> {
-        do {
-            let id = try model.requireID()
-            return query(on: database)
-                .filter(\._$id == id)
-                .first()
-                .map { child in
-                    return child != nil
-            }
-        }
-        catch {
-            return database.eventLoop.fail(with: error)
-        }
-
-	}
-
-    func all(on database: Database) -> Future<[To]> {
-        return query(on: database).all()
+    /// Returns true if the supplied model is a child
+    /// to this relationship.
+    func includes(_ model: To, in database: Database) async throws -> Bool {
+        let id = try model.requireID()
+        return try await query(on: database)
+            .filter(\._$id == id)
+            .first() != nil
     }
 
-//    @discardableResult
-    func attach(_ children: [To], on database: Database) -> EventLoopFuture<Void> {
+    func all(in database: Database) async throws -> [To] {
+        try await query(on: database).all()
+    }
+
+    @discardableResult
+    func attach(_ children: [To], in database: Database) async throws -> [To] {
         guard let id = fromId else {
             fatalError("Cannot query children relation from unsaved model.")
         }
@@ -45,50 +28,42 @@ public extension ChildrenProperty {
                 $0[keyPath: keyPath].id = id
             }
         }
-        return children.update(on: database)
+        return try await children.update(in: database)
     }
-
 
     @discardableResult
-    func replace(with children: [To], on database: Database) -> EventLoopFuture<Void> {
-        return self.all(on: database).flatMap { existingChildren in
-            switch self.parentKey {
-            case .required(_):
-                return existingChildren.delete(force: true, on: database)
-                    .flatMap({children.upsert(on: database)})
-            case .optional(let keyPath):
-                existingChildren.forEach({
-                    $0[keyPath: keyPath].id = nil
-                })
-                //Need to use wrapped id since it may not exist yet.
-                children.forEach({ $0[keyPath: keyPath].$id.value = self.fromId})
-                return existingChildren.update(on: database)
-                    .flatMap({children.upsert(on: database)}).future(Void())
-            }
+    func replace(with children: [To], in database: Database) async throws -> [To] {
+        let existingChildren = try await self.all(in: database)
+        switch self.parentKey {
+        case .required(_):
+            try await existingChildren.delete(force: true, in: database)
+            return try await children.upsert(in: database)
+        case .optional(let keyPath):
+            existingChildren.forEach { $0[keyPath: keyPath].id = nil }
+            children.forEach { $0[keyPath: keyPath].$id.value = self.fromId }
+            try await existingChildren.update(in: database)
+            return try await children.upsert(in: database)
         }
-
-    }
-
-    func replaceAndReturn(with children: [To], on database: Database) -> EventLoopFuture<[To]> {
-        replace(with: children, on: database).transform(to: children)
     }
 }
 
 public extension Model {
-	/// Returns true if this model is a child
-	/// to the supplied relationship.
-	func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, on database: Database) -> Future<Bool> {
-		return children.includes(self, on: database)
-	}
+    /// Returns true if this model is a child
+    /// to the supplied relationship.
+    func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, in database: Database) async throws -> Bool {
+        try await children.includes(self, in: database)
+    }
 
     @discardableResult
-    func replaceChildren<C: Model>(with children: [C],
-                                          through childKeyPath: ChildrenPropertyKeyPath<Self, C>,
-                                          on database: Database) throws -> Future<[C]> {
+    func replaceChildren<C: Model>(
+        with children: [C],
+        through childKeyPath: ChildrenPropertyKeyPath<Self, C>,
+        in database: Database
+    ) async throws -> [C] {
         let _ = try self.requireID()
-        return database.transaction { (database) -> Future<[C]> in
+        return try await database.transaction { database in
             let relation = self[keyPath: childKeyPath]
-            return relation.replaceAndReturn(with: children, on: database)
+            return try await relation.replace(with: children, in: database)
         }
     }
 }

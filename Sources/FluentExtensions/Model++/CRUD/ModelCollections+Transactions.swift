@@ -1,32 +1,61 @@
-//
-//  File.swift
-//  
-//
-//  Created by Brian Strobach on 8/9/21.
-//
-
 import FluentKit
+import CollectionConcurrencyKit
 
-public typealias BatchAction<V> = (Database) -> Future<V>
-public typealias ThrowingBatchAction<V> = (Database) throws -> Future<V>
+public typealias AsyncBatchAction<V, R> = (Database, V) async throws -> R
 
 public extension Collection where Element: Model {
-
-    func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool = true) -> Future<V>{
-        guard transaction else {
-            return action(database)
+    
+    func performBatch(
+        action: @escaping AsyncBatchAction<Element, Element>,
+        on database: Database,
+        transaction: Bool = true,
+        concurrently: Bool = true
+    ) async throws -> [Element] {
+        let batchOperation = {
+            if concurrently {
+                return try await self.concurrentMap { element in
+                    try await action(database, element)
+                }
+            } else {
+                return try await self.asyncMap { element in
+                    try await action(database, element)
+                }
+            }
         }
-        return database.transaction { conn in
-            return action(conn)
+        
+        if transaction {
+            return try await database.transaction { db in
+                try await batchOperation()
+            }
+        } else {
+            return try await batchOperation()
         }
     }
-}
-
-
-public extension Future where Value: Collection, Value.Element: Model {
-    func performBatch<V>(action: @escaping BatchAction<V>, on database: Database, transaction: Bool = true) -> Future<V>{
-        return flatMap { elements in
-            return elements.performBatch(action: action, on: database, transaction: transaction)
+    
+    func performBatchVoid(
+        action: @escaping AsyncBatchAction<Element, Void>,
+        on database: Database,
+        transaction: Bool = true,
+        concurrently: Bool = true
+    ) async throws -> Void {
+        let batchOperation = {
+            if concurrently {
+                try await self.concurrentForEach { element in
+                    _ = try await action(database, element)
+                }
+            } else {
+                try await asyncForEach { element in
+                    _ = try await action(database, element)
+                }
+            }
+        }
+        
+        if transaction {
+            try await database.transaction { db in
+                try await batchOperation()
+            }
+        } else {
+            try await batchOperation()
         }
     }
 }

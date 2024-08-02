@@ -1,95 +1,51 @@
-//
-//  Model+CollectionCRUD.swift
-//  FluentExtensions
-//
-//  Created by Brian Strobach on 7/2/18.
-//
-
-import VaporExtensions
+import Vapor
 import Fluent
+import CollectionConcurrencyKit
 
 public extension Collection where Element: Model {
+
     @discardableResult
-    func update(on database: Database, force: Bool) -> Future<Void>{
-        if force {
-            self.forEach({$0._$id.exists = true})
-        }
-        return self.update(on: database)
-    }
-	func create(on database: Database, transaction: Bool = true) -> Future<Void> {
-		return performBatch(action: create, on: database, transaction: transaction)
-	}
-
-	func save(on database: Database, transaction: Bool = true) -> Future<Void>{
-		return performBatch(action: save, on: database, transaction: transaction)
-	}
-
-	func update(on database: Database, transaction: Bool = true) -> Future<Void>{
-        performBatch(action: { database in
-            update(on: database, force: true)
-        }, on: database, transaction: transaction)
-	}
-
-    func delete(force: Bool = false, on database: Database, transaction: Bool = true) -> Future<Void> {
-        performBatch(action: { database in
-            delete(force: force, on: database)
-        }, on: database, transaction: transaction)
-
+    func create(in database: Database, transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { db, element in
+                try await element.create(in: db)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
 
-
-    func createAndReturn(on database: Database, transaction: Bool = true) -> Future<Self> {
-        return performBatch(action: createAndReturn, on: database, transaction: transaction)
+    @discardableResult
+    func save(in database: Database, transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { db, element in
+                try await element.save(in: db)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
-
-    func saveAndReturn(on database: Database, transaction: Bool = true) -> Future<Self>{
-        return performBatch(action: saveAndReturn, on: database, transaction: transaction)
+    
+    @discardableResult
+    func update(in database: Database,
+                transaction: Bool = true,
+                force: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { db, element in
+                try await element.update(in: db, force: force)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
-
-    func updateAndReturn(on database: Database, transaction: Bool = true) -> Future<Self>{
-        return performBatch(action: updateAndReturn, on: database, transaction: transaction)
-    }
-}
-
-
-public extension Future where Value: Collection, Value.Element: Model{
-
-	func create(on database: Database, transaction: Bool = true) -> Future<Void>{
-		return flatMap { elements in
-			return elements.create(on: database)
-		}
-	}
-
-//	func delete(on database: Database) -> Future<Void>{
-//		return flatMap(to: Void.self) { elements in
-//			return elements.delete(on: database)
-//		}
-//	}
-
-	func save(on database: Database, transaction: Bool = true) -> Future<Void>{
-        return flatMap { $0.save(on: database, transaction: transaction )}
-	}
-
-	func update(on database: Database, transaction: Bool = true) -> Future<Void>{
-        return flatMap { $0.update(on: database, transaction: transaction )}
-	}
-
-    func createAndReturn(on database: Database, transaction: Bool = true) -> Future<Value> {
-
-        return flatMap { $0.createAndReturn(on: database, transaction: transaction )}
-    }
-
-
-    func delete(force: Bool = false, on database: Database, transaction: Bool = true) -> Future<Void> {
-        return flatMap { $0.delete(force: force, on: database, transaction: transaction )}
-
-    }
-
-    func saveAndReturn(on database: Database, transaction: Bool = true) -> Future<Value>{
-        return flatMap { $0.saveAndReturn(on: database, transaction: transaction )}
-    }
-
-    func updateAndReturn(on database: Database, transaction: Bool = true) -> Future<Value>{
-        return flatMap { $0.updateAndReturn(on: database, transaction: transaction )}
+    
+    func delete(force: Bool = false, in database: Database, transaction: Bool = true) async throws {
+        try await performBatchVoid(
+            action: { db, element in
+                try await element.delete(force: force, on: db)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
 }

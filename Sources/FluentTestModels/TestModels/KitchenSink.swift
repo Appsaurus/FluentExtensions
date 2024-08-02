@@ -249,10 +249,10 @@ public enum TestRawIntEnum: Int, Codable, CaseIterable {
 class KitchenSinkReflectionMigration: AutoMigration<KitchenSink> {}
 
 //MARK: Manual migration
-public class KitchenSinkMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-
-        database.schema(KitchenSink.schema)
+public class KitchenSinkMigration: AsyncMigration {
+    
+    public func prepare(on database: any FluentKit.Database) async throws {
+        try await database.schema(KitchenSink.schema)
             .field(.id, .int, .identifier(auto: true))
 
             //MARK: Basic Data Type Fields Schema
@@ -301,7 +301,7 @@ public class KitchenSinkMigration: Migration {
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> { 
-        return database.schema(KitchenSink.schema).delete()
+    public func revert(on database: any FluentKit.Database) async throws {
+        try await database.schema(KitchenSink.schema).delete()
     }
 }
