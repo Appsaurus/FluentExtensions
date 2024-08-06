@@ -8,11 +8,11 @@
 import FluentKit
 
 public extension QueryBuilder{
-    func emptyResults() -> Future<[Model]> {
-        return self.database.eventLoop.future([Model]())
+    func emptyResults() -> [Model] {
+        return [Model]()
     }
-    func emptyResult() -> Future<Model?> {
-        return self.database.eventLoop.future(nil)
+    func emptyResult() -> Model? {
+        return nil
     }
 }
 

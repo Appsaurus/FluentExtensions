@@ -26,8 +26,8 @@ public extension SiblingsProperty{
         try await self.$pivots.includes(model, in: database)
     }
 
-    func all(on database: Database) -> Future<[To]> {
-        return query(on: database).all()
+    func all(on database: Database) async throws -> [To] {
+        return try await query(on: database).all()
     }
 }
 
@@ -45,9 +45,9 @@ extension SiblingsProperty {
         with tos: [To],
         on database: Database,
         _ edit: @escaping (Through) -> () = { _ in }
-    ) -> EventLoopFuture<Void> {
-        return self.detachAll(on: database).flatMap { _ in
-            self.attach(tos, on: database, edit)
-        }
+    ) async throws {
+        //TODO: transaction?
+        try await self.detachAll(on: database)
+        try await self.attach(tos, on: database, edit)
     }
 }

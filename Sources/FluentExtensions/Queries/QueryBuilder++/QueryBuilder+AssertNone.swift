@@ -9,7 +9,7 @@ import Fluent
 import VaporExtensions
 
 public extension QueryBuilder {
-    func assertNone(or error: Error = Abort(.badRequest)) throws -> Future<Void> {
-        return count().is(==, 0, or: error).flattenVoid()
+    func assertNone(or error: Error = Abort(.badRequest)) async throws {
+        try await count().is(==, 0, or: error)
     }
 }
