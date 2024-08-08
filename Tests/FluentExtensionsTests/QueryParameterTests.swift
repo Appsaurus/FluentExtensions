@@ -61,8 +61,8 @@ class QueryParameterTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
 
-        router.get(basePath) { (request: Request) -> EventLoopFuture<[KitchenSink]> in
-            return try KitchenSink.query(on: request.db)
+        router.get(basePath) { (request: Request) async throws -> [KitchenSink] in
+            return try await KitchenSink.query(on: request.db)
                 .filterByQueryParameters(request: request)
                 .sorted(on: request)
                 .all()

@@ -214,16 +214,6 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
             .delete()
     }
 
-//    /// Detach all models by deleting all pivots from this model.
-//    func detachAll(on database: Database) -> EventLoopFuture<Void> {
-//        guard let fromID = self.idValue else {
-//            fatalError("Cannot detach siblings relation from unsaved model.")
-//        }
-//
-//        return Through.query(on: database)
-//            .filter(self.from.appending(path: \.$id) == fromID)
-//            .delete()
-//    }
 
     // MARK: Query
 

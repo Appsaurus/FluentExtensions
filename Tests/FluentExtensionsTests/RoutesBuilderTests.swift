@@ -41,8 +41,8 @@ class RoutesBuilderTests: FluentTestModels.TestCase {
 
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
-        router.get(basePath, KitchenSink.pathComponent) { (req: Request, kitchenSink: KitchenSink) -> Future<KitchenSink> in
-            return req.toFuture(kitchenSink)
+        router.get(basePath, KitchenSink.pathComponent) { (req: Request, kitchenSink: KitchenSink) async throws -> KitchenSink in
+            return kitchenSink
         }
 
         for route in app.routes.all {
@@ -51,8 +51,8 @@ class RoutesBuilderTests: FluentTestModels.TestCase {
 
     }
 
-    func testModelParameterRoute() throws {
-        let id = try KitchenSink.query(on: app.db).first().assertExists().wait().requireID()
+    func testModelParameterRoute() async throws {
+        let id = try await KitchenSink.query(on: app.db).first().assertExists().requireID()
         try app.test(.GET, "\(basePath)/\(id)") { response in
             XCTAssertEqual(response.status, .ok)
             XCTAssertEqual(id, try response.content.decode(KitchenSink.self).requireID())

@@ -38,7 +38,7 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
         try super.addRoutes(to: router)
 
         router.get(basePath) { (request: Request) in
-            return try KitchenSink.query(on: request.db)
+            return try await KitchenSink.query(on: request.db)
                 .filterByQueryParameters(request: request)
                 .all()
         }
@@ -48,7 +48,6 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
         let counts = try await app.db
             .select()
             .labeledCountsGroupedBy(\KitchenSink.$optionalStringField)
-            .get()
         XCTAssert(counts.count > 0)
         for count in counts {
             XCTAssert(count.value > 0)
@@ -56,7 +55,7 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
     }
 
     func testSum() async throws {
-        let sum1 = try await app.db.select().sum(\KitchenSink.$intField).get()
+        let sum1 = try await app.db.select().sum(\KitchenSink.$intField)
         XCTAssertEqual(sum1, 325)
     }
 
@@ -67,11 +66,11 @@ class SQLKitExtensionTests: FluentTestModels.TestCase {
         // First operation
         let counts = try await app.db
             .select()
-            .labeledCountsGroupedBy(\KitchenSink.$optionalStringField).get()
+            .labeledCountsGroupedBy(\KitchenSink.$optionalStringField)
         XCTAssert(counts.count > 0)
 
         // Second operation
-        let sum = try await app.db.select().sum(\KitchenSink.$intField).get()
+        let sum = try await app.db.select().sum(\KitchenSink.$intField)
         XCTAssertEqual(sum, 325)
 
         // You can add more operations or assertions as needed
