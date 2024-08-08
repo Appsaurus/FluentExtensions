@@ -23,15 +23,15 @@ public final class TestStudentModel: Model, Content {
 class TestStudentModelReflectionMigration: AutoMigration<TestStudentModel> {}
 
 //MARK: Manual migration
-public class TestStudentModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestStudentModel.schema)
+public class TestStudentModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestStudentModel.schema)
             .id()
             .create()
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestStudentModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestStudentModel.schema).delete()
     }
 }

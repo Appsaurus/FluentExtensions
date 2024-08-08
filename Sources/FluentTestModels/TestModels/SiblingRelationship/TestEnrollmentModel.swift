@@ -35,10 +35,10 @@ class TestEnrollmentModelReflectionMigration: AutoMigration<TestEnrollmentModel>
 }
 
 //MARK: Manual migration
-public class TestEnrollmentModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
+public class TestEnrollmentModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
 
-        database.schema(TestEnrollmentModel.schema)
+        try await database.schema(TestEnrollmentModel.schema)
             .id()
             .field(.student, .uuid, .required)
             .field(.`class`, .uuid, .required)
@@ -47,7 +47,7 @@ public class TestEnrollmentModelMigration: Migration {
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestEnrollmentModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestEnrollmentModel.schema).delete()
     }
 }

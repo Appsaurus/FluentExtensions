@@ -41,9 +41,9 @@ class TestChildModelReflectionMigration: AutoMigration<TestChildModel> {
 }
 
 //MARK: Manual migration
-public class TestChildModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestChildModel.schema)
+public class TestChildModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestChildModel.schema)
             .id()
             .field(.name, .string, .required)
             .field(.parent, .uuid, .required)
@@ -52,7 +52,7 @@ public class TestChildModelMigration: Migration {
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestChildModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestChildModel.schema).delete()
     }
 }

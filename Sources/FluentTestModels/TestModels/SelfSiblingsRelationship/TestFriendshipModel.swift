@@ -53,9 +53,9 @@ class TestFriendshipModelReflectionMigration: AutoMigration<TestFriendshipModel>
 }
 
 //MARK: Manual migration
-public class TestFriendshipModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestFriendshipModel.schema)
+public class TestFriendshipModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestFriendshipModel.schema)
             .id()
             .field(.toUser, .uuid, .required)
             .foreignKey(.toUser, references: TestUserModel.schema, .id)
@@ -65,7 +65,7 @@ public class TestFriendshipModelMigration: Migration {
             .create()
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestFriendshipModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestFriendshipModel.schema).delete()
     }
 }
