@@ -7,7 +7,7 @@ public extension Model {
         where filters: ModelValueFilter<Self>...,
         in database: Database
     ) async throws -> [Self] {
-        let models = try await findAll<Self>(where: filters, limit: nil, on: database)
+        let models = try await findAll(where: filters, limit: nil, on: database)
         return try await models.updateValue(at: keyPath, to: value, in: database)
     }
 }
