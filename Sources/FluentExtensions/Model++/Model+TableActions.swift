@@ -11,9 +11,9 @@ import VaporExtensions
 // MARK: - Destructive
 public extension Model {
     /// Deletes all rows in a table
-    static func delete(force: Bool = false, in database: Database, transaction: Bool = true) async throws -> Void {
+    static func deleteAll(force: Bool = false, in database: Database, transaction: Bool = true) async throws -> Void {
         let models = try await query(on: database).all()
-        try await models.delete(force: force, in: database, transaction: transaction)
+        try await models.delete(from: database, force: force, transaction: transaction)
     }
 
     @discardableResult

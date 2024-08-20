@@ -8,7 +8,7 @@ public extension Collection where Element: Model {
     func upsert(in database: Database,
                 transaction: Bool = true) async throws -> [Element] {
         try await performBatch(
-            action: { db, element in
+            action: { element, db in
                 try await element.upsert(in: db)
             },
             on: database,
@@ -21,7 +21,7 @@ public extension Collection where Element: Model {
     func updateIfExists(in database: Database,
                 transaction: Bool = true) async throws -> [Element] {
         try await performBatch(
-            action: { db, element in
+            action: { element, db in
                 try await element.updateIfExists(in: db)
             },
             on: database,
@@ -35,7 +35,7 @@ public extension Collection where Element: Model {
                  in database: Database,
                 transaction: Bool = true) async throws -> [Element] {
         try await performBatch(
-            action: { db, element in
+            action: { element, db in
                 try await element.replace(with: element, on: db)
             },
             on: database,

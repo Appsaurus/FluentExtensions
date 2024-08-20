@@ -36,7 +36,7 @@ public extension ChildrenProperty {
         let existingChildren = try await self.all(in: database)
         switch self.parentKey {
         case .required(_):
-            try await existingChildren.delete(force: true, in: database)
+            try await existingChildren.delete(from: database, force: true)
             return try await children.upsert(in: database)
         case .optional(let keyPath):
             existingChildren.forEach { $0[keyPath: keyPath].id = nil }

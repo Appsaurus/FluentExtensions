@@ -27,8 +27,8 @@ public extension Model {
     }
     
     @discardableResult
-    func delete(from database: Database) async throws -> Self {
-        try await self.delete(on: database).get()
+    func delete(from database: Database, force: Bool = false) async throws -> Self {
+        try await self.delete(force: force, on: database).get()
         return self
     }
     
