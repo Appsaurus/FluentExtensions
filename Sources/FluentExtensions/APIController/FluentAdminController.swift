@@ -16,6 +16,12 @@ where R.ResolvedParameter == R.IDValue, R: Content {
     open override func update(model: R,
                               with updateModel: R,
                               in db: Database) async throws -> R {
+        if (updateModel.id == nil) {
+            updateModel.id = try model.requireID()
+        }
+        if (updateModel.id != model.id) {
+            throw Abort(.badRequest)
+        }
         return updateModel
     }
     

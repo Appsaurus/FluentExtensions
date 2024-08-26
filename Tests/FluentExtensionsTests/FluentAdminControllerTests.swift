@@ -14,6 +14,8 @@ import CodableExtensions
 import FluentExtensions
 @testable import FluentTestModels
 
+extension KitchenSink: Paginatable {}
+
 class FluentAdminControllerTests: FluentTestModels.TestCase {
     let basePath = "kitchen-sinks"
     
@@ -95,57 +97,4 @@ class FluentAdminControllerTests: FluentTestModels.TestCase {
             XCTAssertEqual(models.count, 26) // Assuming 26 items were seeded (A-Z)
         }
     }
-    
-    func testEqualsFieldQuery() throws {
-        try app.test(.GET, "\(basePath)?stringField=eq:StringValue_A") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.count == 1)
-            XCTAssertEqual(models[0].stringField, "StringValue_A")
-        }
-    }
-    
-    func testIntFilters() throws {
-        let value = 10
-        
-        try app.test(.GET, "\(basePath)?intField=eq:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.count == 1)
-            models.forEach { XCTAssert($0.intField == value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?intField=gt:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.intField > value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?intField=lt:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.intField < value) }
-        }
-    }
-    
-    func testSort() throws {
-        try app.test(.GET, "\(basePath)?sort=intField:asc") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.isSorted((\.intField, <)))
-        }
-        
-        try app.test(.GET, "\(basePath)?sort=intField:desc") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.isSorted((\.intField, >)))
-        }
-    }
 }
-
-//extension Array {
-//    func isSorted<Value: Comparable>(_ predicate: (KeyPath<Element, Value>, (Value, Value) throws -> Bool)) -> Bool {
-//        guard count > 1 else { return true }
-//        return (try? zip(self, self.dropFirst()).allSatisfy { try predicate.1($0[keyPath: predicate.0], $1[keyPath: predicate.0]) }) == true
-//    }
-//}

@@ -24,22 +24,36 @@ public enum UpdateMethod: Decodable {
     static var `default` = UpdateMethod.update
 }
 
+public class ControllerSettings {
+    public var forceDelete: Bool
+    
+    public init(forceDelete: Bool = true) {
+        self.forceDelete = forceDelete
+    }
+    
+}
+
 public typealias ResourceModel = Content & Parameter
 public typealias CreateModel = Content
 public typealias ReadModel = Content
 public typealias UpdateModel = Content
+public typealias SearchResultModel = Content
 
 open class Controller<Resource: ResourceModel,
                       Create: CreateModel,
                       Read: ReadModel,
-                      Update: UpdateModel> {
+                      Update: UpdateModel,
+                      SearchResult: SearchResultModel> {
     var baseRoute: [PathComponentRepresentable]
     var middlewares: [Middleware]
+    var settings: ControllerSettings
     
-    
-    public init(baseRoute: [PathComponentRepresentable], middlewares: [Middleware] = []) {
+    public init(baseRoute: [PathComponentRepresentable], 
+                middlewares: [Middleware] = [],
+                settings: ControllerSettings = ControllerSettings()) {
         self.baseRoute = baseRoute
         self.middlewares = middlewares
+        self.settings = settings
     }
     
     open func performBatch(
@@ -65,16 +79,24 @@ open class Controller<Resource: ResourceModel,
     
     open func registerCRUDRoutes(routes: RoutesBuilder) throws {
         
+        routes.get(use: search)
         routes.get(":id", use: read)
         routes.get("all", use: readAll)
         routes.post(use: create)
         routes.post("batch", use: createBatch)
-        routes.put("batch", use: updateBatch)
         routes.put(use: update)
         routes.put(":id", use: update)
+        routes.put("batch", use: updateBatch)
+        routes.delete(":id", use: delete)
     }
     
     //MARK: Begin Routes
+    
+    //MARK: Search Routes
+    open func search(_ req: Request) async throws -> SearchResult {
+        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
+        throw Abort(.notFound)
+    }
     
     //MARK: Read Routes
     open func read(_ req: Request) async throws -> Read {
@@ -82,6 +104,8 @@ open class Controller<Resource: ResourceModel,
         let model = try await readModel(id: resourceID, in: req.db)
         return try read(model)
     }
+    
+    
     
     open func readAll(on req: Request) async throws -> [Read] {
         try await readAllModels(in: req.db).map(read)
@@ -110,7 +134,19 @@ open class Controller<Resource: ResourceModel,
         return try await self.update(updateModels: models, on: req)
     }
     
+    //MARK: Delete
+    
+    open func delete(_ req: Request) async throws -> Read {
+        let resourceID = try req.parameters.next(Resource.self)
+        let model = try await self.readModel(id: resourceID, in: req.db)
+        let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? settings.forceDelete
+        let deletedModel = try await self.delete(model: model, in: req.db, force: forceDelete)
+        return try read(deletedModel)
+    }
+    
     //MARK: End Routes
+    
+    
     open func create(resource: Resource,
                      in db: Database,
                      method: CreateMethod) async throws -> Resource {

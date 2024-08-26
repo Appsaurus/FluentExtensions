@@ -6,12 +6,12 @@
 //
 
 
-public typealias FluentResourceModel = Fluent.Model & ResourceModel
+public typealias FluentResourceModel = Fluent.Model & ResourceModel & Paginatable
 
 open class FluentController<Resource: FluentResourceModel,
                             Create: CreateModel,
                             Read: ReadModel,
-                            Update: UpdateModel>: Controller<Resource, Create, Read, Update> {
+                            Update: UpdateModel>: Controller<Resource, Create, Read, Update, Page<Read>> {
     
  
     
@@ -73,6 +73,79 @@ open class FluentController<Resource: FluentResourceModel,
 //
 //    }
         
+    //MARK: Search
+    @discardableResult
+    open func defaultSort() -> DatabaseQuery.Sort? {
+        DatabaseQuery.Sort.sort(.path([Resource.idFieldKey], schema: Resource.schemaOrAlias), .ascending)
+    }
+
+    open override func search(_ req: Request) async throws -> Page<Read> {
+        let query = try buildSearchQuery(request: req)
+        let page = try await query.paginate(for: req)
+        return try page.transformDatum(with: read)
+    }
+
+    open func buildSearchQuery(request: Request) throws -> QueryBuilder<Resource> {
+        var query = Resource.query(on: request)
+        query = try filterSearch(query: query, on: request)
+        query = try sortSearch(query: query, on: request)
+        return query
+    }
+
+
+    open func filterSearch(query: QueryBuilder<Resource>,
+                           on request: Request) throws -> QueryBuilder<Resource> {
+        var query = query
+        if let queryString = request.query[String.self, at: "query"] {
+            let queryString = queryString.trimmingCharacters(in: .punctuationCharacters)
+            query = try filter(queryBuilder: query, for: queryString)
+        }
+        query = query.filter(try request.advancedFilter(Resource.self))
+
+
+//        query.filter(Resource.createdAtKey, toRangeAt: "createdAt", on: request)
+
+//        for property in try Resource.properties() {
+//            if (property.fieldName == "createdAt") {
+//                //skip
+//            }
+//            else {
+//                try applyFilter(for: property, to: query, on: request)
+//            }
+//        }
+        return query
+    }
+    
+    open func sortSearch(query: QueryBuilder<Resource>, on request: Request) throws -> QueryBuilder<Resource> {
+        var sorts = try query.sorts(convertingKeysWith: { key in
+            guard key.contains(".") else { return key }
+            let split = key.split(separator: ".")
+            var key: String = String(split[0])
+            for keyPart in split[1...split.count - 1] {
+                if keyPart.lowercased() == "id" {
+                    key += keyPart.uppercased()
+                } else {
+                    key += keyPart.capitalized
+                }
+            }
+            return key
+        }, on: request)
+        if sorts.count == 0, let defaultSort = self.defaultSort() {
+            sorts.append(defaultSort)
+        }
+        return query.sort(sorts)
+    }
+
+//    open func applyFilter(for property: PropertyInfo, to query: QueryBuilder<Resource>, 
+//                          on request: Request) throws {
+//        try query.filter(property, on: request)
+//    }
+
+    @discardableResult
+    open func filter(queryBuilder: QueryBuilder<Resource>, 
+                     for searchQuery: String) throws -> QueryBuilder<Resource> {
+        return queryBuilder
+    }
 }
 
 extension FluentController where Resource == Create {
