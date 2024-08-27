@@ -12,6 +12,8 @@ import FluentSQLiteDriver
 import FluentKit
 import CodableExtensions
 import Codability
+import VaporExtensions
+
 @testable import FluentTestModels
 
 class QueryParameterTests: FluentTestModels.TestCase {
@@ -36,7 +38,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
     
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
-        
         router.get(basePath) { (request: Request) async throws -> [KitchenSink] in
             try await KitchenSink.query(on: request.db)
                 .filterByQueryParameters(request: request)
