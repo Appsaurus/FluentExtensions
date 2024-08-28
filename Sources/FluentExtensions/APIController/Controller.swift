@@ -14,22 +14,30 @@ public enum CreateMethod: Decodable {
     case create
     case save
     case upsert
-    static var `default` = CreateMethod.create
+    public static var `default` = CreateMethod.create
 }
 
 public enum UpdateMethod: Decodable {
     case update
     case save
     case upsert
-    static var `default` = UpdateMethod.update
+    public static var `default` = UpdateMethod.update
 }
 
 public class ControllerSettings {
+    
+    public var createMethod: CreateMethod
+    public var updateMethod: UpdateMethod
     public var forceDelete: Bool
     
-    public init(forceDelete: Bool = true) {
+    public init(createMethod: CreateMethod = .default,
+                updateMethod: UpdateMethod = .default,
+                forceDelete: Bool = false) {
+        self.createMethod = createMethod
+        self.updateMethod = updateMethod
         self.forceDelete = forceDelete
     }
+    
     
 }
 
@@ -43,7 +51,7 @@ open class Controller<Resource: ResourceModel,
                       Create: CreateModel,
                       Read: ReadModel,
                       Update: UpdateModel,
-                      SearchResult: SearchResultModel> {
+                      SearchResult: SearchResultModel>: RouteCollection {
     var baseRoute: [PathComponentRepresentable]
     var middlewares: [Middleware]
     var settings: ControllerSettings
@@ -71,14 +79,15 @@ open class Controller<Resource: ResourceModel,
     
 
     //MARK: Routes
-    
+    open func boot(routes: RoutesBuilder) throws {
+        try registerRoutes(routes: routes)
+    }
     open func registerRoutes(routes: RoutesBuilder) throws {
         let router = routes.grouped(baseRoute.pathComponents)
         try registerCRUDRoutes(routes: router)
     }
     
     open func registerCRUDRoutes(routes: RoutesBuilder) throws {
-        
         routes.get(use: search)
         routes.get(":id", use: read)
         routes.get("all", use: readAll)
@@ -104,7 +113,6 @@ open class Controller<Resource: ResourceModel,
         let model = try await readModel(id: resourceID, in: req.db)
         return try read(model)
     }
-    
     
     
     open func readAll(on req: Request) async throws -> [Read] {

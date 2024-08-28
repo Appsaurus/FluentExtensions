@@ -14,7 +14,13 @@ open class FluentController<Resource: FluentResourceModel,
                             Update: UpdateModel>: Controller<Resource, Create, Read, Update, Page<Read>> {
     
  
-    
+    public override init(baseRoute: [PathComponentRepresentable] = [],
+                         middlewares: [Middleware] = [],
+                         settings: ControllerSettings = ControllerSettings()) {
+        super.init(baseRoute: baseRoute.length == 0 ? [Resource.crudPathName] : baseRoute,
+                   middlewares: middlewares,
+                   settings: settings)
+    }
     open override func readAllModels(in db: Database) async throws -> [Resource] {
         return try await Resource.query(on: db).all()
     }
