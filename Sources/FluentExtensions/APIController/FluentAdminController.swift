@@ -6,8 +6,8 @@
 //
 
 
-open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R,R>
-where R.ResolvedParameter == R.IDValue, R: Content {
+open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R,R> where R.ResolvedParameter == R.IDValue,
+                                                                                          R: Content {
     
     open override func readModel(id: R.IDValue, in db: Database) async throws -> R {
         return try await R.find(id, on: db).unwrapped(or: Abort(.notFound))
@@ -41,10 +41,10 @@ where R.ResolvedParameter == R.IDValue, R: Content {
     
     //    MARK: Children Routes
     func childCRUDRoute<C: FluentResourceModel, CC, CR, CU>(_ routes: RoutesBuilder,
-                                                          pathSlug: String,
-                                                          queryParamKey: String = "ids",
-                                                          childForeignKeyPath: ChildrenPropertyKeyPath<R, C>,
-                                                          childController: FluentController<C, CC, CR, CU>) {
+                                                            pathSlug: String,
+                                                            queryParamKey: String = "ids",
+                                                            childForeignKeyPath: ChildrenPropertyKeyPath<R, C>,
+                                                            childController: FluentController<C, CC, CR, CU> = .init()) {
         let path = R.childCRUDPath(childForeignKeyPath, slug: pathSlug)
         
         //Replace attached children with new children
@@ -70,88 +70,94 @@ where R.ResolvedParameter == R.IDValue, R: Content {
             return try await childController.search(request)
         }
     }
-
-//        func childSearchRoute<C: AdminControllableModel>(_ routes: RoutesBuilder,
-//                                                         pathSlug: String,
-//                                                         childForeignKeyPath: ChildrenPropertyKeyPath<CRUDModel, C>,
-//                                                         childController: FluentAdminController<C>) {
-//            let searchPath: [PathComponentRepresentable] = CRUDModel.childCRUDPath(childForeignKeyPath, slug: pathSlug) + ["search"]
-//            routes.get(searchPath.pathComponents) { (request) -> Future<[C]> in
-//                return try childController.search(request: request).map({$0.data})
-//            }
-//        }
-//
-//        //Siblings
-//
-//        func pivotCRUDRoutes<S, T, P>(_ routes: RoutesBuilder,
-//                                      relationshipName: String = CRUDModel.crudPathName + "_" + S.crudPathName,
-//                                      through siblingKeyPath: SiblingPropertyKeyPath<CRUDModel, S, T>,
-//                                      withPublicModel: P.Type = P.self)
-//        where S.IDValue: Hashable,
-//              P: Content & ModelConvertible, P.ModelType == T,
-//              T: RelatedModelQueryable {
-//            //Pivot Entity based API
-//
-//            let pivotPath = CRUDModel.pivotCRUDPath(relationshipName: relationshipName)
-//
-//            routes.get(pivotPath, params: CRUDModel.self) { (request: Request, model: CRUDModel) -> Future<[P]> in
-//                return model[keyPath: siblingKeyPath].$pivots.query(on: request.db).withAllRelationships.all().to(P.self)
-//            }
-//
-//            routes.put(pivotPath, params: CRUDModel.self) { (request, model) -> Future<[P]> in
-//                let pivotEntities = try request.content.decode([P].self).toModel()
-//                return request.db.transaction { database in
-//                    model[keyPath: siblingKeyPath].$pivots.replace(with: pivotEntities, on: database)
-//                }.flatMap {
-//                    return model[keyPath: siblingKeyPath].$pivots.query(on: request.db).withAllRelationships.all()
-//                }.to(P.self)
-//            }
-//
-//            let attachPath = pivotPath + ["attach"]
-//            routes.put(attachPath, params: CRUDModel.self) { (request, model) -> Future<[P]> in
-//                let _ = try model.requireID()
-//                let pivotEntities = try request.content.decode([P].self).toModel()
-//                return model[keyPath: siblingKeyPath].$pivots
-//                    .attach(pivotEntities, on: request.db)
-//                    .transform(to: pivotEntities)
-//                    .to(P.self)
-//            }
-//    //        let detachPath = pivotPath + ["detach"]
-//    //        routes.put(detachPath, params: CRUDModel.self) { (request, model) -> Future<APISuccessResponse> in
-//    //            let _ = try model.requireID()
-//    //            let pivotEntities = try request.content.decode([P].self).toModel()
-//    //            return model[keyPath: siblingKeyPath].$pivots
-//    //                .detach(pivotEntities, on: request.db)
-//    //                .transform(to: pivotEntities).transform(to: HTTPResponseStatus.ok).transform(to: APISuccessResponse("Successfully removed siblings."))
-//    //        }
-//        }
-//
-//        func siblingCRUDRoutes<S, T, P>(_ routes: RoutesBuilder,
-//                                      relationshipName: String = CRUDModel.crudPathName + "_" + S.crudPathName,
-//                                      through siblingKeyPath: SiblingPropertyKeyPath<CRUDModel, S, T>,
-//                                      withPublicModel: P.Type = P.self)
-//        where S: Model & Content {
-//
-//            let siblingPath = CRUDModel.siblingCRUDPath(relationshipName: relationshipName)
-//
-//            routes.get(siblingPath, params: CRUDModel.self) { (request: Request, model: CRUDModel) -> Future<[S]> in
-//                return model[keyPath: siblingKeyPath].query(on: request.db).all()
-//            }
-//
-//        }
+    
+    
+    //Siblings
+    
+    func pivotCRUDRoutes<S, P, PC, PR, PU>(_ routes: RoutesBuilder,
+                                           relationshipName: String = R.crudPathName + "_" + S.crudPathName,
+                                           through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>,
+                                           pivotController: FluentController<P, PC, PR, PU> = .init()) where S: FluentResourceModel,
+                                                                                                             P: FluentResourceModel {
+              //Pivot Entity based API
+              
+              let pivotPath = R.pivotCRUDPath(relationshipName: relationshipName)
+              
+              routes.get(pivotPath, params: R.self) { (request: Request, model: R) async throws -> [PR] in
+                  return try await model[keyPath: siblingKeyPath]
+                      .$pivots
+                      .query(on: request.db).all()
+                      .map(pivotController.read)
+              }
+              
+              routes.put(pivotPath, params: R.self) { (request, model) async throws -> [PR] in
+                  return try await request.db.transaction { database in
+                      let pivotEntities = try request.content.decode([P].self)
+                      let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
+                      try await siblingRelationship.replace(with: pivotEntities, in: database)
+                      return try await siblingRelationship
+                          .query(on: request.db)
+                          .all()
+                          .map(pivotController.read)
+                  }
+              }
+              
+              let attachPath = pivotPath + ["attach"]
+              routes.put(attachPath, params: R.self) { (request, model) async throws -> [PR] in
+                  let _ = try model.requireID()
+                  let pivotEntities = try request.content.decode([P].self)
+                  let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
+                  return try await siblingRelationship
+                      .attach(pivotEntities, in: request.db)
+                      .map(pivotController.read)
+              }
+              
+              let detachPath = pivotPath + ["detach"]
+              routes.put(detachPath, params: R.self) { (request, model) async throws -> [PR] in
+                  let _ = try model.requireID()
+                  let pivotEntities = try request.content.decode([P].self)
+                  let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
+                  return try await siblingRelationship.detach(pivotEntities, in: request.db)
+                      .map(pivotController.read)
+              }
+          }
+    
+    func siblingCRUDRoutes<P, S, SC, SR, SU>(_ routes: RoutesBuilder,
+                                 relationshipName: String = R.crudPathName + "_" + S.crudPathName,
+                                 through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>,
+                                 siblingController: FluentController<S, SC, SR, SU> = .init())
+    where S: FluentResourceModel {
+        
+        let siblingPath = R.siblingCRUDPath(relationshipName: relationshipName)
+        
+        routes.get(siblingPath, params: R.self) { (request: Request, model: R) async throws -> [SR] in
+            return try await model[keyPath: siblingKeyPath].query(on: request.db).all().map(siblingController.read)
+        }
+        
+    }
 }
+
 
 extension Collection where Element == FieldKey {
     var propertyName: String{
         return map({$0.description}).joined(separator: ".")
     }
-
+    
     var codingKeys: [CodingKeyRepresentable] {
         return map({$0.description})
     }
 }
 
 extension Model where Self: Parameter {
+    
+    static func siblingCRUDPath(relationshipName: String) -> [PathComponentRepresentable] {
+        return [pathComponent, "siblings", relationshipName]
+    }
+    
+    static func pivotCRUDPath(relationshipName: String) -> [PathComponentRepresentable] {
+        return [pathComponent, "pivots", relationshipName]
+    }
+    
     static func foreignKeyPropertyName<Child: Model>(for childKeyPath: ChildrenPropertyKeyPath<Self, Child>) -> String {
         let relationship = Self()[keyPath: childKeyPath]
         switch relationship.parentKey {
@@ -164,5 +170,21 @@ extension Model where Self: Parameter {
     static func childCRUDPath<Child: Model>(_ childKeyPath: ChildrenPropertyKeyPath<Self, Child>,
                                             slug: String = "children") -> [PathComponentRepresentable] {
         return [pathComponent, slug, Child.crudPathName, foreignKeyPropertyName(for: childKeyPath)]
+    }
+}
+
+extension ChildrenProperty {
+    
+    @discardableResult
+    func detach(_ children: [To], in database: Database) async throws -> [To] {
+        
+        switch self.parentKey {
+        case .required(_):
+            throw Abort(.badRequest, reason: "That parent child relationship is required.")
+        case .optional(let keyPath):
+            //            children.updateValue(at: keyPath, to: nil, in: database)
+            children.forEach { $0[keyPath: keyPath].$id.value = nil }
+            return try await children.upsert(in: database)
+        }
     }
 }
