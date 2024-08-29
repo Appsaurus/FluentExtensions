@@ -217,9 +217,10 @@ extension AnyCodable {
     }
 }
 
-extension Request {
-    func advancedFilter<T: Model>(_ schema: T.Type) throws -> DatabaseQuery.Filter {
-        guard let filterJson: String = query["filter"] else {
+public extension Request {
+    func decodeParameterFilter<T: Model>(_ schema: T.Type = T.self,
+                                         withQueryParameter queryParameter: String = "filter") throws -> DatabaseQuery.Filter {
+        guard let filterJson: String = query[queryParameter] else {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
         

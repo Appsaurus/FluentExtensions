@@ -1,10 +1,11 @@
 //
 //  FluentController.swift
-//  
+//
 //
 //  Created by Brian Strobach on 8/16/24.
 //
 
+import VaporExtensions
 
 public typealias FluentResourceModel = Fluent.Model & ResourceModel & Paginatable
 
@@ -13,7 +14,9 @@ open class FluentController<Resource: FluentResourceModel,
                             Read: ReadModel,
                             Update: UpdateModel>: Controller<Resource, Create, Read, Update, Page<Read>> {
     
- 
+    var defaultSort: DatabaseQuery.Sort? = .sort(.path([Resource.idFieldKey],
+                                                       schema: Resource.schemaOrAlias), .ascending)
+    
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
                          settings: ControllerSettings = ControllerSettings()) {
@@ -33,14 +36,14 @@ open class FluentController<Resource: FluentResourceModel,
     open override func update(model: Resource, in db: Database) async throws -> Resource {
         try await model.update(in: db)
     }
-
+    
     
     open override func delete(model: Resource, in db: Database, force: Bool = false) async throws -> Resource {
         try await model.delete(from: db, force: force)
     }
     
     open override func save(model: Resource, in db: Database) async throws -> Resource {
-        try await model.save(in: db)        
+        try await model.save(in: db)
     }
     
     open override func upsert(model: Resource, in db: Database) async throws -> Resource {
@@ -56,7 +59,7 @@ open class FluentController<Resource: FluentResourceModel,
         try await models.update(in: db)
     }
     
-    open override func delete(models: [Resource], 
+    open override func delete(models: [Resource],
                               in db: Database,
                               force: Bool = false) async throws -> [Resource] {
         try await models.delete(from: db, force: force)
@@ -67,38 +70,38 @@ open class FluentController<Resource: FluentResourceModel,
     }
     
     open override func upsert(models: [Resource], in db: Database) async throws -> [Resource] {
-        try await models.update(in: db)
-//        try await db.performBatch(action: self.update, on: models)
+        try await models.upsert(in: db)
+        //        try await db.performBatch(action: self.upsert, on: models)
     }
     
     //MARK: Other
     
-//    open override func update(model: Resource,
-//                              with updateModel: Update,
-//                              in db: Database) async throws -> Resource {
-//
-//    }
-        
+    //    open override func update(model: Resource,
+    //                              with updateModel: Update,
+    //                              in db: Database) async throws -> Resource {
+    //
+    //    }
+    
     //MARK: Search
-    @discardableResult
-    open func defaultSort() -> DatabaseQuery.Sort? {
-        DatabaseQuery.Sort.sort(.path([Resource.idFieldKey], schema: Resource.schemaOrAlias), .ascending)
-    }
-
+    //    @discardableResult
+    //    open func defaultSort() -> DatabaseQuery.Sort? {
+    //        DatabaseQuery.Sort.sort(.path([Resource.idFieldKey], schema: Resource.schemaOrAlias), .ascending)
+    //    }
+    
     open override func search(_ req: Request) async throws -> Page<Read> {
         let query = try buildSearchQuery(request: req)
         let page = try await query.paginate(for: req)
         return try page.transformDatum(with: read)
     }
-
+    
     open func buildSearchQuery(request: Request) throws -> QueryBuilder<Resource> {
         var query = Resource.query(on: request)
         query = try filterSearch(query: query, on: request)
         query = try sortSearch(query: query, on: request)
         return query
     }
-
-
+    
+    
     open func filterSearch(query: QueryBuilder<Resource>,
                            on request: Request) throws -> QueryBuilder<Resource> {
         var query = query
@@ -106,19 +109,8 @@ open class FluentController<Resource: FluentResourceModel,
             let queryString = queryString.trimmingCharacters(in: .punctuationCharacters)
             query = try filter(queryBuilder: query, for: queryString)
         }
-        query = query.filter(try request.advancedFilter(Resource.self))
-
-
-//        query.filter(Resource.createdAtKey, toRangeAt: "createdAt", on: request)
-
-//        for property in try Resource.properties() {
-//            if (property.fieldName == "createdAt") {
-//                //skip
-//            }
-//            else {
-//                try applyFilter(for: property, to: query, on: request)
-//            }
-//        }
+        query = query.filter(try request.decodeParameterFilter(Resource.self))
+        
         return query
     }
     
@@ -136,22 +128,24 @@ open class FluentController<Resource: FluentResourceModel,
             }
             return key
         }, on: request)
-        if sorts.count == 0, let defaultSort = self.defaultSort() {
+        if sorts.count == 0, let defaultSort = self.defaultSort {
             sorts.append(defaultSort)
         }
         return query.sort(sorts)
     }
-
-//    open func applyFilter(for property: PropertyInfo, to query: QueryBuilder<Resource>, 
-//                          on request: Request) throws {
-//        try query.filter(property, on: request)
-//    }
-
+    
+    //    open func applyFilter(for property: PropertyInfo, to query: QueryBuilder<Resource>,
+    //                          on request: Request) throws {
+    //        try query.filter(property, on: request)
+    //    }
+    
     @discardableResult
-    open func filter(queryBuilder: QueryBuilder<Resource>, 
+    open func filter(queryBuilder: QueryBuilder<Resource>,
                      for searchQuery: String) throws -> QueryBuilder<Resource> {
         return queryBuilder
     }
+    
+    
 }
 
 extension FluentController where Resource == Create {
@@ -167,8 +161,8 @@ extension FluentController where Resource == Update {
     }
     
     public func update(model: Resource,
-                              with updateModel: Update,
-                              in db: Database) async throws -> Resource {
+                       with updateModel: Update,
+                       in db: Database) async throws -> Resource {
         return updateModel
     }
 }
