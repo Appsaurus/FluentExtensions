@@ -11,7 +11,7 @@ private extension FieldKey {
     static var name: Self { "nameID" }
     static var parent: Self { "parentID" }
 }
-public final class TestChildModel: Model, Content {
+public final class TestChildModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?

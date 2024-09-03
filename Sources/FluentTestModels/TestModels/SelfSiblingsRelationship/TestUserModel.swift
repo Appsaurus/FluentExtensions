@@ -11,7 +11,7 @@ private extension FieldKey {
     static var name: Self { "name" }
 }
 
-public final class TestUserModel: Model, Content {
+public final class TestUserModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?

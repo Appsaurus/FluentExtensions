@@ -7,7 +7,7 @@
 
 import FluentExtensions
 
-public final class TestStudentModel: Model, Content {
+public final class TestStudentModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?

@@ -7,7 +7,7 @@
 
 import Swiftest
 
-extension Model {
+public extension Model {
     static var crudPathName: String {
         return schemaOrAlias
             .removingSuffix("Entity")

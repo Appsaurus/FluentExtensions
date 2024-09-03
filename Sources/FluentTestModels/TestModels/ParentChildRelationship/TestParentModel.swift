@@ -11,7 +11,7 @@ private extension FieldKey {
 
 }
 
-public final class TestParentModel: Model, Content {
+public final class TestParentModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?

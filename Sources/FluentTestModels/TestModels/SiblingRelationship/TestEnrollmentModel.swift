@@ -12,7 +12,7 @@ private extension FieldKey {
     static var `class`: Self { "class" }
 }
 
-public final class TestEnrollmentModel: Model, Content {
+public final class TestEnrollmentModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?

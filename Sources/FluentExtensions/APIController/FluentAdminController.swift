@@ -40,11 +40,11 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
     
     
     //    MARK: Children Routes
-    func childCRUDRoute<C: FluentResourceModel, CC, CR, CU>(_ routes: RoutesBuilder,
-                                                            pathSlug: String,
+    public func childCRUDRoute<C: FluentResourceModel, CC, CR, CU>(_ routes: RoutesBuilder,
+                                                            pathSlug: String = "children",
                                                             queryParamKey: String = "ids",
                                                             childForeignKeyPath: ChildrenPropertyKeyPath<R, C>,
-                                                            childController: FluentController<C, CC, CR, CU> = .init()) {
+                                                            childController: FluentController<C, CC, CR, CU>) {
         let path = R.childCRUDPath(childForeignKeyPath, slug: pathSlug)
         
         //Replace attached children with new children
@@ -74,13 +74,11 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
     
     //Siblings
     
-    func pivotCRUDRoutes<S, P, PC, PR, PU>(_ routes: RoutesBuilder,
+    public func pivotCRUDRoutes<S, P, PC, PR, PU>(_ routes: RoutesBuilder,
                                            relationshipName: String = R.crudPathName + "_" + S.crudPathName,
                                            through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>,
                                            pivotController: FluentController<P, PC, PR, PU> = .init()) where S: FluentResourceModel,
-                                                                                                             P: FluentResourceModel {
-              //Pivot Entity based API
-              
+                                                                                                             P: FluentResourceModel {              
               let pivotPath = R.pivotCRUDPath(relationshipName: relationshipName)
               
               routes.get(pivotPath, params: R.self) { (request: Request, model: R) async throws -> [PR] in
@@ -122,10 +120,10 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
               }
           }
     
-    func siblingCRUDRoutes<P, S, SC, SR, SU>(_ routes: RoutesBuilder,
+    public func siblingCRUDRoutes<P, S, SC, SR, SU>(_ routes: RoutesBuilder,
                                  relationshipName: String = R.crudPathName + "_" + S.crudPathName,
                                  through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>,
-                                 siblingController: FluentController<S, SC, SR, SU> = .init())
+                                                    siblingController: FluentController<S, SC, SR, SU>)
     where S: FluentResourceModel {
         
         let siblingPath = R.siblingCRUDPath(relationshipName: relationshipName)
@@ -169,7 +167,7 @@ extension Model where Self: Parameter {
     }
     static func childCRUDPath<Child: Model>(_ childKeyPath: ChildrenPropertyKeyPath<Self, Child>,
                                             slug: String = "children") -> [PathComponentRepresentable] {
-        return [pathComponent, slug, Child.crudPathName, foreignKeyPropertyName(for: childKeyPath)]
+        return [pathComponent, slug, foreignKeyPropertyName(for: childKeyPath)]
     }
 }
 
@@ -182,7 +180,6 @@ extension ChildrenProperty {
         case .required(_):
             throw Abort(.badRequest, reason: "That parent child relationship is required.")
         case .optional(let keyPath):
-            //            children.updateValue(at: keyPath, to: nil, in: database)
             children.forEach { $0[keyPath: keyPath].$id.value = nil }
             return try await children.upsert(in: database)
         }

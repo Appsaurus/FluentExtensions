@@ -44,11 +44,6 @@ class RoutesBuilderTests: FluentTestModels.TestCase {
         router.get(basePath, KitchenSink.pathComponent) { (req: Request, kitchenSink: KitchenSink) async throws -> KitchenSink in
             return kitchenSink
         }
-
-        for route in app.routes.all {
-            debugPrint(route.path.string)
-        }
-
     }
 
     func testModelParameterRoute() async throws {

@@ -37,7 +37,7 @@ private extension FieldKey {
     static var enumDictionary: Self { "enumDictionary" }
 }
 
-public final class KitchenSink: Model, Content {
+public final class KitchenSink: TestModel {
 
     @ID(custom: .id)
 	public var id: Int?

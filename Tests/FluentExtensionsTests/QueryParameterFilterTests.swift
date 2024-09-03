@@ -26,10 +26,6 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         
         let controller = FluentAdminController<KitchenSink>(baseRoute: [basePath])
         try controller.registerRoutes(routes: router)
-        
-        for route in app.routes.all {
-            debugPrint(route.path.string)
-        }
     }
     
     // Helper function to create filter URL

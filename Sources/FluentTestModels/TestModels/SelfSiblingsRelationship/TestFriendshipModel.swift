@@ -12,7 +12,7 @@ private extension FieldKey {
     static var toUser: Self { "toUser"}
 }
 
-final class TestFriendshipModel: Model, Content {
+final class TestFriendshipModel: TestModel {
 
     @ID(key: .id)
     public var id: UUID?
