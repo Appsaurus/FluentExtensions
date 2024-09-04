@@ -11,7 +11,7 @@ private extension FieldKey {
 
 }
 
-public final class TestParentModel: TestModel {
+public final class TestParentModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -32,10 +32,10 @@ public final class TestParentModel: TestModel {
 }
 
 //MARK: Reflection-based migration
-class TestParentModelReflectionMigration: AutoMigration<TestParentModel> {}
+public final class TestParentModelReflectionMigration: AutoMigration<TestParentModel>, @unchecked Sendable  {}
 
 //MARK: Manual migration
-public class TestParentModelMigration: AsyncMigration {
+public final class TestParentModelMigration: AsyncMigration {
     public func prepare(on database: Database) async throws {
         try await database.schema(TestParentModel.schema)
             .id()

@@ -44,7 +44,7 @@ extension SiblingsProperty {
     public func replace(
         with tos: [To],
         on database: Database,
-        _ edit: @escaping (Through) -> () = { _ in }
+        _ edit: @Sendable @escaping (Through) -> () = { _ in }
     ) async throws {
         //TODO: transaction?
         try await self.detachAll(on: database)

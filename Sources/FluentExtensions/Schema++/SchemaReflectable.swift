@@ -38,7 +38,7 @@ public extension Migratable where Self: Model {
     }
 }
 
-open class AutoMigration<M: Model>: ReflectionMigration {
+open class AutoMigration<M: Model>: ReflectionMigration, @unchecked Sendable {
     public typealias ModelType = M
     public required init(){}
 

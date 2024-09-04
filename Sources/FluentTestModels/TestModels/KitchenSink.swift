@@ -37,7 +37,7 @@ private extension FieldKey {
     static var enumDictionary: Self { "enumDictionary" }
 }
 
-public final class KitchenSink: TestModel {
+public final class KitchenSink: TestModel, @unchecked Sendable {
 
     @ID(custom: .id)
 	public var id: Int?
@@ -195,7 +195,7 @@ public final class KitchenSink: TestModel {
 
 }
 
-public final class TestGroupedFieldsModel: Fields {
+public final class TestGroupedFieldsModel: Fields, @unchecked Sendable  {
 
     @Field(key: .stringField)
     public var stringField: String
@@ -246,10 +246,10 @@ public enum TestRawIntEnum: Int, Codable, CaseIterable {
 
 
 //MARK: Reflection-based migration
-class KitchenSinkReflectionMigration: AutoMigration<KitchenSink> {}
+public final class KitchenSinkReflectionMigration: AutoMigration<KitchenSink>, @unchecked Sendable {}
 
 //MARK: Manual migration
-public class KitchenSinkMigration: AsyncMigration {
+public final class KitchenSinkMigration: AsyncMigration {
     
     public func prepare(on database: any FluentKit.Database) async throws {
         try await database.schema(KitchenSink.schema)

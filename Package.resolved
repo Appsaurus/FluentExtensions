@@ -280,6 +280,15 @@
       }
     },
     {
+      "identity" : "swiftest",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Appsaurus/Swiftest.git",
+      "state" : {
+        "revision" : "d18fb967be99f16ecd81f67aabcc0a3e6b6601df",
+        "version" : "1.2.3"
+      }
+    },
+    {
       "identity" : "vapor",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/vapor.git",

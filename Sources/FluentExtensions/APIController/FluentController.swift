@@ -95,7 +95,13 @@ open class FluentController<Resource: FluentResourceModel,
     }
     
     open func buildSearchQuery(request: Request) throws -> QueryBuilder<Resource> {
-        var query = Resource.query(on: request)
+        let query = Resource.query(on: request)
+        return try applyQueryConstraints(query: query, on: request)
+    }
+    
+    open func applyQueryConstraints(query: QueryBuilder<Resource>,
+                                   on request: Request) throws -> QueryBuilder<Resource> {
+        var query = query
         query = try filterSearch(query: query, on: request)
         query = try sortSearch(query: query, on: request)
         return query

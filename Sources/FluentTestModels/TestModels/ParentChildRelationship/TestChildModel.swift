@@ -11,7 +11,7 @@ private extension FieldKey {
     static var name: Self { "nameID" }
     static var parent: Self { "parentID" }
 }
-public final class TestChildModel: TestModel {
+public final class TestChildModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -34,14 +34,14 @@ public final class TestChildModel: TestModel {
 }
 
 //MARK: Reflection-based migration
-class TestChildModelReflectionMigration: AutoMigration<TestChildModel> {
+final class TestChildModelReflectionMigration: AutoMigration<TestChildModel>, @unchecked Sendable {
     override var fieldKeyMap: [String : FieldKey] {
         [ "name" : .name, "parent" : .parent]
     }
 }
 
 //MARK: Manual migration
-public class TestChildModelMigration: AsyncMigration {
+public class TestChildModelMigration: AsyncMigration, @unchecked Sendable {
     public func prepare(on database: Database) async throws {
         try await database.schema(TestChildModel.schema)
             .id()

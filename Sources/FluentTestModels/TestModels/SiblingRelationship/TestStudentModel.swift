@@ -7,7 +7,7 @@
 
 import FluentExtensions
 
-public final class TestStudentModel: TestModel {
+public final class TestStudentModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -20,10 +20,10 @@ public final class TestStudentModel: TestModel {
 
 
 //MARK: Reflection-based migration
-class TestStudentModelReflectionMigration: AutoMigration<TestStudentModel> {}
+public final class TestStudentModelReflectionMigration: AutoMigration<TestStudentModel>, @unchecked Sendable {}
 
 //MARK: Manual migration
-public class TestStudentModelMigration: AsyncMigration {
+public final class TestStudentModelMigration: AsyncMigration {
     public func prepare(on database: Database) async throws {
         try await database.schema(TestStudentModel.schema)
             .id()

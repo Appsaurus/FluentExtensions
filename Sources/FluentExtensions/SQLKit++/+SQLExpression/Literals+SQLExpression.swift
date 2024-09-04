@@ -13,19 +13,19 @@ import Vapor
 //    }
 //}
 
-extension Bool: SQLExpression  {
+extension Bool: /*@retroactive*/ SQLExpression  {
     public func serialize(to serializer: inout SQLSerializer) {
         SQLLiteral.boolean(self).serialize(to: &serializer)
     }
 }
 
-extension Int: SQLExpression  {
+extension Int: /*@retroactive*/ SQLExpression  {
     public func serialize(to serializer: inout SQLSerializer) {
         SQLLiteral.numeric("\(self)").serialize(to: &serializer)
     }
 }
 
-extension Double: SQLExpression  {
+extension Double: /*@retroactive*/ SQLExpression  {
     public func serialize(to serializer: inout SQLSerializer) {
         SQLLiteral.numeric("\(self)").serialize(to: &serializer)
     }

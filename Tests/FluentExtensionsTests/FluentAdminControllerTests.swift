@@ -23,7 +23,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
         databases.use(.sqlite(.memory, connectionPoolTimeout: .minutes(2)), as: .sqlite)
     }
 
-    class TestDataSeeder: AsyncMigration {
+    class TestDataSeeder: AsyncMigration, @unchecked Sendable {
         unowned let testCase: FluentAdminControllerTestCase
 
         init(testCase: FluentAdminControllerTestCase) {

@@ -238,7 +238,7 @@ fileprivate extension String {
 }
 
 
-extension Date: Strideable {
+extension Date: /*@retroactive*/ Strideable {
     public typealias Stride = TimeInterval
 
     public func distance(to other: Date) -> TimeInterval {

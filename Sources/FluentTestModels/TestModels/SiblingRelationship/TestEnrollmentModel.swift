@@ -12,7 +12,7 @@ private extension FieldKey {
     static var `class`: Self { "class" }
 }
 
-public final class TestEnrollmentModel: TestModel {
+public final class TestEnrollmentModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -27,15 +27,17 @@ public final class TestEnrollmentModel: TestModel {
 }
 
 //MARK: Reflection-based migration
-class TestEnrollmentModelReflectionMigration: AutoMigration<TestEnrollmentModel> {
+public final class TestEnrollmentModelReflectionMigration: AutoMigration<TestEnrollmentModel>,
+                                                            @unchecked Sendable  {
+    
     @discardableResult
-    override func customize(schema: SchemaBuilder) -> SchemaBuilder {
+    override public func customize(schema: SchemaBuilder) -> SchemaBuilder {
         schema.unique(on: .student, .`class`)
     }
 }
 
 //MARK: Manual migration
-public class TestEnrollmentModelMigration: AsyncMigration {
+public final class TestEnrollmentModelMigration: AsyncMigration {
     public func prepare(on database: Database) async throws {
 
         try await database.schema(TestEnrollmentModel.schema)
