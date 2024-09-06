@@ -16,6 +16,13 @@ public final class TestClassModel: TestModel, @unchecked Sendable {
     public var students: [TestStudentModel]
 
     public init() {}
+    
+    public init(id: UUID? = nil, students: [TestStudentModel]? = nil) {
+        self.id = id
+        if let students {
+            self.students = students
+        }        
+    }
 }
 
 //MARK: Reflection-based migration

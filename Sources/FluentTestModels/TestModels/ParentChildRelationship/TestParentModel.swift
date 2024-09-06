@@ -21,6 +21,9 @@ public final class TestParentModel: TestModel, @unchecked Sendable {
 
     @Children(for: \.$parent)
     public var children: [TestChildModel]
+    
+    @Children(for: \.$optionalParent)
+    public var optionalChildren: [TestChildModel]
 
     public init() {}
 

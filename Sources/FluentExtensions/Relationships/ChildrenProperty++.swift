@@ -28,16 +28,36 @@ public extension ChildrenProperty {
                 $0[keyPath: keyPath].id = id
             }
         }
-        return try await children.update(in: database)
+        
+        return try await children.update(in: database, force: true)
+    }
+    
+    @discardableResult
+    func detach(_ children: [To], in database: Database) async throws -> [To] {
+        
+        switch self.parentKey {
+        case .required(_):
+            throw Abort(.badRequest, reason: "That parent child relationship is required.")
+        case .optional(let keyPath):
+            children.forEach { $0[keyPath: keyPath].id = nil }
+            return try await children.update(in: database, force: true)
+        }
     }
 
     @discardableResult
-    func replace(with children: [To], in database: Database) async throws -> [To] {
+    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
         let existingChildren = try await self.all(in: database)
         switch self.parentKey {
         case .required(_):
-            try await existingChildren.delete(from: database, force: true)
-            return try await children.upsert(in: database)
+            if (force) {
+                try await existingChildren.delete(from: database, force: true)
+                return try await children.upsert(in: database)
+            }
+            else {
+                throw Abort(.badRequest, reason: "That parent child relationship is required.")
+
+            }
+            
         case .optional(let keyPath):
             existingChildren.forEach { $0[keyPath: keyPath].id = nil }
             children.forEach { $0[keyPath: keyPath].$id.value = self.fromId }

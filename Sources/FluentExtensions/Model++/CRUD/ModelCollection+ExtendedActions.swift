@@ -4,6 +4,19 @@ import Vapor
 import CollectionConcurrencyKit
 
 public extension Collection where Element: Model {
+    
+    @discardableResult
+    func update(in database: Database,
+                force: Bool = true,
+                transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { element, db in
+                try await element.update(in: db, force: force)
+            },
+            on: database,
+            transaction: transaction
+        )
+    }
     @discardableResult
     func upsert(in database: Database,
                 transaction: Bool = true) async throws -> [Element] {
