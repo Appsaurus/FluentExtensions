@@ -4,6 +4,20 @@ import Vapor
 import CollectionConcurrencyKit
 
 public extension Collection where Element: Model {
+ 
+    @discardableResult
+    func updateBy(_ method: UpdateMethod,
+                  in database: Database,
+                  transaction: Bool = true) async throws -> [Element] {
+        switch method {
+        case .upsert:
+            return try await upsert(in: database)
+        case .update:
+            return try await update(in: database, force: true)
+        case .save:
+            return try await save(in: database)
+        }
+    }
     
     @discardableResult
     func update(in database: Database,

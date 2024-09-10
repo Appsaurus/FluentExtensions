@@ -42,7 +42,7 @@ class FluentAdminControllerSiblingsTests: FluentAdminControllerTestCase {
     }
     
     func testAttachStudents() throws {
-        throw XCTSkip()
+        
         let newStudent = TestStudentModel(id: UUID(), name: "New Attached Student")
         
         try app.test(.PUT, "\(basePath)/\(Self.classUUID)/siblings/students/attach", beforeRequest: { req in

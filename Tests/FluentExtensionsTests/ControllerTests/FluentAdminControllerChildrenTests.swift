@@ -45,7 +45,8 @@ class FluentAdminControllerChildrenTests: FluentAdminControllerTestCase {
     func testDetachChildren() async throws {
                 
         
-        var response = try app.testPut("\(basePath)/\(Self.parentUUID)/children/parentID/detach", body: [self.child1])
+        var response = try app.testPut("\(basePath)/\(Self.parentUUID)/children/parentID/detach", 
+                                       body: [self.child1])
         XCTAssertEqual(response.status, .badRequest) //Parent ID is required, cannot detach
         
         
@@ -65,5 +66,32 @@ class FluentAdminControllerChildrenTests: FluentAdminControllerTestCase {
         XCTAssertEqual(response.status, .ok)
         children = try response.content.decode([TestChildModel].self)
         XCTAssertFalse(children.contains { $0.id == Self.child1UUID })
+    }
+    
+    func testReplaceChildren() throws {
+        let optionalParentPath = "\(basePath)/\(Self.parentUUID)/children/optionalParentID"
+        var response = try app.testPut(optionalParentPath, body: [self.child1, self.child2, self.child3])
+        XCTAssertEqual(response.status, .ok)
+        
+        response = try app.test(.GET, optionalParentPath)
+        XCTAssertEqual(response.status, .ok)
+        var children = try response.content.decode([TestChildModel].self)
+        XCTAssert(children.contains { $0.id == Self.child1UUID })
+        XCTAssert(children.contains { $0.id == Self.child2UUID })
+        XCTAssert(children.contains { $0.id == Self.child3UUID })
+        
+        
+        response = try app.testPut(optionalParentPath, body: [] as [TestChildModel])
+        XCTAssertEqual(response.status, .ok)
+        children = try response.content.decode([TestChildModel].self)
+        XCTAssertTrue(children.length == 0)
+        
+        response = try app.testPut(optionalParentPath, body: [self.child1])
+        
+        XCTAssertEqual(response.status, .ok)
+        children = try response.content.decode([TestChildModel].self)
+        XCTAssertTrue(children.length == 1)
+        XCTAssert(children.contains { $0.id == Self.child1UUID })
+
     }
 }

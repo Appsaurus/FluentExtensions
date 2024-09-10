@@ -72,7 +72,6 @@ class FluentAdminControllerPivotTests: FluentAdminControllerTestCase {
     }
     
     func testDetachPivot() throws {
-        throw XCTSkip()
         let pivotToDetach = TestEnrollmentModel()
         pivotToDetach.$class.id = Self.classUUID
         pivotToDetach.$student.id = Self.student1UUID
@@ -80,7 +79,13 @@ class FluentAdminControllerPivotTests: FluentAdminControllerTestCase {
         try app.test(.PUT, "\(basePath)/\(Self.classUUID)/pivots/enrollments/detach", beforeRequest: { req in
             try req.content.encode([pivotToDetach])
         }, afterResponse: { response in
-            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.status, .badRequest) //Relationship requires class, should fail
+        })
+        
+        try app.test(.DELETE, "\(basePath)/\(Self.classUUID)/pivots/enrollments/detach", beforeRequest: { req in
+            try req.content.encode([pivotToDetach])
+        }, afterResponse: { response in
+            XCTAssertEqual(response.status, .ok) //Relationship requires class, should fail
         })
         
         // Verify the pivot was detached

@@ -16,7 +16,8 @@ public extension ChildrenProperty {
     }
 
     @discardableResult
-    func attach(_ children: [To], in database: Database) async throws -> [To] {
+    func markForAttachment(_ children: [To]) throws -> [To] {
+        
         guard let id = fromId else {
             fatalError("Cannot query children relation from unsaved model.")
         }
@@ -28,43 +29,99 @@ public extension ChildrenProperty {
                 $0[keyPath: keyPath].id = id
             }
         }
-        
-        return try await children.update(in: database, force: true)
+        return children
     }
     
     @discardableResult
-    func detach(_ children: [To], in database: Database) async throws -> [To] {
+    func attach(_ children: [To],
+                updatingBy method: UpdateMethod = .upsert,
+                in database: Database) async throws -> [To] {
+        let children = try markForAttachment(children)
+        return try await children.updateBy(method, in: database)
+    }
+    
+    
+    @discardableResult
+    func markForDetachment(_ children: [To]) throws -> [To] {
         
         switch self.parentKey {
         case .required(_):
             throw Abort(.badRequest, reason: "That parent child relationship is required.")
         case .optional(let keyPath):
             children.forEach { $0[keyPath: keyPath].id = nil }
-            return try await children.update(in: database, force: true)
         }
+        return children
+    }
+    
+    @discardableResult
+    func detach(_ children: [To], in database: Database) async throws -> [To] {
+        return try await markForDetachment(children)
+            .update(in: database, force: true)
+    }
+    
+    /// Detach all models by deleting all pivots from this model.
+    func detachAll(on database: Database) async throws {
+        guard let fromID = self.fromId else {
+            fatalError("Cannot detach siblings relation \(self.name) from unsaved model.")
+        }
+        var existingChildren = try await self.all(in: database)
+        existingChildren = try markForDetachment(existingChildren)
+        
+        try await existingChildren.update(in: database)
+    }
+    
+    func remove(children: [To], by removalMethod: RemovalMethod = .detach, in database: Database) async throws {
+        switch removalMethod {
+        case .delete(let force):
+            try await children.delete(force: force, on: database)
+        case .detach:
+            try await self.detach(children, in: database)
+        }
+    }
+    
+
+
+    func markForReplacement(_ children: [To], force: Bool = false, in database: Database) async throws -> ([To], [To]) {
+        switch (self.parentKey, force) {
+        case (.required(_), false):
+            throw Abort(.badRequest, reason: "That parent child relationship is required.")
+        default:
+            break
+        }
+        
+        var existingChildren = try await self.all(in: database)
+        existingChildren = try markForDetachment(existingChildren)
+        let children = try markForAttachment(children)
+        return (existingChildren, children)
+    }
+    @discardableResult
+    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
+        let resources = try await markForReplacement(children, force: force, in: database)
+        let existingChildren = resources.0
+        let children = resources.1
+        
+        try await existingChildren.update(in: database, force: force)
+        return try await children.upsert(in: database)
     }
 
     @discardableResult
-    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
-        let existingChildren = try await self.all(in: database)
-        switch self.parentKey {
-        case .required(_):
-            if (force) {
-                try await existingChildren.delete(from: database, force: true)
-                return try await children.upsert(in: database)
+    func replace(
+        with children: [To],
+        by removalMethod: RemovalMethod = .detach,
+        updatingBy updateMethod: UpdateMethod = .upsert,
+        on database: Database) async throws -> [To] {
+        return try await database.transaction { database in
+            switch removalMethod {
+            case .delete(let force):
+                try await self.query(on: database).delete(force: force)
+            case .detach:
+                try await self.detachAll(on: database)
             }
-            else {
-                throw Abort(.badRequest, reason: "That parent child relationship is required.")
-
-            }
-            
-        case .optional(let keyPath):
-            existingChildren.forEach { $0[keyPath: keyPath].id = nil }
-            children.forEach { $0[keyPath: keyPath].$id.value = self.fromId }
-            try await existingChildren.update(in: database)
-            return try await children.upsert(in: database)
+            return try await self.attach(children, updatingBy: .upsert, in: database)
         }
+        
     }
+    
 }
 
 public extension Model {

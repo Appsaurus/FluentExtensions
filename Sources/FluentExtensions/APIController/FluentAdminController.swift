@@ -48,13 +48,12 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
         let path = R.childCRUDPath(childForeignKeyPath, slug: pathSlug)
         
         //Replace attached children with new children
-        routes.put(path, params: R.self, use: { (request, model) async throws -> [CR] in
-            let childrenModel = try request.content.decode([C].self)
-            return try await model.replaceChildren(with: childrenModel,
-                                                   through: childForeignKeyPath,
-                                                   in: request.db)
+        routes.put(at: path) { (request, resource: R, body: [C]) async throws -> [CR] in
+            return try await resource.replaceChildren(with: body,
+                                                      through: childForeignKeyPath,
+                                                      in: request.db)
             .map(childController.read)
-        })
+        }
         
         let searchPath = path + ["search"]
         routes.get(searchPath.pathComponents) { request in
@@ -100,23 +99,30 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
           P: FluentResourceModel {
               let pivotPath = R.pivotCRUDPath(relationshipName: relationshipName)
               
-              routes.get(pivotPath, params: R.self) { (request: Request, model: R) async throws -> [PR] in
+              routes.get(pivotPath) { (request: Request, model: R) async throws -> [PR] in
                   return try await model[keyPath: siblingKeyPath]
                       .$pivots
                       .query(on: request.db).all()
                       .map(pivotController.read)
               }
               
-              
-              routes.put(pivotPath, params: R.self) { (request, model) async throws -> [PR] in
+              //Replace
+              routes.put([P].self, at: pivotPath) { (request, model: R, pivotEntities) async throws -> [PR] in
                   let database = request.db
-                      let pivotEntities = try request.content.decode([P].self)
-                      let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
-                  try await siblingRelationship.replace(with: pivotEntities, force: true, in: database)
-                      return try await siblingRelationship
-                          .query(on: database)
-                          .all()
-                          .map(pivotController.read)
+                      let pivotProperty = model[keyPath: siblingKeyPath].$pivots
+                  var policy: RemovalMethod = .detach
+                  switch pivotProperty.parentKey {
+                  case .required(_):
+                      policy = .delete(force: false)
+                      break
+                  case .optional(_):
+                      break
+                  }
+                  return try await pivotProperty.replace(with: pivotEntities,
+                                                         by: policy,
+                                                         updatingBy: .upsert,
+                                                         on: database)
+                  .map(pivotController.read)
               }
               
               let attachPath = pivotPath + ["attach"]
@@ -124,19 +130,33 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
                   let _ = try model.requireID()
                   let pivotEntities = try request.content.decode([P].self)
                   try await pivotEntities.upsert(in: request.db)
-                  let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
+                  let siblingRelationship = model[keyPath: siblingKeyPath]
                   return try await siblingRelationship
+                      .$pivots
                       .attach(pivotEntities, in: request.db)
                       .map(pivotController.read)
               }
               
               let detachPath = pivotPath + ["detach"]
               routes.put(detachPath, params: R.self) { (request, model) async throws -> [PR] in
-                  let _ = try model.requireID()
+                  //TODO: Confirm exist and already attached.
                   let pivotEntities = try request.content.decode([P].self)
-                  let siblingRelationship = model[keyPath: siblingKeyPath].$pivots
-                  return try await siblingRelationship.detach(pivotEntities, in: request.db)
+                  let siblingRelationship = model[keyPath: siblingKeyPath]
+                  return try await siblingRelationship
+                      .$pivots
+                      .detach(pivotEntities, in: request.db)
                       .map(pivotController.read)
+              }
+                            
+              routes.delete(detachPath, params: R.self) { (request, model) async throws -> HTTPResponseStatus in
+                  let siblingRelationship = model[keyPath: siblingKeyPath]
+                  let pivots = try await siblingRelationship
+                      .$pivots
+                      .query(on: request.db)
+                      .filterByQueryParameters(request: request)
+                      .all()
+                  try await pivots.delete(from: request.db)
+                  return .ok
               }
           }
     
