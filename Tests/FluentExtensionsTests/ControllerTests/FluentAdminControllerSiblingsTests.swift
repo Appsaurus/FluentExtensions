@@ -41,22 +41,20 @@ class FluentAdminControllerSiblingsTests: FluentAdminControllerTestCase {
         })
     }
     
-    func testAttachStudents() throws {
+    func testAttachStudents() async throws {
         
-        let newStudent = TestStudentModel(id: UUID(), name: "New Attached Student")
         
-        try app.test(.PUT, "\(basePath)/\(Self.classUUID)/siblings/students/attach", beforeRequest: { req in
-            try req.content.encode([newStudent])
-        }, afterResponse: { response in
-            XCTAssertEqual(response.status, .ok)
-        })
+        var response = try app.testPut("\(basePath)/\(Self.classUUID)/siblings/students/attach",
+                                       body: [student2])
+        
+        XCTAssertEqual(response.status, .ok)
         
         // Verify the student was attached
-        try app.test(.GET, "\(basePath)/\(Self.classUUID)/siblings/students") { response in
-            XCTAssertEqual(response.status, .ok)
-            let students = try response.content.decode([TestStudentModel].self)
-            XCTAssertTrue(students.contains { $0.name == "New Attached Student" })
-        }
+        response = try await app.sendRequest(.GET, "\(basePath)/\(Self.classUUID)/siblings/students")
+        
+        XCTAssertEqual(response.status, .ok)
+        let students = try response.content.decode([TestStudentModel].self)
+        XCTAssertTrue(students.contains { $0.id == Self.student2UUID })
     }
     
     func testDetachStudents() throws {
