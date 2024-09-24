@@ -7,14 +7,19 @@
 
 import FluentExtensions
 
+public typealias Enrollment = Pivot<TestClassModel, TestStudentModel>
+
 public final class TestClassModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
 
-    @Siblings(through: TestEnrollmentModel.self, from: \.$class, to: \.$student)
-    public var students: [TestStudentModel]
+//    @Siblings(through: TestEnrollmentModel.self, from: \.$class, to: \.$student)
+//    public var students: [TestStudentModel]
 
+    @Enrollment("enrollments")
+    public var students: [TestStudentModel]
+    
     public init() {}
     
     public init(id: UUID? = nil, students: [TestStudentModel]? = nil) {
