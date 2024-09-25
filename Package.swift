@@ -34,7 +34,6 @@ let package = Package(
 		.package(url: "https://github.com/Appsaurus/CodableExtensions", from: "1.1.0"),
         .package(url: "https://github.com/Appsaurus/RuntimeExtensions", branch: "1.1.0"),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", exact: "0.2.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax", .upToNextMajor(from: "510.0.3")),
 
     ],
     targets: [
@@ -48,10 +47,7 @@ let package = Package(
                            .product(name: "VaporExtensions", package: "VaporExtensions"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions"),
-                           .product(name: "CollectionConcurrencyKit", package: "CollectionConcurrencyKit"),
-                           .product(name: "SwiftSyntax", package: "swift-syntax"),
-                           .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                           .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                           .product(name: "CollectionConcurrencyKit", package: "CollectionConcurrencyKit")
                           ]),
         .target(
             name: "FluentTestUtils",

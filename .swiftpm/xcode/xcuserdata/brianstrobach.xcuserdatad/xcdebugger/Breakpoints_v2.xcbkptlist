@@ -90,8 +90,8 @@
             filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "130"
-            endingLineNumber = "130"
+            startingLineNumber = "143"
+            endingLineNumber = "143"
             landmarkName = "pivotCRUDRoutes(_:relationshipName:through:pivotController:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -106,8 +106,8 @@
             filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "189"
-            endingLineNumber = "189"
+            startingLineNumber = "202"
+            endingLineNumber = "202"
             landmarkName = "siblingCRUDRoutes(_:relationshipName:through:siblingController:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -122,8 +122,8 @@
             filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "74"
-            endingLineNumber = "74"
+            startingLineNumber = "75"
+            endingLineNumber = "75"
             landmarkName = "childCRUDRoute(_:pathSlug:queryParamKey:childForeignKeyPath:childController:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -138,8 +138,8 @@
             filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "191"
-            endingLineNumber = "191"
+            startingLineNumber = "204"
+            endingLineNumber = "204"
             landmarkName = "siblingCRUDRoutes(_:relationshipName:through:siblingController:)"
             landmarkType = "7">
          </BreakpointContent>

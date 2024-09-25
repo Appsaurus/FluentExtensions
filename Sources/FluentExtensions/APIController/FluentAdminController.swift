@@ -6,8 +6,9 @@
 //
 
 
-open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R,R> where R.ResolvedParameter == R.IDValue,
-                                                                                          R: Content {
+open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R,R>
+where R.ResolvedParameter == R.IDValue,
+      R: Content {
     
     open override func readModel(id: R.IDValue, in db: Database) async throws -> R {
         return try await R.find(id, on: db).unwrapped(or: Abort(.notFound))
@@ -90,7 +91,19 @@ open class FluentAdminController<R: FluentResourceModel>: FluentController<R,R,R
     
     
     //Siblings
-    
+    public func pivotCRUDRoutes<S, P>(_ routes: RoutesBuilder,
+                                                  relationshipName: String = R.crudPathName + "_" + S.crudPathName,
+                                              through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>)
+    where S: FluentResourceModel,
+          P: FluentResourceModel,
+          P.ResolvedParameter == P.IDValue,
+          P: Content
+    {
+        self.pivotCRUDRoutes(routes,
+                             relationshipName: relationshipName,
+                             through: siblingKeyPath,
+                             pivotController: FluentAdminController<P>())
+    }
     public func pivotCRUDRoutes<S, P, PC, PR, PU>(_ routes: RoutesBuilder,
                                                   relationshipName: String = R.crudPathName + "_" + S.crudPathName,
                                                   through siblingKeyPath: SiblingPropertyKeyPath<R, S, P>,

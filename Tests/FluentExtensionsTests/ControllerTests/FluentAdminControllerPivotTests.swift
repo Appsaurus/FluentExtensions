@@ -19,8 +19,7 @@ class FluentAdminControllerPivotTests: FluentAdminControllerTestCase {
         try controller.registerRoutes(routes: router)
         controller.pivotCRUDRoutes(router.grouped(basePath),
                                    relationshipName: "enrollments",
-                                   through: \.$students,
-                                   pivotController: FluentAdminController<TestEnrollmentModel>())
+                                   through: \.$students)
     }
     
     func testGetPivots() throws {

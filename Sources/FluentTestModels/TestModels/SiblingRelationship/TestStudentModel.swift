@@ -19,6 +19,9 @@ public final class TestStudentModel: TestModel, @unchecked Sendable {
     @Field(key: .name)
     public var name: String
 
+//    @Siblings()
+//    public var classes: [TestClassModel]
+    
     @Siblings(through: TestEnrollmentModel.self, from: \.$student, to: \.$class)
     public var classes: [TestClassModel]
 
