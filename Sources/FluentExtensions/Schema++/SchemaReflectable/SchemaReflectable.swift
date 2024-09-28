@@ -65,7 +65,7 @@ extension TimestampProperty: SchemaReflectable {
     }
 }
 
-extension ParentProperty: SchemaReflectable {
+extension ParentProperty: SchemaReflectable where To.IDValue == UUID {
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
@@ -74,7 +74,7 @@ extension ParentProperty: SchemaReflectable {
     }
 }
 
-extension OptionalParentProperty: SchemaReflectable {
+extension OptionalParentProperty: SchemaReflectable where To.IDValue == UUID {
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
