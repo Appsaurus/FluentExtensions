@@ -8,85 +8,145 @@
 import Fluent
 import VaporExtensions
 
-//MARK: Destructive
+// MARK: - Destructive
 public extension Model {
     /// Deletes all rows in a table
-    @discardableResult
-    static func delete(force: Bool = false, on database: Database, transaction: Bool = true) -> Future<Void> {
-        return query(on: database).all().delete(force: force, on: database, transaction: transaction)
+    static func deleteAll(force: Bool = false, in database: Database, transaction: Bool = true) async throws -> Void {
+        let models = try await query(on: database).all()
+        try await models.delete(from: database, force: force, transaction: transaction)
     }
 
     @discardableResult
-    static func updateAll(on database: Database, transaction: Bool = true) -> Future<[Self]> {
-        return query(on: database).all().updateAndReturn(on: database, transaction: transaction)
+    static func updateAll(in database: Database, transaction: Bool = true) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        return try await models.update(in: database, transaction: transaction)
     }
 
     @discardableResult
-    static func updateAll(on database: Database,
-                       transaction: Bool = true,
-                       modifications: @escaping (Self) -> Self) -> Future<[Self]> {
-        return query(on: database).all().transformEach(modifications).updateAndReturn(on: database, transaction: transaction)
+    static func updateAll(
+        in database: Database,
+        transaction: Bool = true,
+        modifications: @escaping (Self) -> Self
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = models.map(modifications)
+        return try await modifiedModels.update(in: database, transaction: transaction)
     }
 
     @discardableResult
-    static func updateAllThrowingAsync(on database: Database,
-                                       transaction: Bool = true,
-                                       modifications: @escaping (Self) -> Future<Self>) -> Future<[Self]> {
-        return query(on: database).all().flatMapEach(on: database.eventLoop, modifications).updateAndReturn(on: database, transaction: transaction)
-    }
-
-    @discardableResult
-    static func updateAllAsync(on database: Database,
-                               transaction: Bool = true,
-                               modifications: @escaping (Self) -> Future<Self>) -> Future<[Self]> {
-        return query(on: database).all().flatMapEach(on: database.eventLoop, modifications).updateAndReturn(on: database, transaction: transaction)
-    }
-
-    //Optionally return those you want updated
-    @discardableResult
-    static func updateAllSelectively(on database: Database,
-                       transaction: Bool = true,
-                       modifications: @escaping (Self) -> Self?) -> Future<[Self]> {
-        return query(on: database).all().transformEach(modifications).updateAndReturn(on: database, transaction: transaction)
-    }
-
-    @discardableResult
-    static func updateAllSelectivelyThrowingAsync(on database: Database,
-                                       transaction: Bool = true,
-                                       continueOnError: Bool = false,
-                                       modifications: @escaping (Self) -> Future<Self?>) throws -> Future<[Self]> {
-        let updates = query(on: database).all()
-            .flatMapEach(on: database.eventLoop, modifications, continueOnError: continueOnError)
-            .map({ return $0.removeNils()})
-        return updates.updateAndReturn(on: database, transaction: transaction)
-    }
-
-    @discardableResult
-    static func updateAllSelectivelyAsync(on database: Database,
-                               transaction: Bool = true,
-                               modifications: @escaping (Self) -> Future<Self?>) throws -> Future<[Self]> {
-        let updates = query(on: database).all().flatMapEach(on: database.eventLoop, modifications).map({ return $0.removeNils()})
-        return updates.updateAndReturn(on: database, transaction: transaction)
-    }
-}
-
-
-// MARK: Removing nils
-fileprivate protocol OptionalType {
-    associatedtype Wrapped
-    func map<U>(_ f: (Wrapped) throws -> U) rethrows -> U?
-}
-
-extension Optional: OptionalType {}
-
-fileprivate extension Sequence where Iterator.Element: OptionalType {
-    func removeNils() -> [Iterator.Element.Wrapped] {
-        var result: [Iterator.Element.Wrapped] = []
-        for element in self {
-            if let element = element.map({ $0 }) {
-                result.append(element)
+    static func updateAllThrowing(
+        in database: Database,
+        transaction: Bool = true,
+        modifications: @escaping (Self) throws -> Self
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = try await withThrowingTaskGroup(of: Self.self) { group in
+            for model in models {
+                group.addTask {
+                    try modifications(model)
+                }
+            }
+            return try await group.reduce(into: [Self]()) { result, model in
+                result.append(model)
             }
         }
-        return result
+        return try await modifiedModels.update(in: database, transaction: transaction)
+    }
+
+    @discardableResult
+    static func updateAllAsync(
+        in database: Database,
+        transaction: Bool = true,
+        modifications: @escaping (Self) async -> Self
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = await withTaskGroup(of: Self.self) { group in
+            for model in models {
+                group.addTask {
+                    await modifications(model)
+                }
+            }
+            return await group.reduce(into: [Self]()) { result, model in
+                result.append(model)
+            }
+        }
+        return try await modifiedModels.update(in: database, transaction: transaction)
+    }
+
+    @discardableResult
+    static func updateAllSelectively(
+        in database: Database,
+        transaction: Bool = true,
+        modifications: @escaping (Self) -> Self?
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = models.compactMap(modifications)
+        return try await modifiedModels.update(in: database, transaction: transaction)
+    }
+
+    @discardableResult
+    static func updateAllSelectivelyThrowing(
+        in database: Database,
+        transaction: Bool = true,
+        continueOnError: Bool = false,
+        modifications: @escaping (Self) throws -> Self?
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = try await withThrowingTaskGroup(of: Self?.self) { group in
+            for model in models {
+                group.addTask {
+                    try modifications(model)
+                }
+            }
+            return try await group.reduce(into: [Self]()) { result, model in
+                if let model = model {
+                    result.append(model)
+                }
+            }
+        }
+        return try await modifiedModels.update(in: database, transaction: transaction)
+    }
+
+    @discardableResult
+    static func updateAllSelectivelyAsync(
+        in database: Database,
+        transaction: Bool = true,
+        modifications: @escaping (Self) async -> Self?
+    ) async throws -> [Self] {
+        let models = try await query(on: database).all()
+        let modifiedModels = await withTaskGroup(of: Self?.self) { group in
+            for model in models {
+                group.addTask {
+                    await modifications(model)
+                }
+            }
+            return await group.reduce(into: [Self]()) { result, model in
+                if let model = model {
+                    result.append(model)
+                }
+            }
+        }
+        return try await modifiedModels.update(in: database, transaction: transaction)
     }
 }
+
+// MARK: - Removing nils
+fileprivate extension Sequence {
+    func removeNils<T>() -> [T] where Element == T? {
+        compactMap { $0 }
+    }
+}
+//
+//extension Optional: OptionalType {}
+//
+//fileprivate extension Sequence where Iterator.Element: OptionalType {
+//    func removeNils() -> [Iterator.Element.Wrapped] {
+//        var result: [Iterator.Element.Wrapped] = []
+//        for element in self {
+//            if let element = element.map({ $0 }) {
+//                result.append(element)
+//            }
+//        }
+//        return result
+//    }
+//}

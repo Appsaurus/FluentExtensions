@@ -1,22 +1,22 @@
+////
+////  Database+EventLoopReferencing.swift
+////  
+////
+////  Created by Brian Strobach on 9/8/21.
+////
 //
-//  Database+EventLoopReferencing.swift
-//  
+//import VaporExtensions
 //
-//  Created by Brian Strobach on 9/8/21.
+//public extension Database {
+//    func fail<V>(with error: Error) -> EventLoopFuture<V> {
+//        eventLoop.fail(with: error)
+//    }
 //
-
-import VaporExtensions
-
-public extension Database {
-    func fail<V>(with error: Error) -> EventLoopFuture<V> {
-        eventLoop.fail(with: error)
-    }
-
-    func toFuture<V>(_ value: V) -> EventLoopFuture<V> {
-        eventLoop.future(value)
-    }
-
-    func future<V>(_ value: V) -> Future<V> {
-        toFuture(value)
-    }
-}
+//    func toFuture<V>(_ value: V) -> EventLoopFuture<V> {
+//        eventLoop.future(value)
+//    }
+//
+//    func future<V>(_ value: V) -> Future<V> {
+//        toFuture(value)
+//    }
+//}

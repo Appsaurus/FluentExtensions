@@ -1,75 +1,111 @@
-//
-//  Model+Seeding.swift
-//  
-//
-//  Created by Brian Strobach on 8/9/21.
-//
-
 import FluentKit
-import VaporExtensions
 
 public typealias ModelInitializer<M: Model> = () -> M
-public extension Model where Self: Decodable{
+
+public extension Model where Self: Decodable {
     @discardableResult
-    static func create(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) -> Future<Self>{
+    static func create(
+        id: IDValue? = nil,
+        in database: Database,
+        _ initializer: ModelInitializer<Self>
+    ) async throws -> Self {
         let model: Self = initializer()
         if let id = id {
             model.id = id
         }
-        return model.createAndReturn(on: database)
-    }
-
-    @discardableResult
-    static func createSync(id: IDValue? = nil, on database: Database, _ initializer: ModelInitializer<Self>) throws -> Self{
-        return try create(id: id, on: database, initializer).wait()
-    }
-
-    @discardableResult
-    static func createBatchSync(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
-        return try createBatch(size: size, on: database, initializer).wait()
-    }
-
-
-
-    @discardableResult
-    static func createBatch(size: Int, on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]> {
-
-        var models: [Future<Self>] = []
-        if size > 0{
-            for _ in 1...size{
-                models.append(self.create(on: database, initializer))
-            }
-        }
-        return models.flatten(on: database)
-    }
-
-    @discardableResult
-    static func findOrCreate(id: IDValue, on database: Database,  _ initializer: @escaping ModelInitializer<Self>) -> Future<Self>{
-        return find(id, on: database).unwrapOr {
-            create(id: id, on: database, initializer)
-        }
-    }
-
-    @discardableResult
-    static func findOrCreateBatch(ids: [IDValue], on database: Database, _ initializer: @escaping ModelInitializer<Self>) -> Future<[Self]>{
-        var models: [Future<Self>] = []
-        for id in ids{
-            models.append(self.findOrCreate(id: id, on: database, initializer))
-        }
-        return models.flatten(on: database)
-    }
-
-    @discardableResult
-    static func findOrCreateSync(id: IDValue, on database: Database, _ initializer: @escaping ModelInitializer<Self>) throws -> Self{
-        let futureModel: Future<Self> = findOrCreate(id: id, on: database, initializer)
-        let model: Self = try futureModel.wait()
+        try await model.create(on: database)
         return model
     }
 
     @discardableResult
-    static func findOrCreateBatchSync(ids: [IDValue],
-                                             on database: Database,
-                                             _ initializer: @escaping ModelInitializer<Self>) throws -> [Self]{
-        return try findOrCreateBatch(ids: ids, on: database, initializer).wait()
+    static func createSync(
+        id: IDValue? = nil,
+        in database: Database,
+        _ initializer: ModelInitializer<Self>
+    ) async throws -> Self {
+        try await create(id: id, in: database, initializer)
+    }
+
+    @discardableResult
+    static func createBatchSync(
+        size: Int,
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> [Self] {
+        try await createBatch(size: size, in: database, initializer)
+    }
+
+    @discardableResult
+    static func createBatch(
+        size: Int,
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> [Self] {
+        guard size > 0 else { return [] }
+        
+        return try await withThrowingTaskGroup(of: Self.self) { group in
+            for _ in 1...size {
+                group.addTask {
+                    try await self.create(in: database, initializer)
+                }
+            }
+            
+            var models: [Self] = []
+            for try await model in group {
+                models.append(model)
+            }
+            return models
+        }
+    }
+
+    @discardableResult
+    static func findOrCreate(
+        id: IDValue,
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> Self {
+        if let existingModel = try await find(id, on: database) {
+            return existingModel
+        }
+        return try await create(id: id, in: database, initializer)
+    }
+
+    @discardableResult
+    static func findOrCreateBatch(
+        ids: [IDValue],
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> [Self] {
+        try await withThrowingTaskGroup(of: Self.self) { group in
+            for id in ids {
+                group.addTask {
+                    try await self.findOrCreate(id: id, in: database, initializer)
+                }
+            }
+            
+            var models: [Self] = []
+            for try await model in group {
+                models.append(model)
+            }
+            return models
+        }
+    }
+
+    @discardableResult
+    static func findOrCreateSync(
+        id: IDValue,
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> Self {
+        try await findOrCreate(id: id, in: database, initializer)
+    }
+
+    @discardableResult
+    static func findOrCreateBatchSync(
+        ids: [IDValue],
+        in database: Database,
+        _ initializer: @escaping ModelInitializer<Self>
+    ) async throws -> [Self] {
+        try await findOrCreateBatch(ids: ids, in: database, initializer)
     }
 }

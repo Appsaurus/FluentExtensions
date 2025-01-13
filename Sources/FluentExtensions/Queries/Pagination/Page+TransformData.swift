@@ -39,17 +39,17 @@ public extension Page {
 }
 
 //MARK: SQLRow
-
-public extension Future where Value == Page<SQLRow> {
-    func transformDatum<O>(with transformer: @escaping (SQLRow) throws -> O) throws -> Future<Page<O>> {
-        return tryMap({try $0.transformDatum(with: transformer)})
-    }
-
-    func transformData<O>(with transformer: @escaping ([SQLRow]) throws -> [O]) throws -> Future<Page<O>> {
-        return tryMap({try $0.transformData(with: transformer)})
-    }
-
-    func transform<Transformer: PageTransformer>(with transformer: Transformer) throws -> Future<Page<Transformer.Output>> where Transformer.Input == SQLRow {
-        try transformDatum(with: transformer.transform)
-    }
-}
+//
+//public extension Future where Value == Page<SQLRow> {
+//    func transformDatum<O>(with transformer: @escaping (SQLRow) throws -> O) throws -> Future<Page<O>> {
+//        return tryMap({try $0.transformDatum(with: transformer)})
+//    }
+//
+//    func transformData<O>(with transformer: @escaping ([SQLRow]) throws -> [O]) throws -> Future<Page<O>> {
+//        return tryMap({try $0.transformData(with: transformer)})
+//    }
+//
+//    func transform<Transformer: PageTransformer>(with transformer: Transformer) throws -> Future<Page<Transformer.Output>> where Transformer.Input == SQLRow {
+//        try transformDatum(with: transformer.transform)
+//    }
+//}

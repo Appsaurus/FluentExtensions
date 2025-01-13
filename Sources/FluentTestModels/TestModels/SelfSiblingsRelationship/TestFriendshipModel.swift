@@ -12,7 +12,7 @@ private extension FieldKey {
     static var toUser: Self { "toUser"}
 }
 
-final class TestFriendshipModel: Model, Content {
+public final class TestFriendshipModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -23,7 +23,7 @@ final class TestFriendshipModel: Model, Content {
     @Parent(key: .toUser)
     public var toUser: TestUserModel
 
-    init() { }
+    public init() { }
 
 
 //    init(id: UUID? = nil, users: (TestUserModel, TestUserModel)) throws {
@@ -46,16 +46,17 @@ final class TestFriendshipModel: Model, Content {
 }
 
 //MARK: Reflection-based migration
-class TestFriendshipModelReflectionMigration: AutoMigration<TestFriendshipModel> {
-    override func customize(schema: SchemaBuilder) -> SchemaBuilder {
+public final class TestFriendshipModelReflectionMigration: AutoMigration<TestFriendshipModel>,
+                                                           @unchecked Sendable  {
+    public override func customize(schema: SchemaBuilder) -> SchemaBuilder {
         schema.unique(on: .toUser, .fromUser)
     }
 }
 
 //MARK: Manual migration
-public class TestFriendshipModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestFriendshipModel.schema)
+public final class TestFriendshipModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestFriendshipModel.schema)
             .id()
             .field(.toUser, .uuid, .required)
             .foreignKey(.toUser, references: TestUserModel.schema, .id)
@@ -65,7 +66,7 @@ public class TestFriendshipModelMigration: Migration {
             .create()
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestFriendshipModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestFriendshipModel.schema).delete()
     }
 }

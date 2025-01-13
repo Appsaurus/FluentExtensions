@@ -14,7 +14,9 @@ extension Model where Self: Paginatable & Content {
         pageKey: String = Pagination.Defaults.pageKey,
         perPageKey: String = Pagination.Defaults.perPageKey,
         _ sorts: [DatabaseQuery.Sort] = []
-    ) throws -> Future<Fluent.Page<Self>> {
-        return try Self.query(on: req).sort(sorts).paginate(for: req, pageKey: pageKey, perPageKey: perPageKey)
+    ) async throws -> Fluent.Page<Self> {
+        return try await Self.query(on: req)
+            .sort(sorts)
+            .paginate(for: req, pageKey: pageKey, perPageKey: perPageKey)
     }
 }

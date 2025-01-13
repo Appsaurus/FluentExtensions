@@ -7,31 +7,50 @@
 
 import FluentExtensions
 
-public final class TestStudentModel: Model, Content {
+private extension FieldKey {
+    static var name: Self { "name" }
+}
 
+public final class TestStudentModel: TestModel, @unchecked Sendable {
+    
     @ID(key: .id)
     public var id: UUID?
+    
+    @Field(key: .name)
+    public var name: String
 
+//    @Siblings()
+//    public var classes: [TestClassModel]
+    
     @Siblings(through: TestEnrollmentModel.self, from: \.$student, to: \.$class)
     public var classes: [TestClassModel]
 
     public init() {}
+    
+    public init(id: UUID? = nil, name: String, classes: [TestClassModel]? = nil) {
+        self.id = id
+        self.name = name
+        if let classes {
+            self.classes = classes
+        }
+    }
 }
 
 
 //MARK: Reflection-based migration
-class TestStudentModelReflectionMigration: AutoMigration<TestStudentModel> {}
+public final class TestStudentModelReflectionMigration: AutoMigration<TestStudentModel>, @unchecked Sendable {}
 
 //MARK: Manual migration
-public class TestStudentModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestStudentModel.schema)
+public final class TestStudentModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestStudentModel.schema)
             .id()
+            .field(.name, .string, .required)
             .create()
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestStudentModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestStudentModel.schema).delete()
     }
 }

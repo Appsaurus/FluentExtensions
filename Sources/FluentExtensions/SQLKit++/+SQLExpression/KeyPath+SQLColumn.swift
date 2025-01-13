@@ -25,7 +25,7 @@ public extension SQLColumn {
         self.init(keyPath.propertyName, table: M.schemaOrAlias)
     }
 }
-extension KeyPath: SQLExpression where Root: Model, Value: QueryableProperty {
+extension KeyPath: /*@retroactive*/ SQLExpression where Root: Model, Value: QueryableProperty {
 
     public func serialize(to serializer: inout SQLSerializer) {
         SQLColumn(propertyName, table: Root.schemaOrAlias).serialize(to: &serializer)

@@ -37,7 +37,7 @@ private extension FieldKey {
     static var enumDictionary: Self { "enumDictionary" }
 }
 
-public final class KitchenSink: Model, Content {
+public final class KitchenSink: TestModel, @unchecked Sendable {
 
     @ID(custom: .id)
 	public var id: Int?
@@ -195,7 +195,7 @@ public final class KitchenSink: Model, Content {
 
 }
 
-public final class TestGroupedFieldsModel: Fields {
+public final class TestGroupedFieldsModel: Fields, @unchecked Sendable  {
 
     @Field(key: .stringField)
     public var stringField: String
@@ -246,13 +246,13 @@ public enum TestRawIntEnum: Int, Codable, CaseIterable {
 
 
 //MARK: Reflection-based migration
-class KitchenSinkReflectionMigration: AutoMigration<KitchenSink> {}
+public final class KitchenSinkReflectionMigration: AutoMigration<KitchenSink>, @unchecked Sendable {}
 
 //MARK: Manual migration
-public class KitchenSinkMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-
-        database.schema(KitchenSink.schema)
+public final class KitchenSinkMigration: AsyncMigration {
+    
+    public func prepare(on database: any FluentKit.Database) async throws {
+        try await database.schema(KitchenSink.schema)
             .field(.id, .int, .identifier(auto: true))
 
             //MARK: Basic Data Type Fields Schema
@@ -301,7 +301,7 @@ public class KitchenSinkMigration: Migration {
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> { 
-        return database.schema(KitchenSink.schema).delete()
+    public func revert(on database: any FluentKit.Database) async throws {
+        try await database.schema(KitchenSink.schema).delete()
     }
 }

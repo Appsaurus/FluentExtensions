@@ -1,79 +1,72 @@
-//
-//  Model+CollectionExtensions.swift
-//  FluentExtensions
-//
-//  Created by Brian Strobach on 7/2/18.
-//
-
 import Foundation
 import Fluent
 import Vapor
+import CollectionConcurrencyKit
 
-
-public extension Collection where Element: Model{
-    func save(on database: Database) -> EventLoopFuture<Void> {
-        guard self.count > 0 else {
-            return database.eventLoop.makeSucceededFuture(())
+public extension Collection where Element: Model {
+ 
+    @discardableResult
+    func updateBy(_ method: UpdateMethod,
+                  in database: Database,
+                  transaction: Bool = true) async throws -> [Element] {
+        switch method {
+        case .upsert:
+            return try await upsert(in: database)
+        case .update:
+            return try await update(in: database, force: true)
+        case .save:
+            return try await save(in: database)
         }
-
-        return compactMap({$0.save(on: database)}).flatten(on: database.eventLoop)
+    }
+    
+    @discardableResult
+    func update(in database: Database,
+                force: Bool = true,
+                transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { element, db in
+                try await element.update(in: db, force: force)
+            },
+            on: database,
+            transaction: transaction
+        )
+    }
+    @discardableResult
+    func upsert(in database: Database,
+                transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { element, db in
+                try await element.upsert(in: db)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
 
-    func update(on database: Database) -> EventLoopFuture<Void> {
-        guard self.count > 0 else {
-            return database.eventLoop.makeSucceededFuture(())
-        }
 
-        return compactMap({$0.update(on: database, force: true)}).flatten(on: database.eventLoop)
+    @discardableResult
+    func updateIfExists(in database: Database,
+                transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { element, db in
+                try await element.updateIfExists(in: db)
+            },
+            on: database,
+            transaction: transaction
+        )
     }
 
+
+    @discardableResult
+    func replace(with models: [Element],
+                 in database: Database,
+                transaction: Bool = true) async throws -> [Element] {
+        try await performBatch(
+            action: { element, db in
+                try await element.replace(with: element, on: db)
+            },
+            on: database,
+            transaction: transaction
+        )
+    }
 }
-
-
-public extension Collection where Element: Model{
-    func upsert(on database: Database) -> Future<Void>{
-        compactMap { $0.upsert(on: database) }.flatten(on: database.eventLoop).flattenVoid()
-    }
-
-    func updateIfExists(on database: Database) -> Future<Void>{
-        compactMap { $0.updateIfExists(on: database) }.flatten(on: database.eventLoop).flattenVoid()
-    }
-
-    func upsert(on database: Database, transaction: Bool = true) -> Future<Void>{
-        return performBatch(action: upsert, on: database, transaction: transaction)
-    }
-
-    func replace(with models: Future<Self>, on database: Database, transaction: Bool) -> Future<Void>{
-         map { return $0.delete(on: database) }
-            .compactMap{ _ in
-                models.save(on: database, transaction: transaction)
-            }.flatten(on: database.eventLoop)
-    }
-}
-
-public extension Future where Value: Collection, Value.Element: Model{
-    func upsert(on database: Database, transaction: Bool) -> Future<Void>{
-         flatMap { $0.upsert(on: database, transaction: transaction) }
-    }
-
-
-    func replace(with models: Future<Value>, on database: Database, transaction: Bool) -> Future<Void>{
-        flatMap { $0.replace(with: models, on: database, transaction: transaction) }
-	}
-}
-
-
-//public extension Future where Value: Collection, Value.Element: Model{
-//
-//	func updateIfExists(on database: Database, transaction: Bool) -> Future<Value>{
-//		return flatMap { elements in
-//			return elements.updateIfExists(on: database, transaction: transaction)
-//		}
-//	}
-//
-//	func upsert(on database: Database, transaction: Bool) -> Future<Value>{
-//		return flatMap { elements in
-//			return elements.upsert(on: database, transaction: transaction)
-//		}
-//	}
-//}

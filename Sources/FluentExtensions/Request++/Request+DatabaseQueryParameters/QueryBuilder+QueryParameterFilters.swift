@@ -147,15 +147,3 @@ public enum QueryParameterFilterError: Error, LocalizedError, CustomStringConver
     }
 }
 
-
-fileprivate extension String {
-    /// Converts the string to a `Bool` or returns `nil`.
-    var bool: Bool? {
-        switch self {
-        case "true", "yes", "1", "y": return true
-        case "false", "no", "0", "n": return false
-        default: return nil
-        }
-    }
-}
-

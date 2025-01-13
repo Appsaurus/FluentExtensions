@@ -18,6 +18,9 @@ public struct FluentTestModels {
         override open func configure(_ databases: Databases) throws {
             try super.configure(databases)
             configureTestModelDatabase(databases)
+            for route in app.routes.all {
+                debugPrint(route.path.string)
+            }
         }
 
         open func configureTestModelDatabase(_ databases: Databases) {

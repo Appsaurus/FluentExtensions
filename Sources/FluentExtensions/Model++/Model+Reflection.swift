@@ -93,13 +93,10 @@ import Vapor
 //}
 
 public extension Model where Self: KVC {
-	func updateWithKeyValues(of model: Self, on database: Database) -> Future<Self> {
-        do {
-            return try updateWithKeyValues(of: model).save(on: database).transform(to: self)
-        }
-        catch {
-            return database.fail(with: error)
-        }
+	func updateWithKeyValues(of model: Self,
+                             on database: Database) async throws -> Self {
+        try await updateWithKeyValues(of: model).save(on: database)
+        return model
 
 	}
 }

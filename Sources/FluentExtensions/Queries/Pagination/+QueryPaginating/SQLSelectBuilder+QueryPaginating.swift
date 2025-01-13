@@ -1,10 +1,11 @@
 //
 //  SQLSelectBuilder+QueryPaginating.swift
-//  
+//
 //
 //  Created by Brian Strobach on 9/25/21.
 //
 import SQLKit
+import CollectionConcurrencyKit
 
 public enum PaginationError: Error {
     case invalidPageNumber(Int)
@@ -12,32 +13,29 @@ public enum PaginationError: Error {
     case unspecified(Error)
 }
 
-
 extension SQLSelectBuilder: QueryPaginating {
     public typealias PaginatedData = SQLRow
 
-    public func paginate(_ request: PageRequest) -> Future<Page<SQLRow>> {
+    public func paginate(_ request: PageRequest) async throws -> Page<SQLRow> {
         let page = request.page
         let per = request.per
 
         // Make sure the current page is greater than 0
         guard page > 0 else {
-            return self.database.eventLoop.fail(with: PaginationError.invalidPageNumber(page))
+            throw PaginationError.invalidPageNumber(page)
         }
 
         // Per-page also must be greater than zero
         guard per > 0 else {
-            return self.database.eventLoop.fail(with: PaginationError.invalidPerSize(per))
+            throw PaginationError.invalidPerSize(per)
         }
 
         // Return a full count
-        return self.count(query: self.select).tryFlatMap { total in
-            let lowerBound = (page - 1) * per
-            self.apply(limit: per, offset: lowerBound)
-            return self.all().tryMap { rows in
-                Page(items: rows, metadata: PageMetadata(page: page, per: per, total: total))
-            }
-        }
+        let total = try await self.count(query: self.select)
+        let lowerBound = (page - 1) * per
+        self.apply(limit: per, offset: lowerBound)
+        let rows = try await self.all()
+        return Page(items: rows, metadata: PageMetadata(page: page, per: per, total: total))
     }
 
     @discardableResult
@@ -45,19 +43,18 @@ extension SQLSelectBuilder: QueryPaginating {
         return self.limit(limit).offset(offset)
     }
 
-    public func count(query: SQLSelect) -> EventLoopFuture<Int> {
+    public func count(query: SQLSelect) async throws -> Int {
         var query = query
         query.columns = []
         query.orderBy = []
         let builder = SQLSelectBuilder(on: self.database)
         builder.select = query
 
-        return builder.column(COUNT()).first(decoding: CountResult.self).map({$0?.count}).unwrap(orElse: {0})
+        let result = try await builder.column(COUNT()).first(decoding: CountResult.self)
+        return result?.count ?? 0
     }
 }
 
 public struct CountResult: Codable {
     public let count: Int
 }
-
-

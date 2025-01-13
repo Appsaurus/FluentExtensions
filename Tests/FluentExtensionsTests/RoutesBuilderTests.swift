@@ -13,12 +13,6 @@ import FluentKit
 import VaporExtensions
 @testable import FluentTestModels
 
-extension KitchenSink: Parameter {
-//    public static var parameter: String {
-//        "id"
-//    }
-}
-
 class RoutesBuilderTests: FluentTestModels.TestCase {
     let valueA = "StringValue_A"
     let valueB = "StringValue_B"
@@ -41,40 +35,17 @@ class RoutesBuilderTests: FluentTestModels.TestCase {
 
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
-        router.get(basePath, KitchenSink.pathComponent) { (req: Request, kitchenSink: KitchenSink) -> Future<KitchenSink> in
-            return req.toFuture(kitchenSink)
-        }
-
-        for route in app.routes.all {
-            debugPrint(route.path.string)
-        }
-
-    }
-
-    func testModelParameterRoute() throws {
-        let id = try KitchenSink.query(on: app.db).first().assertExists().wait().requireID()
-        try app.test(.GET, "\(basePath)/\(id)") { response in
-            XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(id, try response.content.decode(KitchenSink.self).requireID())
+        router.get(basePath, KitchenSink.pathComponent) { (req: Request, kitchenSink: KitchenSink) async throws -> KitchenSink in
+            return kitchenSink
         }
     }
 
-    func testSubsetQueries() throws {
-
+    func testModelParameterRoute() async throws {
+        let id = try await KitchenSink.query(on: app.db).first().assertExists().requireID()
+        let response = try await app.sendRequest(.GET, "\(basePath)/\(id)")
+        XCTAssertEqual(response.status, .ok)
+        XCTAssertEqual(id, try response.content.decode(KitchenSink.self).requireID())
     }
-
-//    func applyFilter(for property: PropertyInfo, to query: QueryBuilder<M.Database, M>, on request: Request) throws {
-//        let parameter: String = property.name
-//        if let queryFilter = try? request.stringKeyPathFilter(for: property.name, at: parameter) {
-//            let _ = try? query.filter(queryFilter)
-////            if property.type == Bool.self {
-////                let _ = try? query.filterAsBool(queryFilter)
-////            }
-////            else  {
-////                let _ = try? query.filter(queryFilter)
-////            }
-//        }
-//    }
 }
 
 

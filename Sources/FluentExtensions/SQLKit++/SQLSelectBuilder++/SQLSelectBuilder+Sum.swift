@@ -1,11 +1,12 @@
 //
 //  SQLSelectBuilder+Sum.swift
-//  
+//
 //
 //  Created by Brian Strobach on 9/23/21.
 //
 
 import SQLKit
+import Fluent
 
 public extension SQLSelectBuilder {
 
@@ -17,22 +18,19 @@ public extension SQLSelectBuilder {
         return column(function.as(label))
     }
 
-    func sum<M: Model, Field>(_ key: KeyPath<M, Field>) -> Future<Field.Value?>
+    func sum<M: Model, Field>(_ key: KeyPath<M, Field>) async throws -> Field.Value?
         where
             Field: QueryableProperty,
             Field.Model == M
     {
-        self.sum(key, labeled: "sum")
+        let values = try await self.sum(key, labeled: "sum")
             .from(M.sqlTable)
             .all(decoding: SumRow<Field.Value>.self)
-            .map { values in
-                values.first?.sum
-            }
+        
+        return values.first?.sum
     }
 }
-
 
 public struct SumRow<Value: Codable>: Codable {
     public var sum: Value
 }
-

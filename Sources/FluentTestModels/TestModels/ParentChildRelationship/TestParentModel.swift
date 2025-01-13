@@ -11,7 +11,7 @@ private extension FieldKey {
 
 }
 
-public final class TestParentModel: Model, Content {
+public final class TestParentModel: TestModel, @unchecked Sendable {
 
     @ID(key: .id)
     public var id: UUID?
@@ -21,6 +21,9 @@ public final class TestParentModel: Model, Content {
 
     @Children(for: \.$parent)
     public var children: [TestChildModel]
+    
+    @Children(for: \.$optionalParent)
+    public var optionalChildren: [TestChildModel]
 
     public init() {}
 
@@ -32,19 +35,19 @@ public final class TestParentModel: Model, Content {
 }
 
 //MARK: Reflection-based migration
-class TestParentModelReflectionMigration: AutoMigration<TestParentModel> {}
+public final class TestParentModelReflectionMigration: AutoMigration<TestParentModel>, @unchecked Sendable  {}
 
 //MARK: Manual migration
-public class TestParentModelMigration: Migration {
-    public func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(TestParentModel.schema)
+public final class TestParentModelMigration: AsyncMigration {
+    public func prepare(on database: Database) async throws {
+        try await database.schema(TestParentModel.schema)
             .id()
             .field(.name, .string, .required)
             .create()
 
     }
 
-    public func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema(TestParentModel.schema).delete()
+    public func revert(on database: Database) async throws {
+        return try await database.schema(TestParentModel.schema).delete()
     }
 }

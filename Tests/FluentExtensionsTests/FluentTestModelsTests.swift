@@ -58,8 +58,8 @@
             let parent = TestParentModel(name: "parent")
             try parent.create(on: app.db).wait()
 
-            let son = try TestChildModel(name: "son", parent: parent)
-            let daughter = try TestChildModel(name: "daughter", parent: parent)
+            let son = try TestChildModel(name: "son", parentID: parent.requireID())
+            let daughter = try TestChildModel(name: "daughter", parentID: parent.requireID())
 
             try son.create(on: app.db).wait()
             try daughter.create(on: app.db).wait()
@@ -101,9 +101,9 @@
                 }
             }
 
-            let brian = TestStudentModel()
-            let josh = TestStudentModel()
-            let gerry = TestStudentModel()
+            let brian = TestStudentModel(name: "Brian")
+            let josh = TestStudentModel(name: "Josh")
+            let gerry = TestStudentModel(name: "Gerry")
 
             try [brian, josh, gerry].forEach({try $0.create(on: app.db).wait()})
 

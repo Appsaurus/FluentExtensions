@@ -179,22 +179,30 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
     /// - Parameters:
     ///     - tos: An array of models to detach from this model.
     ///     - database: The database to perform the attachment on.
-//    func detach(_ tos: [M], on database: Database) -> EventLoopFuture<Void> {
-//        guard let fromID = self.idValue else {
-//            fatalError("Cannot detach siblings relation to unsaved model.")
-//        }
-//        let toIDs = tos.map { to -> M.IDValue in
-//            guard let toID = to.id else {
-//                fatalError("Cannot detach unsaved model.")
-//            }
-//            return toID
-//        }
+    func detach(_ tos: [M], on database: Database) -> EventLoopFuture<Void> {
+        guard let fromID = self.idValue else {
+            fatalError("Cannot detach siblings relation to unsaved model.")
+        }
+        let toIDs = tos.map { to -> M.IDValue in
+            guard let toID = to.id else {
+                fatalError("Cannot detach unsaved model.")
+            }
+            return toID
+        }
 //        let sortedIDs = sortIDs(fromID, toID)
-//        return Through.query(on: database)
-//            .filter(self.from.appending(path: \.$id) == sortedIDs.fromID)
-//            .filter(self.to.appending(path: \.$id) ~~ toIDs)
-//            .delete()
-//    }
+        return Through.query(on: database)
+            .group(.or) {
+                $0.group(.and) {
+                    $0.filter(self.from.appending(path: \.$id) == fromID)
+                    $0.filter(self.to.appending(path: \.$id) ~~ toIDs)
+                }
+                $0.group(.and) {
+                    $0.filter(self.from.appending(path: \.$id) ~~ toIDs)
+                    $0.filter(self.to.appending(path: \.$id) == fromID)
+                }
+            }            
+            .delete()
+    }
 
     /// Detach a single model by deleting the pivot.
     ///
@@ -214,16 +222,6 @@ public final class SelfSiblingsProperty<M, Through> where M: Model, Through: Mod
             .delete()
     }
 
-//    /// Detach all models by deleting all pivots from this model.
-//    func detachAll(on database: Database) -> EventLoopFuture<Void> {
-//        guard let fromID = self.idValue else {
-//            fatalError("Cannot detach siblings relation from unsaved model.")
-//        }
-//
-//        return Through.query(on: database)
-//            .filter(self.from.appending(path: \.$id) == fromID)
-//            .delete()
-//    }
 
     // MARK: Query
 

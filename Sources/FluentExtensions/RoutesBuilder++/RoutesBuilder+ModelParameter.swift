@@ -1,111 +1,103 @@
 //
 //  RoutesBuilder+ModelParameter.swift
-//  
+//
 //
 //  Created by Brian Strobach on 9/8/21.
 //
 
-
 import VaporExtensions
 
 public extension RoutesBuilder {
-
+    
     @discardableResult
-    func get<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
-                                                 params: P.Type = P.self,
-                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func get<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                      params: P.Type = P.self,
+                                                      use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.GET, path, params: params, use: closure)
-
     }
-
+    
     @discardableResult
-    func get<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
-                                                 params: P.Type = P.self,
-                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func get<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                      params: P.Type = P.self,
+                                                      use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.GET, path, params: params, use: closure)
-
     }
-
+    
     @discardableResult
-    func put<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
-                                                 params: P.Type = P.self,
-                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func put<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                      params: P.Type = P.self,
+                                                      use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.PUT, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func put<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
-                                                 params: P.Type = P.self,
-                                                 use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func put<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                      params: P.Type = P.self,
+                                                      use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.PUT, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func post<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
-                                                  params: P.Type = P.self,
-                                                  use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func post<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                       params: P.Type = P.self,
+                                                       use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.POST, path, params: params, use: closure)
-
     }
-
+    
     @discardableResult
-    func post<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
-                                                  params: P.Type = P.self,
-                                                  use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func post<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                       params: P.Type = P.self,
+                                                       use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.POST, path, params: params, use: closure)
-
     }
-
+    
     @discardableResult
-    func patch<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
-                                                   params: P.Type = P.self,
-                                                   use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func patch<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                        params: P.Type = P.self,
+                                                        use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.PATCH, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func patch<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
-                                                   params: P.Type = P.self,
-                                                   use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func patch<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                        params: P.Type = P.self,
+                                                        use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.PATCH, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func delete<P: Parameter, R: ResponseEncodable>(_ path: PathComponentRepresentable...,
-                                                    params: P.Type = P.self,
-                                                    use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func delete<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+                                                         params: P.Type = P.self,
+                                                         use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.DELETE, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func delete<P: Parameter, R: ResponseEncodable>(_ path: [PathComponentRepresentable],
-                                                    params: P.Type = P.self,
-                                                    use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func delete<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+                                                         params: P.Type = P.self,
+                                                         use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(.DELETE, path, params: params, use: closure)
     }
-
+    
     @discardableResult
-    func on<P: Parameter, R: ResponseEncodable>(_ method: HTTPMethod,
-                                                _ path: PathComponentRepresentable...,
-                                                params: P.Type = P.self,
-                                                use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    func on<P: Parameter, R: AsyncResponseEncodable>(_ method: HTTPMethod,
+                                                     _ path: PathComponentRepresentable...,
+                                                     params: P.Type = P.self,
+                                                     use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
         on(method, path, params: params, use: closure)
-
     }
-
+    
     @discardableResult
-    func on<P: Parameter, R: ResponseEncodable>(_ method: HTTPMethod,
-                                                _ path: [PathComponentRepresentable],
-                                                params: P.Type = P.self,
-                                                use closure: @escaping (Request, P) throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
-        on(method, path) { request in
-            return request.parameters.next(P.self, on: request.db).flatMapThrowing({ (params) -> R in
-                return try closure(request, params)
-            })
+    func on<P: Parameter, R: AsyncResponseEncodable>(_ method: HTTPMethod,
+                                                     _ path: [PathComponentRepresentable],
+                                                     params: P.Type = P.self,
+                                                     use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(method, path) { request async throws -> R in
+            let params = try await request.parameters.next(P.self, on: request.db)
+            return try await closure(request, params)
         }
     }
 }
-
 
 extension Parameter where Self: Model {
     public typealias ResolvedParameter = Self.IDValue
@@ -115,19 +107,116 @@ extension Parameter where Self: Model {
 }
 
 public extension Parameters {
-    func next<P>(on database: Database) -> EventLoopFuture<P>
+    func next<P>(_ parameterType: P.Type = P.self, on database: Database) async throws -> P
     where P: Model & Parameter, P.ResolvedParameter == P.IDValue {
-        return next(P.self, on: database)
-    }
-
-    func next<P>(_ parameterType: P.Type, on database: Database) -> EventLoopFuture<P> where P: Model & Parameter, P.ResolvedParameter == P.IDValue {
-        do {
-            let id: P.IDValue = try self.require(parameterType.parameter, as: P.ResolvedParameter.self)
-            return P.find(id, on: database).assertExists()
+        let id: P.IDValue = try self.require(parameterType.parameter, as: P.ResolvedParameter.self)
+        guard let model = try await P.find(id, on: database) else {
+            throw Abort(.notFound)
         }
-        catch {
-            return database.fail(with: error)
-        }
-
+        return model
     }
 }
+
+
+//Body + Params
+
+public extension RoutesBuilder {
+    
+    //    @discardableResult
+    //    func get<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+    //                                                 params: P.Type = P.self,
+    //                                                 use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.GET, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func get<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+    //                                                 params: P.Type = P.self,
+    //                                                 use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.GET, path, params: params, use: closure)
+    //    }
+    
+    @discardableResult
+    func put<P: Parameter, B: Codable, R: AsyncResponseEncodable>(_ body: B.Type = B.self, 
+                                                                  at path: PathComponentRepresentable...,
+                                                                  params: P.Type = P.self,
+                                                                  use closure: @escaping (Request, P, B) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.PUT, body: body, at: path, params: params, use: closure)
+    }
+    
+    @discardableResult
+    func put<P: Parameter, B: Codable, R: AsyncResponseEncodable>(_ body: B.Type = B.self, 
+                                                                  at path: [PathComponentRepresentable],
+                                                                  params: P.Type = P.self,
+                                                                  use closure: @escaping (Request, P, B) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(.PUT, body: body, at: path, params: params, use: closure)
+    }
+    
+    //    @discardableResult
+    //    func post<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+    //                                                  params: P.Type = P.self,
+    //                                                  use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.POST, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func post<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+    //                                                  params: P.Type = P.self,
+    //                                                  use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.POST, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func patch<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+    //                                                   params: P.Type = P.self,
+    //                                                   use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.PATCH, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func patch<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+    //                                                   params: P.Type = P.self,
+    //                                                   use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.PATCH, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func delete<P: Parameter, R: AsyncResponseEncodable>(_ path: PathComponentRepresentable...,
+    //                                                    params: P.Type = P.self,
+    //                                                    use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.DELETE, path, params: params, use: closure)
+    //    }
+    //
+    //    @discardableResult
+    //    func delete<P: Parameter, R: AsyncResponseEncodable>(_ path: [PathComponentRepresentable],
+    //                                                    params: P.Type = P.self,
+    //                                                    use closure: @escaping (Request, P) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+    //        on(.DELETE, path, params: params, use: closure)
+    //    }
+    //
+    
+    @discardableResult
+    func on<P: Parameter, B: Codable, R: AsyncResponseEncodable>(_ method: HTTPMethod,
+                                                                 body: B.Type = B.self,
+                                                                 _ path: PathComponentRepresentable...,
+                                                                 params: P.Type = P.self,
+                                                                 
+                                                                 use closure: @escaping (Request, P, B) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(method, body: body, at: path, params: params, use: closure)
+    }
+    
+    @discardableResult
+    func on<P: Parameter, B: Codable, R: AsyncResponseEncodable>(_ method: HTTPMethod,
+                                                                 body: B.Type = B.self,
+                                                                 at path: [PathComponentRepresentable],
+                                                                 params: P.Type = P.self,
+                                                                 
+                                                                 use closure: @escaping (Request, P, B) async throws -> R) -> Route where P: Model, P.ResolvedParameter == P.IDValue {
+        on(method, path) { request async throws -> R in
+            let params = try await request.parameters.next(P.self, on: request.db)
+            let decodedBody = try request.content.decode(body)
+            return try await closure(request, params, decodedBody)
+        }
+    }
+}
+
