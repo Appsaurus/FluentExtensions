@@ -46,6 +46,7 @@ public class QueryParameterFilter {
         case notEndsWith = "new"
         case contains = "ct"
         case notContains = "nct"
+        case filter = "filter"
     }
     
     public func queryField(for schema: Schema.Type? = nil) -> DatabaseQuery.Field {
@@ -162,16 +163,38 @@ enum FilterCondition: Codable {
     }
 }
 
+public typealias RelationshipQueryParamMap = [String: Any.Type]
+
 extension DatabaseQuery.Filter {
-    static func build(from condition: FilterCondition, schema: String) -> DatabaseQuery.Filter {
+    static func build(from condition: FilterCondition,
+                      schema: String,
+                      relationMap: RelationshipQueryParamMap = [:]) -> DatabaseQuery.Filter? {
         switch condition {
         case let .comparison(field, method, value):
-            return .value(.path([FieldKey(field)], schema: schema), method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
+            if method == .filter, let relatedType = relationMap[field] as? any Model.Type {
+                // Handle nested filter by decoding the nested condition
+                if let nestedJson = (value.value as? String)?.urlDecoded,
+                   let nestedCondition = try? JSONDecoder().decode(FilterCondition.self,
+                                                                   from: Data(nestedJson.utf8)) {
+                    // Build nested filter with the related type's schema
+                    return build(from: nestedCondition, schema: relatedType.schemaOrAlias, relationMap: [:])
+//                    switch nestedCondition {
+//                    case let .comparison(field, method, value):
+//                        return .value(.path([FieldKey(field)], schema: relatedType.schemaOrAlias), method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
+//                        default: break
+//                    }
+                }
+                                
+            }
+            // Fall back to regular filter if nested decoding fails
+            return .value(.path([FieldKey(field)], schema: schema),
+                          method.toDatabaseQueryFilterMethod(),
+                          value.toDatabaseQueryValue())
         case let .and(conditions):
-            let filters = conditions.map { build(from: $0, schema: schema) }
+            let filters = conditions.compactMap { build(from: $0, schema: schema, relationMap: relationMap) }
             return .group(filters, .and)
         case let .or(conditions):
-            let filters = conditions.map { build(from: $0, schema: schema) }
+            let filters = conditions.compactMap { build(from: $0, schema: schema, relationMap: relationMap) }
             return .group(filters, .or)
         }
     }
@@ -194,10 +217,10 @@ extension QueryParameterFilter.Method {
         case .notEndsWith: return .contains(inverse: true, .suffix)
         case .contains: return .contains(inverse: false, .anywhere)
         case .notContains: return .contains(inverse: true, .anywhere)
+        case .filter: return .equal  // This won't be used directly
         }
     }
 }
-
 extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
         switch value {
@@ -219,7 +242,9 @@ extension AnyCodable {
 
 public extension Request {
     func decodeParameterFilter<T: Model>(_ schema: T.Type = T.self,
-                                         withQueryParameter queryParameter: String = "filter") throws -> DatabaseQuery.Filter {
+                                         withQueryParameter queryParameter: String = "filter",
+                                         relationMap: RelationshipQueryParamMap = [:]
+    ) throws -> DatabaseQuery.Filter? {
         guard let filterJson: String = query[queryParameter] else {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
@@ -227,7 +252,7 @@ public extension Request {
         let decoder = JSONDecoder()
         let filterCondition = try decoder.decode(FilterCondition.self, from: Data(filterJson.utf8))
         
-        return DatabaseQuery.Filter.build(from: filterCondition, schema: T.schema)
+        return DatabaseQuery.Filter.build(from: filterCondition, schema: T.schema, relationMap: relationMap)
     }
 }
 
@@ -240,4 +265,3 @@ extension String {
         }
     }
 }
-

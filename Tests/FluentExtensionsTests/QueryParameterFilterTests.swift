@@ -29,11 +29,11 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
     }
     
     // Helper function to create filter URL
-    func makeFilterURL(_ condition: FilterCondition) throws -> String {
+    func makeFilterURL(_ condition: TestFilterCondition) throws -> String {
         return "\(basePath)?filter=\(try condition.toURLQueryString())"
     }
     
-    func getFilteredItems(_ condition: FilterCondition) async throws -> [KitchenSink] {
+    func getFilteredItems(_ condition: TestFilterCondition) async throws -> [KitchenSink] {
         let response = try await app.sendRequest(.GET, try makeFilterURL(condition))
         XCTAssertEqual(response.status, .ok)
         return try response.content.decode(Page<KitchenSink>.self).items
@@ -88,5 +88,38 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
     func testNestedFields() async throws {
         let models = try await getFilteredItems(.field("groupedFields_intField", "gt", 5))
         XCTAssert(models.allSatisfy { $0.groupedFields.intField > 5 })
+    }
+    
+    
+}
+
+// Helper structures to represent filter conditions
+enum TestFilterCondition: Encodable {
+    case field(_ field: String, _ method: String, _ value: AnyCodable)
+    case and([TestFilterCondition])
+    case or([TestFilterCondition])
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .field(let field, let method, let value):
+            try container.encode(field, forKey: .field)
+            try container.encode(method, forKey: .method)
+            try container.encode(value, forKey: .value)
+        case .and(let conditions):
+            try container.encode(conditions, forKey: .and)
+        case .or(let conditions):
+            try container.encode(conditions, forKey: .or)
+        }
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case field, method, value, and, or
+    }
+    
+    func toURLQueryString() throws -> String {
+        let jsonData = try JSONEncoder().encode(self)
+        let jsonString = String(data: jsonData, encoding: .utf8)!
+        return jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     }
 }

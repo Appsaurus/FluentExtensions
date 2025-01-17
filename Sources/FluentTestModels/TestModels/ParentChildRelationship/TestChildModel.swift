@@ -8,7 +8,7 @@
 import FluentExtensions
 
 private extension FieldKey {
-    static var name: Self { "nameID" }
+    static var name: Self { "name" }
     static var parent: Self { "parentID" }
     static var optionalParent: Self { "optionalParentID" }
 }

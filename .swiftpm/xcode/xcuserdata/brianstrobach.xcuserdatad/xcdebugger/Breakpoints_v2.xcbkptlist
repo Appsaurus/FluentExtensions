@@ -5,9 +5,18 @@
    version = "2.0">
    <Breakpoints>
       <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SwiftErrorBreakpoint">
+         <BreakpointContent
+            uuid = "1F007950-77BF-450D-8F98-86F8F7C96262"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.ExceptionBreakpoint">
          <BreakpointContent
-            uuid = "8397432F-B715-46F5-AECF-1B17A22A1A7C"
+            uuid = "D42C2FA9-1943-48B7-B1D2-09E715CC04EA"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
@@ -19,129 +28,187 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "9CA1A847-6936-41C3-AE3D-760A44A7DB22"
+            uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/Relationships/ChildrenProperty++.swift"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
-            landmarkName = "detach(_:in:)"
+            startingLineNumber = "190"
+            endingLineNumber = "190"
+            landmarkName = "build(from:schema:relationMap:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d336f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "206"
+                  endingLineNumber = "206"
+                  offsetFromSymbolStart = "2388">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d336f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "206"
+                  endingLineNumber = "206"
+                  offsetFromSymbolStart = "1920">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d3580"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "197"
+                  endingLineNumber = "197"
+                  offsetFromSymbolStart = "1928">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d3580"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "197"
+                  endingLineNumber = "197"
+                  offsetFromSymbolStart = "1972">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d3580"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "197"
+                  endingLineNumber = "197"
+                  offsetFromSymbolStart = "1920">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d3580"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "197"
+                  endingLineNumber = "197"
+                  offsetFromSymbolStart = "1908">
+               </Location>
+               <Location
+                  uuid = "DB745781-C61B-4AA7-8BA9-0BE642B3022B - abf3b970641d369f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.build(from: FluentExtensions.FilterCondition, schema: Swift.String, relationMap: Swift.Dictionary&lt;Swift.String, Any.Type&gt;) -&gt; FluentKit.DatabaseQuery.Filter"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "190"
+                  endingLineNumber = "190"
+                  offsetFromSymbolStart = "1492">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "36ABDB21-6FB8-44AE-9E36-695FD6F4F403"
+            uuid = "A5D59561-BE85-40C7-9D2A-94D52A93C11E"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/Relationships/ChildrenProperty++.swift"
+            filePath = "Tests/FluentExtensionsTests/QueryParameterNestedFilterTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "87"
-            endingLineNumber = "87"
-            landmarkName = "markForReplacement(_:force:in:)"
+            startingLineNumber = "88"
+            endingLineNumber = "88"
+            landmarkName = "getFilteredItems(_:)"
             landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "D1D46FDC-F93C-4A0A-AE24-8E1B2CE3C5E9"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/Relationships/ChildrenProperty++.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
-            landmarkName = "markForReplacement(_:force:in:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "9AD063DB-7697-4D82-9FA4-DDAE1B1BB26C"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Tests/FluentExtensionsTests/ControllerTests/FluentAdminControllerSiblingsTests.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "57"
-            endingLineNumber = "57"
-            landmarkName = "testAttachStudents()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "ED55FE00-F480-4998-9D7A-1CFAFAC3AE27"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "143"
-            endingLineNumber = "143"
-            landmarkName = "pivotCRUDRoutes(_:relationshipName:through:pivotController:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "63FC8D05-C7BB-4543-A084-B6CB12B65AB5"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "202"
-            endingLineNumber = "202"
-            landmarkName = "siblingCRUDRoutes(_:relationshipName:through:siblingController:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "0FC7D4FE-9FAE-4F3F-B39C-C6BCF3C99F78"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "75"
-            endingLineNumber = "75"
-            landmarkName = "childCRUDRoute(_:pathSlug:queryParamKey:childForeignKeyPath:childController:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "55026195-CD0F-445D-933B-598473912496"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Sources/FluentExtensions/APIController/FluentAdminController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "204"
-            endingLineNumber = "204"
-            landmarkName = "siblingCRUDRoutes(_:relationshipName:through:siblingController:)"
-            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "A5D59561-BE85-40C7-9D2A-94D52A93C11E - ef6b3d50d6041cd3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "FluentExtensionsTests.QueryParameterNestedFilterTests.testNestedChildFilter() async throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterNestedFilterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "89"
+                  endingLineNumber = "89"
+                  offsetFromSymbolStart = "36">
+               </Location>
+               <Location
+                  uuid = "A5D59561-BE85-40C7-9D2A-94D52A93C11E - 889e68e235dbfb24"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for FluentExtensionsTests.QueryParameterNestedFilterTests.testNestedChildFilter() async throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterNestedFilterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "89"
+                  endingLineNumber = "89"
+                  offsetFromSymbolStart = "52">
+               </Location>
+               <Location
+                  uuid = "A5D59561-BE85-40C7-9D2A-94D52A93C11E - 4cf18d0229304f2d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for FluentExtensionsTests.QueryParameterNestedFilterTests.getFilteredItems(FluentExtensionsTests.TestFilterCondition) async throws -&gt; Swift.Array&lt;FluentTestModels.TestParentModel&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterNestedFilterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "532">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

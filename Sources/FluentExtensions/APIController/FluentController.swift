@@ -17,6 +17,7 @@ open class FluentController<Resource: FluentResourceModel,
     var defaultSort: DatabaseQuery.Sort? = .sort(.path([Resource.idFieldKey],
                                                        schema: Resource.schemaOrAlias), .ascending)
     
+    
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
                          settings: ControllerSettings = ControllerSettings()) {
@@ -115,7 +116,10 @@ open class FluentController<Resource: FluentResourceModel,
             let queryString = queryString.trimmingCharacters(in: .punctuationCharacters)
             query = try filter(queryBuilder: query, for: queryString)
         }
-        query = query.filter(try request.decodeParameterFilter(Resource.self))
+        if let queryFilter = try request.decodeParameterFilter(Resource.self, relationMap: settings.queryParamMap) {
+            query = query.filter(queryFilter)
+        }
+        
         
         return query
     }

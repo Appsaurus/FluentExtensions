@@ -156,42 +156,11 @@ class QueryParameterTests: FluentTestModels.TestCase {
         }
     }
 }
-    
-    
-    // Helper structures to represent filter conditions
-    enum FilterCondition: Encodable {
-        case field(_ field: String, _ method: String, _ value: AnyCodable)
-        case and([FilterCondition])
-        case or([FilterCondition])
-        
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            switch self {
-            case .field(let field, let method, let value):
-                try container.encode(field, forKey: .field)
-                try container.encode(method, forKey: .method)
-                try container.encode(value, forKey: .value)
-            case .and(let conditions):
-                try container.encode(conditions, forKey: .and)
-            case .or(let conditions):
-                try container.encode(conditions, forKey: .or)
-            }
-        }
-        
-        private enum CodingKeys: String, CodingKey {
-            case field, method, value, and, or
-        }
-        
-        func toURLQueryString() throws -> String {
-            let jsonData = try JSONEncoder().encode(self)
-            let jsonString = String(data: jsonData, encoding: .utf8)!
-            return jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        }
+
+
+extension Array {
+    func isSorted<Value: Comparable>(_ predicate: (KeyPath<Element, Value>, (Value, Value) throws -> Bool)) -> Bool {
+        guard count > 1 else { return true }
+        return (try? zip(self, self.dropFirst()).allSatisfy { try predicate.1($0[keyPath: predicate.0], $1[keyPath: predicate.0]) }) == true
     }
-    
-    extension Array {
-        func isSorted<Value: Comparable>(_ predicate: (KeyPath<Element, Value>, (Value, Value) throws -> Bool)) -> Bool {
-            guard count > 1 else { return true }
-            return (try? zip(self, self.dropFirst()).allSatisfy { try predicate.1($0[keyPath: predicate.0], $1[keyPath: predicate.0]) }) == true
-        }
-    }
+}
