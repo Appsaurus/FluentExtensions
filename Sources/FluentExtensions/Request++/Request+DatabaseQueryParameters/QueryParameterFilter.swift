@@ -75,7 +75,7 @@ public class QueryParameterFilter {
         let decoder = JSONDecoder()
         let filterCondition = try decoder.decode(FilterCondition.self, from: Data(filterJson.utf8))
         
-        guard case let .comparison(field, method, value) = filterCondition else {
+        guard case let .`where`(field, method, value) = filterCondition else {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
         
@@ -122,7 +122,7 @@ public class QueryParameterFilter {
 }
 
 public enum FilterCondition: Codable {
-    case comparison(field: String, method: QueryParameterFilter.Method, value: AnyCodable)
+    case `where`(field: String, method: QueryParameterFilter.Method, value: AnyCodable)
     case and([FilterCondition])
     case or([FilterCondition])
     
@@ -138,7 +138,7 @@ public enum FilterCondition: Codable {
         if let field = try? container.decode(String.self, forKey: .field),
            let method = try? container.decode(QueryParameterFilter.Method.self, forKey: .method),
            let value = try? container.decode(AnyCodable.self, forKey: .value) {
-            self = .comparison(field: field, method: method, value: value)
+            self = .`where`(field: field, method: method, value: value)
         } else if let andConditions = try? container.decode([FilterCondition].self, forKey: .and) {
             self = .and(andConditions)
         } else if let orConditions = try? container.decode([FilterCondition].self, forKey: .or) {
@@ -156,7 +156,7 @@ public enum FilterCondition: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         switch self {
-        case .comparison(let field, let method, let value):
+        case .`where`(let field, let method, let value):
             try container.encode(field, forKey: .field)
             try container.encode(method, forKey: .method)
             try container.encode(value, forKey: .value)
@@ -189,7 +189,7 @@ public extension DatabaseQuery.Filter {
                       schema: String,
                       overrides: QueryParameterFilterOverrides = [:]) throws -> DatabaseQuery.Filter? {
         switch condition {
-        case let .comparison(field, method, value):
+        case let .`where`(field, method, value):
             //Allow overriding for things like nested relationship filters that require APIs that are not available here
             if method == .filter, let override = overrides[field] {
                 guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
