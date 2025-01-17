@@ -131,7 +131,8 @@ enum FilterCondition: Codable {
         case and, or
     }
     
-    init(from decoder: Decoder) throws {
+    
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         if let field = try? container.decode(String.self, forKey: .field),
@@ -145,6 +146,11 @@ enum FilterCondition: Codable {
         } else {
             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Invalid filter condition"))
         }
+    }
+    
+    public static func decoded(from parameterFilterString: String, needsURLDecoding: Bool = true) throws -> FilterCondition {
+        var filterString = needsURLDecoding ? parameterFilterString.urlDecoded : parameterFilterString
+        return try JSONDecoder().decode(FilterCondition.self, from: Data(filterString.utf8))
     }
     
     func encode(to encoder: Encoder) throws {
@@ -166,30 +172,31 @@ enum FilterCondition: Codable {
 public typealias RelationshipQueryParamMap = [String: Any.Type]
 
 extension DatabaseQuery.Filter {
+    
+    static func build(from filterString: String,
+                      schema: String,
+                      relationMap: RelationshipQueryParamMap = [:],
+                      needsURLDecoding: Bool = false) throws -> DatabaseQuery.Filter? {
+        
+        let filterCondition = try FilterCondition.decoded(from: filterString, needsURLDecoding: needsURLDecoding)
+        return DatabaseQuery.Filter.build(from: filterCondition, schema: schema, relationMap: relationMap)
+    }
+    
     static func build(from condition: FilterCondition,
                       schema: String,
                       relationMap: RelationshipQueryParamMap = [:]) -> DatabaseQuery.Filter? {
         switch condition {
         case let .comparison(field, method, value):
-            if method == .filter, let relatedType = relationMap[field] as? any Model.Type {
-                // Handle nested filter by decoding the nested condition
-                if let nestedJson = (value.value as? String)?.urlDecoded,
-                   let nestedCondition = try? JSONDecoder().decode(FilterCondition.self,
-                                                                   from: Data(nestedJson.utf8)) {
-                    // Build nested filter with the related type's schema
-                    return build(from: nestedCondition, schema: relatedType.schemaOrAlias, relationMap: [:])
-//                    switch nestedCondition {
-//                    case let .comparison(field, method, value):
-//                        return .value(.path([FieldKey(field)], schema: relatedType.schemaOrAlias), method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
-//                        default: break
-//                    }
-                }
-                                
+            // Handle nested filters
+            if method == .filter, let relatedType = relationMap[field] as? any Model.Type, let nestedFilterParameterString = value.value as? String {
+                // Build nested filter with the related type's schema
+                return try? build(from: nestedFilterParameterString, schema: relatedType.schemaOrAlias, needsURLDecoding: true)
             }
-            // Fall back to regular filter if nested decoding fails
-            return .value(.path([FieldKey(field)], schema: schema),
-                          method.toDatabaseQueryFilterMethod(),
-                          value.toDatabaseQueryValue())
+            else {
+                return .value(.path([FieldKey(field)], schema: schema),
+                              method.toDatabaseQueryFilterMethod(),
+                              value.toDatabaseQueryValue())
+            }
         case let .and(conditions):
             let filters = conditions.compactMap { build(from: $0, schema: schema, relationMap: relationMap) }
             return .group(filters, .and)
@@ -245,14 +252,11 @@ public extension Request {
                                          withQueryParameter queryParameter: String = "filter",
                                          relationMap: RelationshipQueryParamMap = [:]
     ) throws -> DatabaseQuery.Filter? {
-        guard let filterJson: String = query[queryParameter] else {
+        guard let filterString: String = query[queryParameter] else {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
         
-        let decoder = JSONDecoder()
-        let filterCondition = try decoder.decode(FilterCondition.self, from: Data(filterJson.utf8))
-        
-        return DatabaseQuery.Filter.build(from: filterCondition, schema: T.schema, relationMap: relationMap)
+        return try DatabaseQuery.Filter.build(from: filterString, schema: T.schema, relationMap: relationMap)
     }
 }
 

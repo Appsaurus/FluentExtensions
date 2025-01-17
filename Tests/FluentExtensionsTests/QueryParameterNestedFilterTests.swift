@@ -32,16 +32,20 @@ final class BChildren: ModelAlias {
     
 }
 class TestParentController: FluentAdminController<TestParentModel> {
+    public override init(baseRoute: [PathComponentRepresentable] = [],
+                         middlewares: [Middleware] = [],
+                         settings: ControllerSettings = ControllerSettings()) {
+        settings.queryParamMap = ["children" : TestChildModel.self,
+                                  "optionalChildren": TestChildModel.self]
+        super.init(baseRoute: baseRoute, middlewares: middlewares, settings: settings)
+    }
     override func applyQueryConstraints(query: QueryBuilder<TestParentModel>, on request: Request) throws -> QueryBuilder<TestParentModel> {
-//        let q = query
-////            .with(\.$children)
-//            .with(\.$optionalChildren)
+        //This API feels inadequate since we can't disambiguate relations with the same type, even aliases don't seem to work. Also clunky since it requires mapping setup.
         let q = query
 //            .join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$parent.$id)
             .join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id)
 //            .join(AChildren.self, on: \TestParentModel.$id == \AChildren.$parent.$id)
 //            .join(BChildren.self, on: \TestParentModel.$id == \BChildren.$optionalParent.$id)
-//        var q = query.join<TestChildModel>(children: \TestParentModel.$children, method: .left)
         return try super.applyQueryConstraints(query: q, on: request)
     }
 }
@@ -69,11 +73,8 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
-        
-        let settings = ControllerSettings(queryParamMap: ["children" : TestChildModel.self,
-                                                          "optionalChildren": TestChildModel.self])
-        let controller = TestParentController(baseRoute: [basePath],
-                                                                settings: settings)
+    
+        let controller = TestParentController(baseRoute: [basePath])
         try controller.registerRoutes(routes: router)
     }
     
