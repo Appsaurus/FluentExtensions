@@ -39,18 +39,15 @@ class TestParentController: FluentAdminController<TestParentModel> {
         queryParameterFilterOverrides = [
             "optionalChildren": { (query: QueryBuilder<TestParentModel>, field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
                 query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id)
-                return DatabaseQuery.Filter.build(from: condition, schema: TestChildModel.schemaOrAlias)
-//                return DatabaseQuery.Filter.build(from: .comparison(field: "name", method: .startsWith, value: AnyCodable("Optional")), schema: TestChildModel.schemaOrAlias)
-                
-//                return DatabaseQuery.Filter.build(from: .comparison(field: condition.field, method: condition.method, value: AnyCodable((condition.value as String).urlDecoded)),
-//                                                  schema: TestChildModel.schemaOrAlias)
+                return try .build(from: condition, schema: TestChildModel.schemaOrAlias)
+            },
+            "children": { (query: QueryBuilder<TestParentModel>, field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
+                query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$parent.$id)
+                return try .build(from: condition, schema: TestChildModel.schemaOrAlias)
             }
         ]
     }
-//    override func applyQueryConstraints(query: QueryBuilder<TestParentModel>, on request: Request) throws -> QueryBuilder<TestParentModel> {
-//        
-//        try super.applyQueryConstraints(query: query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id), on: request)
-//    }
+
 }
 class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     
@@ -100,13 +97,12 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
             AnyCodable(try TestFilterCondition.field("name", "eq", "Child A").toURLQueryString())
         )
         
-        let parents = try await getFilteredItems(condition)
-        XCTAssertFalse(parents.isEmpty)
-        // Verify that filtered parents have a child named "Child A"
-        try await parents.asyncForEach { parent in
-            let children = try await parent.$children.get(on: app.db)
-            XCTAssertTrue(children.contains { $0.name == "Child A" })
-        }
+        let parent1ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 1").first()!.requireID()
+        
+        let models = try await getFilteredItems(condition)
+        XCTAssertFalse(models.isEmpty)
+        XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent1ID]) })
+
     }
     
     func testNestedOptionalChildFilter() async throws {
@@ -118,14 +114,9 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         )
         
         let parent2ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 2").first()!.requireID()
-//        let condition = TestFilterCondition.field(
-//            "name",
-//            "eq",
-//            AnyCodable("Parent 1")
-//        )
         
         let models = try await getFilteredItems(.and([condition]))
-        XCTAssert(models.length > 0)
+        XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent2ID]) })
 
     }
@@ -141,7 +132,7 @@ class QueryParameterNestedTestSeeder: AsyncMigration {
         try await parent2.create(on: database)
         
         let child1 = TestChildModel(name: "Child A", parentID: try parent1.requireID())
-        let child2 = TestChildModel(name: "Child B", parentID: try parent1.requireID())
+        let child2 = TestChildModel(name: "Child B", parentID: try parent2.requireID())
         let child3 = TestChildModel(name: "Optional Child", parentID: try parent1.requireID(),
                                     optionalParentID: try parent2.requireID())
         let child4 = TestChildModel(name: "Optional Child A", parentID: try parent1.requireID(),

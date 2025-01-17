@@ -181,18 +181,20 @@ public extension DatabaseQuery.Filter {
                       overrides: QueryParameterFilterOverrides = [:]) throws -> DatabaseQuery.Filter? {
         
         let filterCondition = try FilterCondition.decoded(from: filterString)
-        return DatabaseQuery.Filter.build(from: filterCondition, schema: schema, overrides: overrides)
+        return try DatabaseQuery.Filter.build(from: filterCondition, schema: schema, overrides: overrides)
     }
     
     static func build(from condition: FilterCondition,
                       schema: String,
-                      overrides: QueryParameterFilterOverrides = [:]) -> DatabaseQuery.Filter? {
+                      overrides: QueryParameterFilterOverrides = [:]) throws -> DatabaseQuery.Filter? {
         switch condition {
         case let .comparison(field, method, value):
             //Allow overriding for things like nested relationship filters that require APIs that are not available here
             if method == .filter, let override = overrides[field] {
-                let nestedJson = (value.value as! String).urlDecoded
-                let nestedCondition = try! JSONDecoder().decode(FilterCondition.self, from: Data(nestedJson.utf8))
+                guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
+                    throw QueryParameterFilterError.invalidFilterConfiguration
+                }
+                let nestedCondition = try FilterCondition.decoded(from: nestedFilterString)
                 return try? override(field, nestedCondition)
             }
             else {
@@ -201,10 +203,10 @@ public extension DatabaseQuery.Filter {
                               value.toDatabaseQueryValue())
             }
         case let .and(conditions):
-            let filters = conditions.compactMap { build(from: $0, schema: schema, overrides: overrides) }
+            let filters = try conditions.compactMap { try build(from: $0, schema: schema, overrides: overrides) }
             return .group(filters, .and)
         case let .or(conditions):
-            let filters = conditions.compactMap { build(from: $0, schema: schema, overrides: overrides) }
+            let filters = try conditions.compactMap { try build(from: $0, schema: schema, overrides: overrides) }
             return .group(filters, .or)
         }
     }
