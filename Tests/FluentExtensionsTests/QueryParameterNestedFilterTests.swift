@@ -35,19 +35,22 @@ class TestParentController: FluentAdminController<TestParentModel> {
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
                          settings: ControllerSettings = ControllerSettings()) {
-        settings.queryParamMap = ["children" : TestChildModel.self,
-                                  "optionalChildren": TestChildModel.self]
         super.init(baseRoute: baseRoute, middlewares: middlewares, settings: settings)
+        queryParameterFilterOverrides = [
+            "optionalChildren": { (query: QueryBuilder<TestParentModel>, field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
+                query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id)
+                return DatabaseQuery.Filter.build(from: condition, schema: TestChildModel.schemaOrAlias)
+//                return DatabaseQuery.Filter.build(from: .comparison(field: "name", method: .startsWith, value: AnyCodable("Optional")), schema: TestChildModel.schemaOrAlias)
+                
+//                return DatabaseQuery.Filter.build(from: .comparison(field: condition.field, method: condition.method, value: AnyCodable((condition.value as String).urlDecoded)),
+//                                                  schema: TestChildModel.schemaOrAlias)
+            }
+        ]
     }
-    override func applyQueryConstraints(query: QueryBuilder<TestParentModel>, on request: Request) throws -> QueryBuilder<TestParentModel> {
-        //This API feels inadequate since we can't disambiguate relations with the same type, even aliases don't seem to work. Also clunky since it requires mapping setup.
-        let q = query
-//            .join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$parent.$id)
-            .join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id)
-//            .join(AChildren.self, on: \TestParentModel.$id == \AChildren.$parent.$id)
-//            .join(BChildren.self, on: \TestParentModel.$id == \BChildren.$optionalParent.$id)
-        return try super.applyQueryConstraints(query: q, on: request)
-    }
+//    override func applyQueryConstraints(query: QueryBuilder<TestParentModel>, on request: Request) throws -> QueryBuilder<TestParentModel> {
+//        
+//        try super.applyQueryConstraints(query: query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id), on: request)
+//    }
 }
 class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     

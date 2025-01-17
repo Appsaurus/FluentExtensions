@@ -121,7 +121,7 @@ public class QueryParameterFilter {
     }
 }
 
-enum FilterCondition: Codable {
+public enum FilterCondition: Codable {
     case comparison(field: String, method: QueryParameterFilter.Method, value: AnyCodable)
     case and([FilterCondition])
     case or([FilterCondition])
@@ -148,12 +148,11 @@ enum FilterCondition: Codable {
         }
     }
     
-    public static func decoded(from parameterFilterString: String, needsURLDecoding: Bool = true) throws -> FilterCondition {
-        var filterString = needsURLDecoding ? parameterFilterString.urlDecoded : parameterFilterString
+    public static func decoded(from filterString: String) throws -> FilterCondition {
         return try JSONDecoder().decode(FilterCondition.self, from: Data(filterString.utf8))
     }
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         switch self {
@@ -171,26 +170,30 @@ enum FilterCondition: Codable {
 
 public typealias RelationshipQueryParamMap = [String: Any.Type]
 
-extension DatabaseQuery.Filter {
+public typealias QueryBuilderParameterFilterOverrides<M: Model> = [String: (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
+public typealias QueryParameterFilterOverrides = [String: (_ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
+
+
+public extension DatabaseQuery.Filter {
     
     static func build(from filterString: String,
                       schema: String,
-                      relationMap: RelationshipQueryParamMap = [:],
-                      needsURLDecoding: Bool = false) throws -> DatabaseQuery.Filter? {
+                      overrides: QueryParameterFilterOverrides = [:]) throws -> DatabaseQuery.Filter? {
         
-        let filterCondition = try FilterCondition.decoded(from: filterString, needsURLDecoding: needsURLDecoding)
-        return DatabaseQuery.Filter.build(from: filterCondition, schema: schema, relationMap: relationMap)
+        let filterCondition = try FilterCondition.decoded(from: filterString)
+        return DatabaseQuery.Filter.build(from: filterCondition, schema: schema, overrides: overrides)
     }
     
     static func build(from condition: FilterCondition,
                       schema: String,
-                      relationMap: RelationshipQueryParamMap = [:]) -> DatabaseQuery.Filter? {
+                      overrides: QueryParameterFilterOverrides = [:]) -> DatabaseQuery.Filter? {
         switch condition {
         case let .comparison(field, method, value):
-            // Handle nested filters
-            if method == .filter, let relatedType = relationMap[field] as? any Model.Type, let nestedFilterParameterString = value.value as? String {
-                // Build nested filter with the related type's schema
-                return try? build(from: nestedFilterParameterString, schema: relatedType.schemaOrAlias, needsURLDecoding: true)
+            //Allow overriding for things like nested relationship filters that require APIs that are not available here
+            if method == .filter, let override = overrides[field] {
+                let nestedJson = (value.value as! String).urlDecoded
+                let nestedCondition = try! JSONDecoder().decode(FilterCondition.self, from: Data(nestedJson.utf8))
+                return try? override(field, nestedCondition)
             }
             else {
                 return .value(.path([FieldKey(field)], schema: schema),
@@ -198,10 +201,10 @@ extension DatabaseQuery.Filter {
                               value.toDatabaseQueryValue())
             }
         case let .and(conditions):
-            let filters = conditions.compactMap { build(from: $0, schema: schema, relationMap: relationMap) }
+            let filters = conditions.compactMap { build(from: $0, schema: schema, overrides: overrides) }
             return .group(filters, .and)
         case let .or(conditions):
-            let filters = conditions.compactMap { build(from: $0, schema: schema, relationMap: relationMap) }
+            let filters = conditions.compactMap { build(from: $0, schema: schema, overrides: overrides) }
             return .group(filters, .or)
         }
     }
@@ -247,16 +250,49 @@ extension AnyCodable {
     }
 }
 
+public extension QueryBuilder {
+    
+    func filterWithQueryParameter(at queryParameterKey: String = "filter",
+                                  in request: Request,
+                                  overrides: QueryBuilderParameterFilterOverrides<Model> = [:]) throws -> Self {
+        guard let filterString: String = request.query[queryParameterKey] else {
+            return self
+        }
+        
+        return try filterWithQueryParameterString(filterString, overrides: overrides)
+    }
+    
+    func filterWithQueryParameterString(_ queryParameterFilterString: String,
+                                        overrides: QueryBuilderParameterFilterOverrides<Model> = [:]) throws -> Self {
+        
+        var filterOverrides: QueryParameterFilterOverrides = [:]
+        overrides.forEach { (key: String, value: @escaping (_ query: QueryBuilder<Model>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?) in
+            //Set filter override to callback without querybuilder, but make call to query builder to allow for needed joins in certain cases
+            filterOverrides[key] = { (field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
+                return try? value(self, field, condition)
+            }
+        }
+        if let filterCondition = try DatabaseQuery.Filter.build(from: queryParameterFilterString, schema: Model.schemaOrAlias, overrides: filterOverrides) {
+            return self.filter(filterCondition)
+        }
+        else {
+            return self
+        }
+        
+    }
+    
+}
+
 public extension Request {
+    
     func decodeParameterFilter<T: Model>(_ schema: T.Type = T.self,
-                                         withQueryParameter queryParameter: String = "filter",
-                                         relationMap: RelationshipQueryParamMap = [:]
+                                         withQueryParameter queryParameter: String = "filter"
     ) throws -> DatabaseQuery.Filter? {
         guard let filterString: String = query[queryParameter] else {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
         
-        return try DatabaseQuery.Filter.build(from: filterString, schema: T.schema, relationMap: relationMap)
+        return try DatabaseQuery.Filter.build(from: filterString, schema: T.schema)
     }
 }
 

@@ -14,9 +14,10 @@ open class FluentController<Resource: FluentResourceModel,
                             Read: ReadModel,
                             Update: UpdateModel>: Controller<Resource, Create, Read, Update, Page<Read>> {
     
-    var defaultSort: DatabaseQuery.Sort? = .sort(.path([Resource.idFieldKey],
+    open var defaultSort: DatabaseQuery.Sort? = .sort(.path([Resource.idFieldKey],
                                                        schema: Resource.schemaOrAlias), .ascending)
     
+    open var queryParameterFilterOverrides: QueryBuilderParameterFilterOverrides<Resource> = [:]
     
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
@@ -108,6 +109,11 @@ open class FluentController<Resource: FluentResourceModel,
         return query
     }
     
+    open func filterWithQueryParameters(query: QueryBuilder<Resource>,
+                                        on request: Request,
+                                        overrides: QueryBuilderParameterFilterOverrides<Resource>) throws -> QueryBuilder<Resource> {
+        try query.filterWithQueryParameter(in: request, overrides: overrides)
+    }
     
     open func filterSearch(query: QueryBuilder<Resource>,
                            on request: Request) throws -> QueryBuilder<Resource> {
@@ -116,11 +122,9 @@ open class FluentController<Resource: FluentResourceModel,
             let queryString = queryString.trimmingCharacters(in: .punctuationCharacters)
             query = try filter(queryBuilder: query, for: queryString)
         }
-        if let queryFilter = try request.decodeParameterFilter(Resource.self, relationMap: settings.queryParamMap) {
-            query = query.filter(queryFilter)
-        }
         
-        
+        query = try filterWithQueryParameters(query: query, on: request, overrides: self.queryParameterFilterOverrides)
+
         return query
     }
     

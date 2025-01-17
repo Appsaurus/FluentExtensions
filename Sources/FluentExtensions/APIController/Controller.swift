@@ -29,16 +29,13 @@ public class ControllerSettings {
     public var createMethod: CreateMethod
     public var updateMethod: UpdateMethod
     public var forceDelete: Bool
-    public var queryParamMap: RelationshipQueryParamMap
     
     public init(createMethod: CreateMethod = .default,
                 updateMethod: UpdateMethod = .default,
-                forceDelete: Bool = false,
-                queryParamMap: RelationshipQueryParamMap = [:]) {
+                forceDelete: Bool = false) {
         self.createMethod = createMethod
         self.updateMethod = updateMethod
         self.forceDelete = forceDelete
-        self.queryParamMap = queryParamMap
     }
     
     
