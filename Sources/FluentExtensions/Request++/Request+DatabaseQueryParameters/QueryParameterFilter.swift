@@ -170,7 +170,8 @@ public enum FilterCondition: Codable {
 
 public typealias RelationshipQueryParamMap = [String: Any.Type]
 
-public typealias QueryBuilderParameterFilterOverrides<M: Model> = [String: (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
+public typealias QueryBuilderParameterFilterOverrides<M: Model> = [String: QueryBuilderParameterFilterOverride<M>]
+public typealias QueryBuilderParameterFilterOverride<M: Model> = (_ query: QueryBuilder<M>, String, FilterCondition) throws -> DatabaseQuery.Filter?
 public typealias QueryParameterFilterOverrides = [String: (_ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
 
 

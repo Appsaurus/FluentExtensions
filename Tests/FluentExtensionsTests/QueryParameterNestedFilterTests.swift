@@ -31,24 +31,42 @@ final class BChildren: ModelAlias {
     
     
 }
+
+class QueryFilterBuilder {
+    static func OptionalChild<Parent: Model, Child: Model, ID>(
+        _ parentKey: KeyPath<Parent, IDProperty<Parent, ID>> = \Parent._$id,
+        foreignKey: KeyPath<Child, OptionalFieldProperty<Child, ID>>
+    ) -> QueryBuilderParameterFilterOverride<Parent> {
+        { query, field, condition in
+            query.join(Child.self, on: parentKey == foreignKey)
+            return try .build(from: condition, schema: Child.schemaOrAlias)
+        }
+    }
+    
+    static func Child<Parent: Model, Child: Model, ID>(
+        _ parentKey: KeyPath<Parent, IDProperty<Parent, ID>> = \Parent._$id,
+        foreignKey: KeyPath<Child, FieldProperty<Child, ID>>
+    ) -> QueryBuilderParameterFilterOverride<Parent> {
+        { query, field, condition in
+            query.join(Child.self, on: parentKey == foreignKey)            
+            return try .build(from: condition, schema: Child.schemaOrAlias)
+        }
+    }
+
+}
+
 class TestParentController: FluentAdminController<TestParentModel> {
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
                          settings: ControllerSettings = ControllerSettings()) {
         super.init(baseRoute: baseRoute, middlewares: middlewares, settings: settings)
         queryParameterFilterOverrides = [
-            "optionalChildren": { (query: QueryBuilder<TestParentModel>, field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
-                query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$optionalParent.$id)
-                return try .build(from: condition, schema: TestChildModel.schemaOrAlias)
-            },
-            "children": { (query: QueryBuilder<TestParentModel>, field: String, condition: FilterCondition) throws -> DatabaseQuery.Filter? in
-                query.join(TestChildModel.self, on: \TestParentModel.$id == \TestChildModel.$parent.$id)
-                return try .build(from: condition, schema: TestChildModel.schemaOrAlias)
-            }
+            "optionalChildren": QueryFilterBuilder.OptionalChild(foreignKey: \TestChildModel.$optionalParent.$id),
+            "children": QueryFilterBuilder.Child(foreignKey: \TestChildModel.$parent.$id)
         ]
     }
-
 }
+
 class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     
     // Your base path for API endpoints
