@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appsaurus/RuntimeExtensions",
       "state" : {
-        "branch" : "1.1.0",
-        "revision" : "221825b8864255392b347725f4afbccfa1cf9662"
+        "revision" : "5647c142d9de3365997aa51710e268d542c56238",
+        "version" : "1.0.2"
       }
     },
     {
