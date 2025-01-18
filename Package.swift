@@ -30,7 +30,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from:"4.0.0"),
         .package(url: "https://github.com/Appsaurus/Swiftest.git", from: "1.0.0"),
 //        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.0.5"),
-        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", branch: "async-await"),
+        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.2.0"),
 		.package(url: "https://github.com/Appsaurus/CodableExtensions", from: "1.1.0"),
         .package(url: "https://github.com/Appsaurus/RuntimeExtensions", branch: "1.1.0"),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", exact: "0.2.0"),
