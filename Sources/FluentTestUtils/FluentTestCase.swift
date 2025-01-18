@@ -6,7 +6,7 @@
 //
 
 import FluentKit
-import VaporTestUtils
+import XCTVaporExtensions
 import Fluent
 
 

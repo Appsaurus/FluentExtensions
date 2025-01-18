@@ -5,7 +5,8 @@
 //  Created by Brian Strobach on 9/5/24.
 //
 
-import Foundation
+import XCTVapor
+
 extension XCTApplicationTester {
     public func testPut<C: Content>(
         _ path: String,

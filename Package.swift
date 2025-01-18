@@ -30,7 +30,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from:"4.0.0"),
         .package(url: "https://github.com/Appsaurus/Swiftest.git", from: "1.0.0"),
 //        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.0.5"),
-        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.2.0"),
+        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.2.1"),
 		.package(url: "https://github.com/Appsaurus/CodableExtensions", from: "1.1.0"),
         .package(url: "https://github.com/Appsaurus/RuntimeExtensions", exact: "1.0.2"),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", exact: "0.2.0"),
@@ -45,6 +45,7 @@ let package = Package(
                            .product(name: "SQLKit", package: "sql-kit"),
                            .product(name: "Swiftest", package: "Swiftest"),
                            .product(name: "VaporExtensions", package: "VaporExtensions"),
+                           .product(name: "XCTVaporExtensions", package: "VaporExtensions"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions"),
                            .product(name: "CollectionConcurrencyKit", package: "CollectionConcurrencyKit")
@@ -54,7 +55,9 @@ let package = Package(
             dependencies: [.product(name: "Fluent", package: "fluent"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions"),
-                           .product(name: "VaporTestUtils", package: "VaporExtensions")]),
+                           .product(name: "VaporExtensions", package: "VaporExtensions"),
+                           .product(name: "XCTVaporExtensions", package: "VaporExtensions")
+                           ]),
 
         .target(
             name: "FluentTestModels",
