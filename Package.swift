@@ -45,7 +45,6 @@ let package = Package(
                            .product(name: "SQLKit", package: "sql-kit"),
                            .product(name: "Swiftest", package: "Swiftest"),
                            .product(name: "VaporExtensions", package: "VaporExtensions"),
-                           .product(name: "XCTVaporExtensions", package: "VaporExtensions"),
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions"),
                            .product(name: "CollectionConcurrencyKit", package: "CollectionConcurrencyKit")
