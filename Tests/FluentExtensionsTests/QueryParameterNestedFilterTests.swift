@@ -32,32 +32,10 @@ final class BChildren: ModelAlias {
     
 }
 
-class QueryFilterBuilder {
-    static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Parent> {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Child.schemaOrAlias)
-        }
-    }
-    
-    static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Parent> {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Child.schemaOrAlias)
-        }
-    }
-}
-
-
-
 class TestParentController: FluentAdminController<TestParentModel> {
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
-                         settings: ControllerSettings = ControllerSettings()) {
+                         settings: Config = Config()) {
         super.init(baseRoute: baseRoute, middlewares: middlewares, settings: settings)
         queryParameterFilterOverrides = [
             "optionalChildren": QueryFilterBuilder.Child(\TestChildModel.$optionalParent),

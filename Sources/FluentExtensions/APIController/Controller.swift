@@ -10,43 +10,6 @@ import RuntimeExtensions
 import VaporExtensions
 import CollectionConcurrencyKit
 
-public enum CreateMethod: Decodable {
-    case create
-    case save
-    case upsert
-    public static var `default` = CreateMethod.create
-}
-
-public enum UpdateMethod: Decodable {
-    case update
-    case save
-    case upsert
-    public static var `default` = UpdateMethod.update
-}
-
-public class ControllerSettings {
-    
-    public var createMethod: CreateMethod
-    public var updateMethod: UpdateMethod
-    public var forceDelete: Bool
-    
-    public init(createMethod: CreateMethod = .default,
-                updateMethod: UpdateMethod = .default,
-                forceDelete: Bool = false) {
-        self.createMethod = createMethod
-        self.updateMethod = updateMethod
-        self.forceDelete = forceDelete
-    }
-    
-    
-}
-
-public typealias ResourceModel = Content & Parameter
-public typealias CreateModel = Content
-public typealias ReadModel = Content
-public typealias UpdateModel = Content
-public typealias SearchResultModel = Content
-
 open class Controller<Resource: ResourceModel,
                       Create: CreateModel,
                       Read: ReadModel,
@@ -54,49 +17,54 @@ open class Controller<Resource: ResourceModel,
                       SearchResult: SearchResultModel>: RouteCollection {
     var baseRoute: [PathComponentRepresentable]
     var middlewares: [Middleware]
-    var settings: ControllerSettings
+    var settings: Controller.Config
     
-    public init(baseRoute: [PathComponentRepresentable], 
+    public init(baseRoute: [PathComponentRepresentable],
                 middlewares: [Middleware] = [],
-                settings: ControllerSettings = ControllerSettings()) {
+                settings: Controller.Config = Controller.Config()) {
         self.baseRoute = baseRoute
         self.middlewares = middlewares
         self.settings = settings
     }
     
-    open func performBatch(
-        action: @escaping AsyncBatchAction<Resource, Resource>,
-        on resources: [Resource],
-        in database: Database,
-        transaction: Bool = true,
-        concurrently: Bool = true
-    ) async throws -> [Resource] {
-        return try await database.performBatch(action: action,
-                                               on: resources,
-                                               transaction: transaction,
-                                               concurrently: concurrently)
-    }
-    
-
     //MARK: Routes
     open func boot(routes: RoutesBuilder) throws {
         try registerRoutes(routes: routes)
     }
+    
     open func registerRoutes(routes: RoutesBuilder) throws {
         let router = routes.grouped(baseRoute.pathComponents)
         try registerCRUDRoutes(routes: router)
     }
     
     open func registerCRUDRoutes(routes: RoutesBuilder) throws {
-        routes.get(use: search)
-        routes.get(":id", use: read)
-        routes.get("all", use: readAll)
-        routes.post(use: create)
-        routes.post("batch", use: createBatch)
-        routes.put(use: update)
-        routes.put(":id", use: update)
-        routes.put("batch", use: updateBatch)
-        routes.delete(":id", use: delete)
+        let supportedActions = settings.supportedActions.supportedActions
+        
+        if supportedActions.contains(.search) {
+            routes.get(use: search)
+        }
+        if supportedActions.contains(.read) {
+            routes.get(":id", use: read)
+        }
+        if supportedActions.contains(.readAll) {
+            routes.get("all", use: readAll)
+        }
+        if supportedActions.contains(.create) {
+            routes.post(use: create)
+        }
+        if supportedActions.contains(.createBatch) {
+            routes.post("batch", use: createBatch)
+        }
+        if supportedActions.contains(.update) {
+            routes.put(use: update)
+            routes.put(":id", use: update)
+        }
+        if supportedActions.contains(.updateBatch) {
+            routes.put("batch", use: updateBatch)
+        }
+        if supportedActions.contains(.delete) {
+            routes.delete(":id", use: delete)
+        }
     }
     
     //MARK: Begin Routes
@@ -111,9 +79,11 @@ open class Controller<Resource: ResourceModel,
     open func read(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
         let model = try await readModel(id: resourceID, in: req.db)
+        guard try await request(req, canRead: model) else {
+            throw Abort(.unauthorized)
+        }
         return try read(model)
     }
-    
     
     open func readAll(on req: Request) async throws -> [Read] {
         try await readAllModels(in: req.db).map(read)
@@ -154,6 +124,61 @@ open class Controller<Resource: ResourceModel,
     
     //MARK: End Routes
     
+    //MARK: Access Control
+    open func request(_ req: Request, canPerform action: Controller.Action, on resource: Resource) async throws -> Bool {
+        switch action {
+        case .search:
+            return try await request(req, canSearch: resource)
+        case .read:
+            return try await request(req, canRead: resource)
+        case .readAll:
+            return try await request(req, canReadAll: resource)
+        case .create:
+            return try await request(req, canCreate: resource)
+        case .createBatch:
+            return try await request(req, canCreateBatch: resource)
+        case .update:
+            return try await request(req, canUpdate: resource)
+        case .updateBatch:
+            return try await request(req, canUpdateBatch: resource)
+        case .delete:
+            return try await request(req, canDelete: resource)
+        }
+    }
+
+    open func request(_ req: Request, canSearch resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canRead resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canReadAll resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canCreate resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canCreateBatch resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canUpdate resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canUpdateBatch resource: Resource) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canDelete resource: Resource) async throws -> Bool {
+        return true
+    }
+    
+    //MARK: End Access Control
     
     open func create(resource: Resource,
                      in db: Database,
@@ -193,10 +218,7 @@ open class Controller<Resource: ResourceModel,
         return try await db.performBatch(action: self.update, on: resources)
     }
 
-
-
-    
-    open func create(createModel: Create, 
+    open func create(createModel: Create,
                      in db: Database,
                      method: CreateMethod? = nil) async throws -> Read {
         let method = method ?? .default
@@ -212,7 +234,7 @@ open class Controller<Resource: ResourceModel,
         return try read(resource)
     }
 
-    open func create(createModels: [Create], 
+    open func create(createModels: [Create],
                      in db: Database,
                      method: CreateMethod? = nil) async throws -> [Read] {
         let method = method ?? .default
@@ -241,6 +263,20 @@ open class Controller<Resource: ResourceModel,
     
     open func update(updateModels: [Update], on req: Request) async throws -> [Read] {
         return try await updateModels.asyncMap({try await self.update(updateModel: $0, on: req)})
+    }
+    
+    
+    open func performBatch(
+        action: @escaping AsyncBatchAction<Resource, Resource>,
+        on resources: [Resource],
+        in database: Database,
+        transaction: Bool = true,
+        concurrently: Bool = true
+    ) async throws -> [Resource] {
+        return try await database.performBatch(action: action,
+                                               on: resources,
+                                               transaction: transaction,
+                                               concurrently: concurrently)
     }
 
     //MARK: Abstact methods

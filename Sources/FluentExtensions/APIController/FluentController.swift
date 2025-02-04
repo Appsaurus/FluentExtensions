@@ -21,7 +21,7 @@ open class FluentController<Resource: FluentResourceModel,
     
     public override init(baseRoute: [PathComponentRepresentable] = [],
                          middlewares: [Middleware] = [],
-                         settings: ControllerSettings = ControllerSettings()) {
+                         settings: Config = Config()) {
         super.init(baseRoute: baseRoute.length == 0 ? [Resource.crudPathName] : baseRoute,
                    middlewares: middlewares,
                    settings: settings)
