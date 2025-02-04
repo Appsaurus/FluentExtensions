@@ -15,17 +15,16 @@ open class Controller<Resource: ResourceModel,
                       Read: ReadModel,
                       Update: UpdateModel,
                       SearchResult: SearchResultModel>: RouteCollection {
-    var baseRoute: [PathComponentRepresentable]
-    var middlewares: [Middleware]
-    var settings: Controller.Config
+    open var config: Config
     
-    public init(baseRoute: [PathComponentRepresentable],
-                middlewares: [Middleware] = [],
-                settings: Controller.Config = Controller.Config()) {
-        self.baseRoute = baseRoute
-        self.middlewares = middlewares
-        self.settings = settings
+    public init(config: Config = Config()) {
+        self.config = config
     }
+    
+        public convenience init(_ modifier: (Config) -> ()) {
+            self.init()
+            modifier(self.config)
+        }
     
     //MARK: Routes
     open func boot(routes: RoutesBuilder) throws {
@@ -33,12 +32,12 @@ open class Controller<Resource: ResourceModel,
     }
     
     open func registerRoutes(routes: RoutesBuilder) throws {
-        let router = routes.grouped(baseRoute.pathComponents)
+        let router = routes.grouped(config.baseRoute.pathComponents)
         try registerCRUDRoutes(routes: router)
     }
     
     open func registerCRUDRoutes(routes: RoutesBuilder) throws {
-        let supportedActions = settings.supportedActions.supportedActions
+        let supportedActions = config.supportedActions.supportedActions
         
         if supportedActions.contains(.search) {
             routes.get(use: search)
@@ -117,7 +116,7 @@ open class Controller<Resource: ResourceModel,
     open func delete(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
         let model = try await self.readModel(id: resourceID, in: req.db)
-        let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? settings.forceDelete
+        let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? config.forceDelete
         let deletedModel = try await self.delete(model: model, in: req.db, force: forceDelete)
         return try read(deletedModel)
     }

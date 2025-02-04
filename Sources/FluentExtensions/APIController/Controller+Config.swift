@@ -9,15 +9,21 @@ import Fluent
 
 extension Controller {
     public class Config {
+        public var baseRoute: [PathComponentRepresentable]
+        public var middlewares: [Middleware]
         public var createMethod: CreateMethod
         public var updateMethod: UpdateMethod
         public var forceDelete: Bool
         public var supportedActions: SupportedActions
         
-        public init(supportedActions: SupportedActions = .all,
-                    createMethod: CreateMethod = .default,
-                    updateMethod: UpdateMethod = .default,
-                    forceDelete: Bool = false) {
+        public init(baseRoute: [PathComponentRepresentable] = [],
+                   middlewares: [Middleware] = [],
+                   supportedActions: SupportedActions = .all,
+                   createMethod: CreateMethod = .default,
+                   updateMethod: UpdateMethod = .default,
+                   forceDelete: Bool = false) {
+            self.baseRoute = baseRoute
+            self.middlewares = middlewares
             self.supportedActions = supportedActions
             self.createMethod = createMethod
             self.updateMethod = updateMethod

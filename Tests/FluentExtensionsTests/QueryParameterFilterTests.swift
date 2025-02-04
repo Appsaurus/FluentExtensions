@@ -24,7 +24,9 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
         
-        let controller = FluentAdminController<KitchenSink>(baseRoute: [basePath])
+        let controller = FluentAdminController<KitchenSink> {
+            $0.baseRoute = [basePath]
+        }
         try controller.registerRoutes(routes: router)
     }
     

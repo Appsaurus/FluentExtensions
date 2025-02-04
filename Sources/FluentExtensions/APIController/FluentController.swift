@@ -19,13 +19,15 @@ open class FluentController<Resource: FluentResourceModel,
     
     open var queryParameterFilterOverrides: QueryBuilderParameterFilterOverrides<Resource> = [:]
     
-    public override init(baseRoute: [PathComponentRepresentable] = [],
-                         middlewares: [Middleware] = [],
-                         settings: Config = Config()) {
-        super.init(baseRoute: baseRoute.length == 0 ? [Resource.crudPathName] : baseRoute,
-                   middlewares: middlewares,
-                   settings: settings)
+    public override init(config: Config = Config()) {
+        var modifiedConfig = config
+        // Only modify baseRoute if it's empty
+        if modifiedConfig.baseRoute.isEmpty {
+            modifiedConfig.baseRoute = [Resource.crudPathName]
+        }
+        super.init(config: modifiedConfig)
     }
+    
     open override func readAllModels(in db: Database) async throws -> [Resource] {
         return try await Resource.query(on: db).all()
     }

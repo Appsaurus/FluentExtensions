@@ -15,7 +15,7 @@ class FluentAdminControllerSiblingsTests: FluentAdminControllerTestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
         
-        let controller = FluentAdminController<TestClassModel>(baseRoute: [basePath])
+        let controller = FluentAdminController<TestClassModel>(config: Controller.Config(baseRoute: [basePath]))
         try controller.registerRoutes(routes: router)
         controller.siblingCRUDRoutes(router.grouped(basePath),
                                      relationshipName: "students",

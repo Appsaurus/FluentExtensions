@@ -33,10 +33,8 @@ final class BChildren: ModelAlias {
 }
 
 class TestParentController: FluentAdminController<TestParentModel> {
-    public override init(baseRoute: [PathComponentRepresentable] = [],
-                         middlewares: [Middleware] = [],
-                         settings: Config = Config()) {
-        super.init(baseRoute: baseRoute, middlewares: middlewares, settings: settings)
+    public override init(config: Config = Config()) {
+        super.init(config: config)
         queryParameterFilterOverrides = [
             "optionalChildren": QueryFilterBuilder.Child(\TestChildModel.$optionalParent),
             "children": QueryFilterBuilder.Child(\TestChildModel.$parent)
@@ -69,7 +67,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
     
-        let controller = TestParentController(baseRoute: [basePath])
+        let controller = TestParentController(config: Controller.Config(baseRoute: [basePath]))
         try controller.registerRoutes(routes: router)
     }
     
