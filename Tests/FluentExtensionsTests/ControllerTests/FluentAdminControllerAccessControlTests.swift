@@ -28,7 +28,7 @@ class FluentAdminControllerAccessControlTests: FluentAdminControllerTestCase {
             return resource.id == Self.classUUID
         }
         
-        config.accessControl.resources[.createBatch] = { req, resources in
+        config.accessControl.resources[.create] = { req, resources in
             // Simulate batch operation access control
             return resources.count <= 5
         }

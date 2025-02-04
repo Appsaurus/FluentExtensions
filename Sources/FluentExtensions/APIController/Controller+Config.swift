@@ -9,11 +9,16 @@ import Fluent
 
 extension Controller {
     public class AccessControl {
-        public var resource: [Action: (Request, Resource) async throws -> Bool]
-        public var resources: [Action: (Request, [Resource]) async throws -> Bool]
+        public typealias ResourceCheck = (Request, Resource) async throws -> Bool
+        public typealias ResourcesCheck = (Request, [Resource]) async throws -> Bool
+        public typealias ResourceChecks = [AuthorizedAction: ResourceCheck]
+        public typealias ResourcesChecks = [AuthorizedAction: ResourcesCheck]
         
-        public init(resource: [Action: (Request, Resource) async throws -> Bool] = [:],
-                    resources: [Action: (Request, [Resource]) async throws -> Bool] = [:]) {
+        public var resource: ResourceChecks
+        public var resources: ResourcesChecks
+        
+        public init(resource: ResourceChecks = [:],
+                    resources: ResourcesChecks = [:]) {
             self.resource = resource
             self.resources = resources
         }
@@ -54,8 +59,15 @@ extension Controller {
         case update
         case updateBatch
         case delete
+//        case deleteBatch
     }
 
+    public enum AuthorizedAction {
+        case read
+        case create
+        case update
+        case delete
+    }
     
     public enum SupportedActions {
         case everythingBut(_ actions: [Controller.Action])
@@ -66,13 +78,13 @@ extension Controller {
         var supportedActions: [Controller.Action] {
             switch self {
             case .all:
-                return [.search, .read, .readAll, .create, .createBatch, .update, .updateBatch, .delete]
+                return [.search, .read, .readAll, .create, .createBatch, .update, .updateBatch, .delete/*, .deleteBatch*/]
             case .none:
                 return []
             case .only(let actions):
                 return actions
             case .everythingBut(let excludedActions):
-                let allActions: Set<Controller.Action> = [.search, .read, .readAll, .create, .createBatch, .update, .updateBatch, .delete]
+                let allActions: Set<Controller.Action> = Set(SupportedActions.all.supportedActions)
                 return Array(allActions.subtracting(Set(excludedActions)))
             }
         }

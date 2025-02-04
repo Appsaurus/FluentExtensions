@@ -28,6 +28,16 @@ open class FluentController<Resource: FluentResourceModel,
         super.init(config: modifiedConfig)
     }
     
+    //MARK: Routes
+    
+    open override func search(_ req: Request) async throws -> Page<Read> {
+        let query = try buildSearchQuery(request: req)
+        let page = try await query.paginate(for: req)
+        try await assertRequest(req, isAuthorizedTo: .read, page.items)
+        return try page.transformDatum(with: read)
+    }
+    //MARK: End Routes
+    
     open override func readAllModels(in db: Database) async throws -> [Resource] {
         return try await Resource.query(on: db).all()
     }
@@ -92,11 +102,7 @@ open class FluentController<Resource: FluentResourceModel,
     //        DatabaseQuery.Sort.sort(.path([Resource.idFieldKey], schema: Resource.schemaOrAlias), .ascending)
     //    }
     
-    open override func search(_ req: Request) async throws -> Page<Read> {
-        let query = try buildSearchQuery(request: req)
-        let page = try await query.paginate(for: req)
-        return try page.transformDatum(with: read)
-    }
+
     
     open func buildSearchQuery(request: Request) throws -> QueryBuilder<Resource> {
         let query = Resource.query(on: request)

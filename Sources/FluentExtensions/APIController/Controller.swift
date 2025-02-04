@@ -84,7 +84,7 @@ open class Controller<Resource: ResourceModel,
     
     open func readAll(_ req: Request) async throws -> [Read] {
         let models = try await readAllModels(in: req.db)
-        try await assertRequest(req, isAuthorizedTo: .readAll, models)
+        try await assertRequest(req, isAuthorizedTo: .read, models)
         return try models.map(read)
     }
     
@@ -100,7 +100,7 @@ open class Controller<Resource: ResourceModel,
     open func createBatch(_ req: Request) async throws -> [Read] {
         let models = try req.content.decode([Create].self)
         let resources = try models.map(convert)
-        try await assertRequest(req, isAuthorizedTo: .createBatch, resources)
+        try await assertRequest(req, isAuthorizedTo: .create, resources)
         return try await self.create(createModels: models, in: req.db)
     }
     
@@ -134,85 +134,72 @@ open class Controller<Resource: ResourceModel,
     
     //MARK: End Routes
     
-    open func assertRequest(_ req: Request, isAuthorizedTo action: Controller.Action, _ resource: Resource) async throws {
+    open func assertRequest(_ req: Request, isAuthorizedTo action: AuthorizedAction, _ resource: Resource) async throws {
         guard try await request(req, isAuthorizedTo: action, resource) else {
             throw Abort(.unauthorized)
         }
     }
     
     //MARK: Access Control
-    open func request(_ req: Request, isAuthorizedTo action: Controller.Action, _ resource: Resource) async throws -> Bool {
-        // Check if there's a custom single-resource access handler
+    open func request(_ req: Request, isAuthorizedTo action: AuthorizedAction, _ resource: Resource) async throws -> Bool {
+        var authorized: Bool = true
+        var authorizedInjected: Bool = true
         if let accessHandler = config.accessControl.resource[action] {
-            return try await accessHandler(req, resource)
+            authorizedInjected = try await accessHandler(req, resource)
         }
         
-        // Fall back to default implementations
         switch action {
-        case .search:
-            return try await request(req, canSearch: resource)
         case .read:
-            return try await request(req, canRead: resource)
-        case .readAll:
-            return try await request(req, canReadAll: resource)
+            authorized = try await request(req, canRead: resource)
         case .create:
-            return try await request(req, canCreate: resource)
-        case .createBatch:
-            return try await request(req, canCreateBatch: resource)
+            authorized = try await request(req, canCreate: resource)
         case .update:
-            return try await request(req, canUpdate: resource)
-        case .updateBatch:
-            return try await request(req, canUpdateBatch: resource)
+            authorized = try await request(req, canUpdate: resource)
         case .delete:
-            return try await request(req, canDelete: resource)
+            authorized = try await request(req, canDelete: resource)
+        default:
+            throw Abort(.internalServerError)
         }
+        return authorized && authorizedInjected
     }
 
-    open func assertRequest(_ req: Request, isAuthorizedTo action: Controller.Action, _ resources: [Resource]) async throws {
+    open func assertRequest(_ req: Request, isAuthorizedTo action: AuthorizedAction, _ resources: [Resource]) async throws {
         guard try await request(req, isAuthorizedTo: action, resources) else {
             throw Abort(.unauthorized)
         }
     }
-    open func request(_ req: Request, isAuthorizedTo action: Controller.Action, _ resources: [Resource]) async throws -> Bool {
-        // Check if there's a custom batch access handler
+    open func request(_ req: Request, isAuthorizedTo action: AuthorizedAction, _ resources: [Resource]) async throws -> Bool {
+        var authorized: Bool = true
+        var authorizedInjected: Bool = true
+        
         if let accessHandler = config.accessControl.resources[action] {
-            return try await accessHandler(req, resources)
+            authorizedInjected = try await accessHandler(req, resources)
         }
         
-        // Fall back to checking each resource individually
-        for resource in resources {
-            guard try await request(req, isAuthorizedTo: action, resource) else {
-                return false
-            }
+        switch action {
+        case .read:
+            authorized = try await request(req, canRead: resources)
+        case .create:
+            authorized = try await request(req, canCreate: resources)
+        case .update:
+            authorized = try await request(req, canUpdate: resources)
+        case .delete:
+            authorized = try await request(req, canDelete: resources)
+        default:
+            throw Abort(.internalServerError)
         }
-        return true
-    }
-
-    open func request(_ req: Request, canSearch resource: Resource) async throws -> Bool {
-        return true
+        return authorized && authorizedInjected
     }
 
     open func request(_ req: Request, canRead resource: Resource) async throws -> Bool {
         return true
     }
-
-    open func request(_ req: Request, canReadAll resource: Resource) async throws -> Bool {
-        return true
-    }
-
+    
     open func request(_ req: Request, canCreate resource: Resource) async throws -> Bool {
         return true
     }
-
-    open func request(_ req: Request, canCreateBatch resource: Resource) async throws -> Bool {
-        return true
-    }
-
+    
     open func request(_ req: Request, canUpdate resource: Resource) async throws -> Bool {
-        return true
-    }
-
-    open func request(_ req: Request, canUpdateBatch resource: Resource) async throws -> Bool {
         return true
     }
 
@@ -220,6 +207,26 @@ open class Controller<Resource: ResourceModel,
         return true
     }
     
+    //Batch Actions
+    open func request(_ req: Request, canSearch resources: [Resource]) async throws -> Bool {
+        return true
+    }
+    
+    open func request(_ req: Request, canRead resources: [Resource]) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canCreate resources: [Resource]) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canUpdate resources: [Resource]) async throws -> Bool {
+        return true
+    }
+
+    open func request(_ req: Request, canDelete resources: [Resource]) async throws -> Bool {
+        return true
+    }
     //MARK: End Access Control
     
     open func create(resource: Resource,
