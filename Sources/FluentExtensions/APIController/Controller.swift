@@ -21,10 +21,10 @@ open class Controller<Resource: ResourceModel,
         self.config = config
     }
     
-        public convenience init(_ modifier: (Config) -> ()) {
-            self.init()
-            modifier(self.config)
-        }
+    public convenience init(_ modifier: (Config) -> ()) {
+        self.init()
+        modifier(self.config)
+    }
     
     //MARK: Routes
     open func boot(routes: RoutesBuilder) throws {

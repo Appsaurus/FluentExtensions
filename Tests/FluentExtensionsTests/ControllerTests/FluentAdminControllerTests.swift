@@ -17,6 +17,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
     static let child3UUID = UUID()
     
     static let classUUID = UUID()
+    static let class2UUID = UUID()
     
     static let student1UUID = UUID()
     static let student2UUID = UUID()
@@ -35,6 +36,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
                                 optionalParentID: parentUUID)
     
     var class1 = TestClassModel(id: classUUID)
+    var class2 = TestClassModel(id: class2UUID)
     
     var student1 = TestStudentModel(id: student1UUID, name: "Student 1")
     var student2 = TestStudentModel(id: student2UUID, name: "Student 2")
@@ -66,7 +68,8 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
             testCase.child3 = try await testCase.child3.save(in: database)
             
             testCase.class1 = try await testCase.class1.save(in: database)
-                        
+            testCase.class2 = try await testCase.class2.save(in: database)
+            
             testCase.student1 = try await testCase.student1.save(in: database)
             testCase.student2 = try await testCase.student2.save(in: database)
             
