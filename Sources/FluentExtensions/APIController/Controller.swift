@@ -78,53 +78,76 @@ open class Controller<Resource: ResourceModel,
     open func read(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
         let model = try await readModel(id: resourceID, in: req.db)
-        guard try await request(req, canRead: model) else {
-            throw Abort(.unauthorized)
-        }
+        try await assertRequest(req, isAuthorizedTo: .read, model)
         return try read(model)
     }
     
-    open func readAll(on req: Request) async throws -> [Read] {
-        try await readAllModels(in: req.db).map(read)
+    open func readAll(_ req: Request) async throws -> [Read] {
+        let models = try await readAllModels(in: req.db)
+        try await assertRequest(req, isAuthorizedTo: .readAll, models)
+        return try models.map(read)
     }
     
     //MARK: Create Routes
     open func create(_ req: Request) async throws -> Read {
         let model = try req.content.decode(Create.self)
+        let resource = try convert(model)
+        try await assertRequest(req, isAuthorizedTo: .create, resource)
         let method = try? req.query.get(CreateMethod.self, at: "method")
         return try await self.create(createModel: model, in: req.db, method: method)
     }
     
     open func createBatch(_ req: Request) async throws -> [Read] {
         let models = try req.content.decode([Create].self)
+        let resources = try models.map(convert)
+        try await assertRequest(req, isAuthorizedTo: .createBatch, resources)
         return try await self.create(createModels: models, in: req.db)
     }
     
     //MARK: Update
     open func update(_ req: Request) async throws -> Read {
-        let model = try req.content.decode(Update.self)
-        return try await self.update(updateModel: model, on: req)
+        let updateModel = try req.content.decode(Update.self)
+        let resourceID = try req.parameters.next(Resource.self)
+        let resource = try await readModel(id: resourceID, in: req.db)
+        try await assertRequest(req, isAuthorizedTo: .update, resource)
+        let updatedResource = try await update(model: resource,
+                                           with: updateModel,
+                                           in: req.db)
+        return try read(updatedResource)
     }
 
     open func updateBatch(_ req: Request) async throws -> [Read] {
-        let models = try req.content.decode([Update].self)
-        return try await self.update(updateModels: models, on: req)
+        let updateModels = try req.content.decode([Update].self)
+        return try await updateModels.asyncMap({try await self.update(updateModel: $0, on: req)})
     }
     
     //MARK: Delete
     
     open func delete(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let model = try await self.readModel(id: resourceID, in: req.db)
+        let resource = try await self.readModel(id: resourceID, in: req.db)
+        try await assertRequest(req, isAuthorizedTo: .delete, resource)
         let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? config.forceDelete
-        let deletedModel = try await self.delete(model: model, in: req.db, force: forceDelete)
+        let deletedModel = try await self.delete(model: resource, in: req.db, force: forceDelete)
         return try read(deletedModel)
     }
     
     //MARK: End Routes
     
+    open func assertRequest(_ req: Request, isAuthorizedTo action: Controller.Action, _ resource: Resource) async throws {
+        guard try await request(req, isAuthorizedTo: action, resource) else {
+            throw Abort(.unauthorized)
+        }
+    }
+    
     //MARK: Access Control
-    open func request(_ req: Request, canPerform action: Controller.Action, on resource: Resource) async throws -> Bool {
+    open func request(_ req: Request, isAuthorizedTo action: Controller.Action, _ resource: Resource) async throws -> Bool {
+        // Check if there's a custom single-resource access handler
+        if let accessHandler = config.accessControl.resource[action] {
+            return try await accessHandler(req, resource)
+        }
+        
+        // Fall back to default implementations
         switch action {
         case .search:
             return try await request(req, canSearch: resource)
@@ -143,6 +166,26 @@ open class Controller<Resource: ResourceModel,
         case .delete:
             return try await request(req, canDelete: resource)
         }
+    }
+
+    open func assertRequest(_ req: Request, isAuthorizedTo action: Controller.Action, _ resources: [Resource]) async throws {
+        guard try await request(req, isAuthorizedTo: action, resources) else {
+            throw Abort(.unauthorized)
+        }
+    }
+    open func request(_ req: Request, isAuthorizedTo action: Controller.Action, _ resources: [Resource]) async throws -> Bool {
+        // Check if there's a custom batch access handler
+        if let accessHandler = config.accessControl.resources[action] {
+            return try await accessHandler(req, resources)
+        }
+        
+        // Fall back to checking each resource individually
+        for resource in resources {
+            guard try await request(req, isAuthorizedTo: action, resource) else {
+                return false
+            }
+        }
+        return true
     }
 
     open func request(_ req: Request, canSearch resource: Resource) async throws -> Bool {
@@ -254,6 +297,7 @@ open class Controller<Resource: ResourceModel,
 //        let updatedModel = try await update(updateModel: updateModel, on: req)
         let resourceID = try req.parameters.next(Resource.self)
         let resource = try await readModel(id: resourceID, in: req.db)
+        try await assertRequest(req, isAuthorizedTo: .update, resource)
         let updatedResource = try await update(model: resource,
                                                with: updateModel,
                                                in: req.db)

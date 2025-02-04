@@ -8,6 +8,17 @@
 import Fluent
 
 extension Controller {
+    public class AccessControl {
+        public var resource: [Action: (Request, Resource) async throws -> Bool]
+        public var resources: [Action: (Request, [Resource]) async throws -> Bool]
+        
+        public init(resource: [Action: (Request, Resource) async throws -> Bool] = [:],
+                    resources: [Action: (Request, [Resource]) async throws -> Bool] = [:]) {
+            self.resource = resource
+            self.resources = resources
+        }
+    }
+    
     public class Config {
         public var baseRoute: [PathComponentRepresentable]
         public var middlewares: [Middleware]
@@ -15,19 +26,22 @@ extension Controller {
         public var updateMethod: UpdateMethod
         public var forceDelete: Bool
         public var supportedActions: SupportedActions
+        public var accessControl: AccessControl
         
         public init(baseRoute: [PathComponentRepresentable] = [],
                    middlewares: [Middleware] = [],
                    supportedActions: SupportedActions = .all,
                    createMethod: CreateMethod = .default,
                    updateMethod: UpdateMethod = .default,
-                   forceDelete: Bool = false) {
+                   forceDelete: Bool = false,
+                   accessControl: AccessControl = AccessControl()) {
             self.baseRoute = baseRoute
             self.middlewares = middlewares
             self.supportedActions = supportedActions
             self.createMethod = createMethod
             self.updateMethod = updateMethod
             self.forceDelete = forceDelete
+            self.accessControl = accessControl
         }
     }
     
