@@ -122,19 +122,8 @@ where R.ResolvedParameter == R.IDValue,
               //Replace
               routes.put([P].self, at: pivotPath) { (request, model: R, pivotEntities) async throws -> [PR] in
                   let database = request.db
-                      let pivotProperty = model[keyPath: siblingKeyPath].$pivots
-                  var policy: RemovalMethod = .detach
-                  switch pivotProperty.parentKey {
-                  case .required(_):
-                      policy = .delete(force: false)
-                      break
-                  case .optional(_):
-                      break
-                  }
-                  return try await pivotProperty.replace(with: pivotEntities,
-                                                         by: policy,
-                                                         updatingBy: .upsert,
-                                                         on: database)
+                  let pivotProperty = model[keyPath: siblingKeyPath].$pivots
+                  return try await pivotProperty.replace(with: pivotEntities, in: database)
                   .map(pivotController.read)
               }
               

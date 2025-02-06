@@ -1,6 +1,12 @@
 import Vapor
 import Fluent
 
+public struct ChildrenDiff<T: Model> {
+    let modelsToUpdate: [T]
+    let modelsToCreate: [T]
+    let modelsToRemove: [T]
+}
+
 public extension ChildrenProperty {
     /// Returns true if the supplied model is a child
     /// to this relationship.
@@ -59,7 +65,6 @@ public extension ChildrenProperty {
             .update(in: database, force: true)
     }
     
-    /// Detach all models by deleting all pivots from this model.
     func detachAll(on database: Database) async throws {
         guard let fromID = self.fromId else {
             fatalError("Cannot detach siblings relation \(self.name) from unsaved model.")
@@ -81,45 +86,113 @@ public extension ChildrenProperty {
     
 
 
-    func markForReplacement(_ children: [To], force: Bool = false, in database: Database) async throws -> ([To], [To]) {
-        switch (self.parentKey, force) {
-        case (.required(_), false):
-            throw Abort(.badRequest, reason: "That parent child relationship is required.")
-        default:
-            break
+//    func markForReplacement(_ children: [To], force: Bool = false, in database: Database) async throws -> ([To], [To]) {
+//        switch (self.parentKey, force) {
+//        case (.required(_), false):
+//            throw Abort(.badRequest, reason: "That parent child relationship is required.")
+//        default:
+//            break
+//        }
+//        
+//        var existingChildren = try await self.all(in: database)
+//        existingChildren = try markForDetachment(existingChildren)
+//        let children = try markForAttachment(children)
+//        return (existingChildren, children)
+//    }
+//    @discardableResult
+//    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
+//        let resources = try await markForReplacement(children, force: force, in: database)
+//        let existingChildren = resources.0
+//        let children = resources.1
+//        
+//        try await existingChildren.update(in: database, force: force)
+//        return try await children.upsert(in: database)
+//    }
+//
+//    @discardableResult
+//    func replace(
+//        with children: [To],
+//        by removalMethod: RemovalMethod = .detach,
+//        updatingBy updateMethod: UpdateMethod = .upsert,
+//        on database: Database) async throws -> [To] {
+//        return try await database.transaction { database in
+//            switch removalMethod {
+//            case .delete(let force):
+//                try await self.query(on: database).delete(force: force)
+//            case .detach:
+//                try await self.detachAll(on: database)
+//            }
+//            return try await self.attach(children, updatingBy: .upsert, in: database)
+//        }
+//        
+//    }
+    
+    func diffWithExistingChildren(_ newChildren: [To], in database: Database) async throws -> ChildrenDiff<To> {
+        let existingChildren = try await self.all(in: database)
+        
+        // Split new children into those with and without IDs
+        let (newWithIds, newWithoutIds) = newChildren.reduce(into: ([To](), [To]())){ result, model in
+            if (try? model.requireID()) != nil {
+                result.0.append(model)
+            } else {
+                result.1.append(model)
+            }
         }
         
-        var existingChildren = try await self.all(in: database)
-        existingChildren = try markForDetachment(existingChildren)
-        let children = try markForAttachment(children)
-        return (existingChildren, children)
-    }
-    @discardableResult
-    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
-        let resources = try await markForReplacement(children, force: force, in: database)
-        let existingChildren = resources.0
-        let children = resources.1
+        // Get existing IDs safely
+        let existingIds = try existingChildren.map { try $0.requireID() }
+        let newIds = try newWithIds.map { try $0.requireID() }
         
-        try await existingChildren.update(in: database, force: force)
-        return try await children.upsert(in: database)
+        let modelsToUpdate = newWithIds.filter { model in
+            guard let id = try? model.requireID() else { return false }
+            return existingIds.contains(id)
+        }
+        
+        // All models without IDs need to be created
+        let modelsToCreate = newWithoutIds + newWithIds.filter { model in
+            guard let id = try? model.requireID() else { return true }
+            return !existingIds.contains(id)
+        }
+        
+        let modelsToRemove = existingChildren.filter { model in
+            guard let id = try? model.requireID() else { return false }
+            return !newIds.contains(id)
+        }
+        
+        return ChildrenDiff(
+            modelsToUpdate: modelsToUpdate,
+            modelsToCreate: modelsToCreate,
+            modelsToRemove: modelsToRemove
+        )
     }
 
     @discardableResult
     func replace(
         with children: [To],
-        by removalMethod: RemovalMethod = .detach,
-        updatingBy updateMethod: UpdateMethod = .upsert,
-        on database: Database) async throws -> [To] {
-        return try await database.transaction { database in
-            switch removalMethod {
-            case .delete(let force):
-                try await self.query(on: database).delete(force: force)
-            case .detach:
-                try await self.detachAll(on: database)
+        deleteOrphaned: Bool = true,
+        in database: Database
+    ) async throws -> [To] {
+        try await database.transaction { database in
+            let diff = try await self.diffWithExistingChildren(children, in: database)
+            
+            // Handle removals
+            for model in diff.modelsToRemove {
+                switch self.parentKey {
+                case .required(_):
+                    if deleteOrphaned {
+                        try await model.delete(force: true, on: database)
+                    } else {
+                        throw Abort(.badRequest, reason: "Cannot remove child with required parent relationship unless deleteOrphaned is true")
+                    }
+                case .optional(_):
+                    try await self.detach([model], in: database)
+                }
             }
-            return try await self.attach(children, updatingBy: .upsert, in: database)
+            
+            let modelsToUpsert = diff.modelsToUpdate + diff.modelsToCreate
+            try self.markForAttachment(modelsToUpsert)
+            return try await modelsToUpsert.upsert(in: database)
         }
-        
     }
     
 }

@@ -21,6 +21,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
     
     static let student1UUID = UUID()
     static let student2UUID = UUID()
+    static let student3UUID = UUID()
     
     var parent = TestParentModel(id: parentUUID, name: "Parent 1")
     var parent2 = TestParentModel(id: parent2UUID, name: "Parent 2")
@@ -40,6 +41,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
     
     var student1 = TestStudentModel(id: student1UUID, name: "Student 1")
     var student2 = TestStudentModel(id: student2UUID, name: "Student 2")
+    var student3 = TestStudentModel(id: student3UUID, name: "Student 3")
 
     override func migrate(_ migrations: Migrations) throws {
         try super.migrate(migrations)
@@ -72,6 +74,7 @@ class FluentAdminControllerTestCase: FluentTestModels.TestCase {
             
             testCase.student1 = try await testCase.student1.save(in: database)
             testCase.student2 = try await testCase.student2.save(in: database)
+            testCase.student3 = try await testCase.student3.save(in: database)
             
             let enrollment = TestEnrollmentModel()
             enrollment.$class.id = try testCase.class1.requireID()
