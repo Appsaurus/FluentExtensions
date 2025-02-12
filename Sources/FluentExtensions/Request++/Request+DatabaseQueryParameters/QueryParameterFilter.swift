@@ -168,8 +168,6 @@ public enum FilterCondition: Codable {
     }
 }
 
-public typealias RelationshipQueryParamMap = [String: Any.Type]
-
 public typealias QueryBuilderParameterFilterOverrides<M: Model> = [String: QueryBuilderParameterFilterOverride<M>]
 public typealias QueryBuilderParameterFilterOverride<M: Model> = (_ query: QueryBuilder<M>, String, FilterCondition) throws -> DatabaseQuery.Filter?
 public typealias QueryParameterFilterOverrides = [String: (_ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
@@ -192,6 +190,24 @@ public class QueryFilterBuilder {
             return try .build(from: condition, schema: Child.schemaOrAlias)
         }
     }
+    
+    public static func Parent<Parent: Model, Child: Model>(
+        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
+    ) -> QueryBuilderParameterFilterOverride<Child> {
+        { query, field, condition in
+            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+            return try .build(from: condition, schema: Parent.schemaOrAlias)
+        }
+    }
+    
+    public static func Parent<Parent: Model, Child: Model>(
+        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
+    ) -> QueryBuilderParameterFilterOverride<Child> {
+        { query, field, condition in
+            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+            return try .build(from: condition, schema: Parent.schemaOrAlias)
+        }
+    }
 }
 
 
@@ -211,7 +227,10 @@ public extension DatabaseQuery.Filter {
         switch condition {
         case let .`where`(field, method, value):
             //Allow overriding for things like nested relationship filters that require APIs that are not available here
-            if method == .filter, let override = overrides[field] {
+            if let override = overrides[field] {
+                guard method == .filter else {
+                    return try override(field, condition)
+                }
                 guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
                     throw QueryParameterFilterError.invalidFilterConfiguration
                 }
@@ -277,16 +296,18 @@ public extension QueryBuilder {
     
     func filterWithQueryParameter(at queryParameterKey: String = "filter",
                                   in request: Request,
-                                  overrides: QueryBuilderParameterFilterOverrides<Model> = [:]) throws -> Self {
+                                  overrides: QueryBuilderParameterFilterOverrides<Model> = [:],
+                                  globalOverride: QueryBuilderParameterFilterOverride<Model>? = nil) throws -> Self {
         guard let filterString: String = request.query[queryParameterKey] else {
             return self
         }
         
-        return try filterWithQueryParameterString(filterString, overrides: overrides)
+        return try filterWithQueryParameterString(filterString, overrides: overrides, globalOverride: globalOverride)
     }
     
     func filterWithQueryParameterString(_ queryParameterFilterString: String,
-                                        overrides: QueryBuilderParameterFilterOverrides<Model> = [:]) throws -> Self {
+                                        overrides: QueryBuilderParameterFilterOverrides<Model> = [:],
+                                        globalOverride: QueryBuilderParameterFilterOverride<Model>? = nil) throws -> Self {
         
         var filterOverrides: QueryParameterFilterOverrides = [:]
         overrides.forEach { (key: String, value: @escaping (_ query: QueryBuilder<Model>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?) in

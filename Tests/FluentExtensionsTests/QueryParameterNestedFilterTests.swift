@@ -19,13 +19,13 @@ import FluentExtensions
 final class AChildren: ModelAlias {
     static var name: String = "children"
     
-    var model: TestChildModel = TestChildModel()
+    let model: TestChildModel = TestChildModel()
     
     
 }
 
 final class BChildren: ModelAlias {
-    var model: TestChildModel = TestChildModel()
+    let model: TestChildModel = TestChildModel()
     
     static var name: String = "optionalChildren"
     
@@ -42,10 +42,23 @@ class TestParentController: FluentAdminController<TestParentModel> {
     }
 }
 
+
+class TestChildController: FluentAdminController<TestChildModel> {
+    public override init(config: Config = Config()) {
+        super.init(config: config)
+        queryParameterFilterOverrides = [
+            "parent": QueryFilterBuilder.Parent(\TestChildModel.$parent),
+            "optionalParent": QueryFilterBuilder.Parent(\TestChildModel.$optionalParent)
+        ]
+    }
+}
+
+
 class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     
-    // Your base path for API endpoints
-    let basePath = "parents"
+    // Base paths for API endpoints
+    let parentBasePath = "parents"
+    let childBasePath = "children"
     
     override func migrate(_ migrations: Migrations) throws {
         try super.migrate(migrations)
@@ -53,7 +66,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     }
     
     override func configureTestModelDatabase(_ databases: Databases) {
-
+        
         databases.use(.sqlite(.memory, connectionPoolTimeout: .minutes(2)), as: .sqlite)
         
     }
@@ -66,22 +79,27 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
     
     override func addRoutes(to router: Routes) throws {
         try super.addRoutes(to: router)
-    
-        let controller = TestParentController(config: Controller.Config(baseRoute: [basePath]))
-        try controller.registerRoutes(routes: router)
+        
+        let parentController = TestParentController(config: Controller.Config(baseRoute: [parentBasePath]))
+        let childController = TestChildController(config: Controller.Config(baseRoute: [childBasePath]))
+        
+        try parentController.registerRoutes(routes: router)
+        try childController.registerRoutes(routes: router)
     }
     
-    // Helper function to create filter URL
-    func makeFilterURL(_ condition: TestFilterCondition) throws -> String {
+    // Generic helper function to create filter URL
+    func makeFilterURL(basePath: String, _ condition: TestFilterCondition) throws -> String {
         return "\(basePath)?filter=\(try condition.toURLQueryString())"
     }
     
-    func getFilteredItems(_ condition: TestFilterCondition) async throws -> [TestParentModel] {
-        let response = try await app.sendRequest(.GET, try makeFilterURL(condition))
+    // Generic helper function to get filtered items
+    func getFilteredItems<T: Content>(_ condition: TestFilterCondition, basePath: String) async throws -> [T] {
+        let response = try await app.sendRequest(.GET, try makeFilterURL(basePath: basePath, condition))
         XCTAssertEqual(response.status, .ok)
-        return try response.content.decode(Page<TestParentModel>.self).items
+        return try response.content.decode(Page<T>.self).items
     }
     
+    // Parent model tests
     func testNestedChildFilter() async throws {
         // Test filtering parents based on child properties
         let condition = TestFilterCondition.field(
@@ -91,11 +109,15 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         )
         
         let parent1ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 1").first()!.requireID()
+        let parent2ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 2").first()!.requireID()
         
-        let models = try await getFilteredItems(condition)
+        let models: [TestParentModel] = try await getFilteredItems(condition, basePath: parentBasePath)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent1ID]) })
-
+        
+        // Negative test case: ensure Parent 2 is not included
+        XCTAssertFalse(models.contains { $0.id == parent2ID })
+        XCTAssertEqual(models.count, 1) // Should only return one parent
     }
     
     func testNestedOptionalChildFilter() async throws {
@@ -103,19 +125,58 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         let condition = TestFilterCondition.field(
             "optionalChildren",
             "filter",
-            AnyCodable(try TestFilterCondition.field("name", "sw", "Optional").toURLQueryString())
+            AnyCodable(try TestFilterCondition.field("name", "eq", "Optional Child").toURLQueryString())
         )
         
+        let parent1ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 1").first()!.requireID()
         let parent2ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 2").first()!.requireID()
         
-        let models = try await getFilteredItems(.and([condition]))
+        let models: [TestParentModel] = try await getFilteredItems(condition, basePath: parentBasePath)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent2ID]) })
-
+        
+        // Negative test case: ensure Parent 1 is not included
+        XCTAssertFalse(models.contains { $0.id == parent1ID })
+        XCTAssertEqual(models.count, 1) // Should only return one parent
+    }
+    
+    // Child model tests
+    func testParentFilter() async throws {
+        // Test filtering children based on parent properties
+        let condition = TestFilterCondition.field(
+            "parent",
+            "filter",
+            AnyCodable(try TestFilterCondition.field("name", "eq", "Parent 1").toURLQueryString())
+        )
+        
+        let models: [TestChildModel] = try await getFilteredItems(condition, basePath: childBasePath)
+        XCTAssertFalse(models.isEmpty)
+        XCTAssert(models.allSatisfy { $0.name.contains("Child A") || $0.name.contains("Optional Child") })
+        
+        // Negative test case: ensure no children of Parent 2 are included
+        XCTAssertFalse(models.contains { $0.name == "Child B" })
+        XCTAssertEqual(models.count, 3) // Should return three children (Child A and two Optional Children)
+    }
+    
+    func testOptionalParentFilter() async throws {
+        // Test filtering children based on optional parent properties
+        let condition = TestFilterCondition.field(
+            "optionalParent",
+            "filter",
+            AnyCodable(try TestFilterCondition.field("name", "eq", "Parent 2").toURLQueryString())
+        )
+        
+        let models: [TestChildModel] = try await getFilteredItems(condition, basePath: childBasePath)
+        XCTAssertFalse(models.isEmpty)
+        XCTAssert(models.allSatisfy { $0.name.contains("Optional Child") })
+        
+        // Negative test case: ensure non-optional children are not included
+        XCTAssertFalse(models.contains { $0.name == "Child A" || $0.name == "Child B" })
+        XCTAssertEqual(models.count, 2) // Should only return two optional children
     }
 }
 
-class QueryParameterNestedTestSeeder: AsyncMigration {
+final class QueryParameterNestedTestSeeder: AsyncMigration {
     func prepare(on database: Database) async throws {
 
         let parent1 = TestParentModel(name: "Parent 1")

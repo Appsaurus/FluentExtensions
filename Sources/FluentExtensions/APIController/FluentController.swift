@@ -9,21 +9,21 @@ import VaporExtensions
 
 public typealias FluentResourceModel = Fluent.Model & ResourceModel & Paginatable
 
-open class FluentController<Resource: FluentResourceModel,
+open class FluentController<Model: FluentResourceModel,
                             Create: CreateModel,
                             Read: ReadModel,
-                            Update: UpdateModel>: Controller<Resource, Create, Read, Update, Page<Read>> {
+                            Update: UpdateModel>: Controller<Model, Create, Read, Update, Page<Read>> {
     
-    open var defaultSort: DatabaseQuery.Sort? = .sort(.path([Resource.idFieldKey],
-                                                       schema: Resource.schemaOrAlias), .ascending)
+    open var defaultSort: DatabaseQuery.Sort? = .sort(.path([Model.idFieldKey],
+                                                       schema: Model.schemaOrAlias), .ascending)
     
-    open var queryParameterFilterOverrides: QueryBuilderParameterFilterOverrides<Resource> = [:]
+    open var queryParameterFilterOverrides: QueryBuilderParameterFilterOverrides<Model> = [:]
     
     public override init(config: Config = Config()) {
-        var modifiedConfig = config
+        let modifiedConfig = config
         // Only modify baseRoute if it's empty
         if modifiedConfig.baseRoute.isEmpty {
-            modifiedConfig.baseRoute = [Resource.crudPathName]
+            modifiedConfig.baseRoute = [Model.crudPathName]
         }
         super.init(config: modifiedConfig)
     }
@@ -38,93 +38,117 @@ open class FluentController<Resource: FluentResourceModel,
     }
     //MARK: End Routes
     
-    open override func readAllModels(in db: Database) async throws -> [Resource] {
-        return try await Resource.query(on: db).all()
+    
+    //MARK: CRUD Actions
+    
+    open func create(model: Model, in db: Database) async throws -> Model {
+        try await model.create(in: db)
     }
     
-    open override func create(model: Resource, in db: Database) async throws -> Resource {
-        try await model.create(on: db)
-        return model
-    }
-    
-    open override func update(model: Resource, in db: Database) async throws -> Resource {
+    open func update(model: Model, in db: Database) async throws -> Model {
         try await model.update(in: db)
     }
     
-    
-    open override func delete(model: Resource, in db: Database, force: Bool = false) async throws -> Resource {
-        try await model.delete(from: db, force: force)
-    }
-    
-    open override func save(model: Resource, in db: Database) async throws -> Resource {
+    open func save(model: Model, in db: Database) async throws -> Model {
         try await model.save(in: db)
     }
     
-    open override func upsert(model: Resource, in db: Database) async throws -> Resource {
+    open func upsert(model: Model, in db: Database) async throws -> Model {
         try await model.upsert(in: db)
     }
     
-    
-    open override func create(models: [Resource], in db: Database) async throws -> [Resource] {
-        try await models.create(in: db)
+    open func delete(model: Model, in db: Database, force: Bool = false) async throws -> Model {
+        try await model.delete(from: db, force: force)
     }
     
-    open override func update(models: [Resource], in db: Database) async throws -> [Resource] {
-        try await models.update(in: db)
+    //MARK: Abstract Implementations
+    
+    open override func readAllModels(request: Request) async throws -> [Model] {
+        return try await Model.query(on: request.db).all()
     }
     
-    open override func delete(models: [Resource],
-                              in db: Database,
-                              force: Bool = false) async throws -> [Resource] {
-        try await models.delete(from: db, force: force)
+    open override func create(resource: Model, request: Request) async throws -> Model {
+        try await create(model: resource, in: request.db)
     }
     
-    open override func save(models: [Resource], in db: Database) async throws -> [Resource] {
-        try await models.save(in: db)
+    open override func update(resource: Model, request: Request) async throws -> Model {
+        try await update(model: resource, in: request.db)
     }
     
-    open override func upsert(models: [Resource], in db: Database) async throws -> [Resource] {
-        try await models.upsert(in: db)
-        //        try await db.performBatch(action: self.upsert, on: models)
+    open override func save(resource: Model, request: Request) async throws -> Model {
+        try await save(model: resource, in: request.db)
     }
     
-    //MARK: Other
+    open override func upsert(resource: Model, request: Request) async throws -> Model {
+        try await upsert(model: resource, in: request.db)
+    }
     
-    //    open override func update(model: Resource,
-    //                              with updateModel: Update,
-    //                              in db: Database) async throws -> Resource {
-    //
-    //    }
+    open override func delete(resource: Model, request: Request, force: Bool = false) async throws -> Model {
+        try await delete(model: resource, in: request.db)
+    }
     
-    //MARK: Search
-    //    @discardableResult
-    //    open func defaultSort() -> DatabaseQuery.Sort? {
-    //        DatabaseQuery.Sort.sort(.path([Resource.idFieldKey], schema: Resource.schemaOrAlias), .ascending)
-    //    }
+    open override func create(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.create, on: resources)
+    }
     
+    open override func update(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.update, on: resources)
+    }
+    
+    open override func save(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.save, on: resources)
 
+    }
     
-    open func buildSearchQuery(request: Request) throws -> QueryBuilder<Resource> {
-        let query = Resource.query(on: request)
+    open override func upsert(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.upsert, on: resources)
+    }
+    
+    open override func delete(resources: [Model], request: Request, force: Bool = false) async throws -> [Model] {
+        try await resources.delete(force: force, on: request.db)
+        return resources
+    }
+    
+    //MARK: End Abstract Implementations
+    
+    open func isJoinedRequest(_ request: Request) -> Bool {
+        if let joinedParam = try? request.query.get(Bool.self, at: "joined") {
+            return joinedParam
+        }
+        return false
+    }
+    open func join(query: QueryBuilder<Model>) -> QueryBuilder<Model> {
+        return query
+    }
+    
+    public func buildSearchQuery(request: Request) throws -> QueryBuilder<Model> {
+        return try buildSearchQuery(joined: isJoinedRequest(request), request: request)
+    }
+    
+    open func buildSearchQuery(joined: Bool, request: Request) throws -> QueryBuilder<Model> {
+        var query = Model.query(on: request)
+        if isJoinedRequest(request) {
+            query = join(query: query)
+        }
         return try applyQueryConstraints(query: query, on: request)
     }
     
-    open func applyQueryConstraints(query: QueryBuilder<Resource>,
-                                   on request: Request) throws -> QueryBuilder<Resource> {
+    open func applyQueryConstraints(query: QueryBuilder<Model>,
+                                   on request: Request) throws -> QueryBuilder<Model> {
         var query = query
         query = try filterSearch(query: query, on: request)
         query = try sortSearch(query: query, on: request)
         return query
     }
     
-    open func filterWithQueryParameters(query: QueryBuilder<Resource>,
+    open func filterWithQueryParameters(query: QueryBuilder<Model>,
                                         on request: Request,
-                                        overrides: QueryBuilderParameterFilterOverrides<Resource>) throws -> QueryBuilder<Resource> {
+                                        overrides: QueryBuilderParameterFilterOverrides<Model>) throws -> QueryBuilder<Model> {
         try query.filterWithQueryParameter(in: request, overrides: overrides)
     }
     
-    open func filterSearch(query: QueryBuilder<Resource>,
-                           on request: Request) throws -> QueryBuilder<Resource> {
+    open func filterSearch(query: QueryBuilder<Model>,
+                           on request: Request) throws -> QueryBuilder<Model> {
         var query = query
         if let queryString = request.query[String.self, at: "query"] {
             let queryString = queryString.trimmingCharacters(in: .punctuationCharacters)
@@ -136,7 +160,7 @@ open class FluentController<Resource: FluentResourceModel,
         return query
     }
     
-    open func sortSearch(query: QueryBuilder<Resource>, on request: Request) throws -> QueryBuilder<Resource> {
+    open func sortSearch(query: QueryBuilder<Model>, on request: Request) throws -> QueryBuilder<Model> {
         var sorts = try query.sorts(convertingKeysWith: { key in
             guard key.contains(".") else { return key }
             let split = key.split(separator: ".")
@@ -156,47 +180,9 @@ open class FluentController<Resource: FluentResourceModel,
         return query.sort(sorts)
     }
     
-    //    open func applyFilter(for property: PropertyInfo, to query: QueryBuilder<Resource>,
-    //                          on request: Request) throws {
-    //        try query.filter(property, on: request)
-    //    }
-    
     @discardableResult
-    open func filter(queryBuilder: QueryBuilder<Resource>,
-                     for searchQuery: String) throws -> QueryBuilder<Resource> {
+    open func filter(queryBuilder: QueryBuilder<Model>,
+                     for searchQuery: String) throws -> QueryBuilder<Model> {
         return queryBuilder
-    }
-    
-    
-}
-
-extension FluentController where Resource == Create {
-    public func convert(_ create: Create) throws -> Resource {
-        return create
-    }
-}
-
-extension FluentController where Resource == Update {
-    @discardableResult
-    public func apply(_ update: Update, to model: Resource) throws -> Resource {
-        return update
-    }
-    
-    public func update(model: Resource,
-                       with updateModel: Update,
-                       in db: Database) async throws -> Resource {
-        return updateModel
-    }
-}
-
-extension FluentController where Resource == Read {
-    public func read(_ model: Resource) throws -> Read {
-        return model
-    }
-}
-
-extension FluentController where Resource.ResolvedParameter == Resource.IDValue {
-    public func readModel(id: Resource.IDValue, in db: Database) async throws -> Resource {
-        return try await Resource.find(id, on: db).unwrapped(or: Abort(.notFound))
     }
 }

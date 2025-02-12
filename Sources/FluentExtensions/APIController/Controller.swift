@@ -1,5 +1,5 @@
 ////
-////  CrudController.swift
+////  Controller.swift
 ////  App
 ////
 ////  Created by Brian Strobach on 1/21/21.
@@ -7,7 +7,6 @@
 
 
 import RuntimeExtensions
-import VaporExtensions
 import CollectionConcurrencyKit
 
 open class Controller<Resource: ResourceModel,
@@ -26,7 +25,7 @@ open class Controller<Resource: ResourceModel,
         modifier(self.config)
     }
     
-    //MARK: Routes
+    //MARK: Register Routes
     open func boot(routes: RoutesBuilder) throws {
         try registerRoutes(routes: routes)
     }
@@ -77,13 +76,13 @@ open class Controller<Resource: ResourceModel,
     //MARK: Read Routes
     open func read(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let model = try await readModel(id: resourceID, in: req.db)
+        let model = try await readModel(id: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .read, model)
         return try read(model)
     }
     
     open func readAll(_ req: Request) async throws -> [Read] {
-        let models = try await readAllModels(in: req.db)
+        let models = try await readAllModels(request: req)
         try await assertRequest(req, isAuthorizedTo: .read, models)
         return try models.map(read)
     }
@@ -94,25 +93,25 @@ open class Controller<Resource: ResourceModel,
         let resource = try convert(model)
         try await assertRequest(req, isAuthorizedTo: .create, resource)
         let method = try? req.query.get(CreateMethod.self, at: "method")
-        return try await self.create(createModel: model, in: req.db, method: method)
+        return try await self.create(createModel: model, request: req, method: method)
     }
     
     open func createBatch(_ req: Request) async throws -> [Read] {
         let models = try req.content.decode([Create].self)
         let resources = try models.map(convert)
         try await assertRequest(req, isAuthorizedTo: .create, resources)
-        return try await self.create(createModels: models, in: req.db)
+        return try await self.create(createModels: models, request: req)
     }
     
     //MARK: Update
     open func update(_ req: Request) async throws -> Read {
         let updateModel = try req.content.decode(Update.self)
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, in: req.db)
+        let resource = try await readModel(id: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .update, resource)
-        let updatedResource = try await update(model: resource,
+        let updatedResource = try await update(resource: resource,
                                            with: updateModel,
-                                           in: req.db)
+                                           request: req)
         return try read(updatedResource)
     }
 
@@ -125,10 +124,10 @@ open class Controller<Resource: ResourceModel,
     
     open func delete(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await self.readModel(id: resourceID, in: req.db)
+        let resource = try await self.readModel(id: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .delete, resource)
         let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? config.forceDelete
-        let deletedModel = try await self.delete(model: resource, in: req.db, force: forceDelete)
+        let deletedModel = try await self.delete(resource: resource, request: req, force: forceDelete)
         return try read(deletedModel)
     }
     
@@ -230,84 +229,92 @@ open class Controller<Resource: ResourceModel,
     //MARK: End Access Control
     
     open func create(resource: Resource,
-                     in db: Database,
+                     request: Request,
                      method: CreateMethod) async throws -> Resource {
         switch method {
             case .create:
-            return try await create(model: resource, in: db)
+            return try await create(resource: resource, request: request)
             case .upsert:
-            return try await upsert(model: resource, in: db)
+            return try await upsert(resource: resource, request: request)
             case .save:
-            return try await save(model: resource, in: db)
+            return try await save(resource: resource, request: request)
         }
     }
     
     open func update(resource: Resource,
-                     in db: Database,
+                     request: Request,
                      method: UpdateMethod) async throws -> Resource {
         switch method {
             case .update:
-            return try await update(model: resource, in: db)
+            return try await update(resource: resource, request: request)
             case .upsert:
-            return try await upsert(model: resource, in: db)
+            return try await upsert(resource: resource, request: request)
             case .save:
-            return try await save(model: resource, in: db)
+            return try await save(resource: resource, request: request)
         }
     }
     
     open func create(resources: [Resource],
-                     in db: Database,
+                     request: Request,
                      method: CreateMethod) async throws -> [Resource] {
-        return try await db.performBatch(action: self.create, on: resources)
+        switch method {
+            case .create:
+            return try await create(resources: resources, request: request)
+            case .upsert:
+            return try await upsert(resources: resources, request: request)
+            case .save:
+            return try await save(resources: resources, request: request)
+        }
     }
     
     open func update(resources: [Resource],
-                     in db: Database,
+                     request: Request,
                      method: UpdateMethod) async throws -> [Resource] {
-        return try await db.performBatch(action: self.update, on: resources)
+        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
+        throw Abort(.notFound)
     }
 
     open func create(createModel: Create,
-                     in db: Database,
+                     request: Request,
                      method: CreateMethod? = nil) async throws -> Read {
         let method = method ?? .default
         var resource = try convert(createModel)
         switch method {
             case .create:
-            resource = try await create(model: resource, in: db)
+            resource = try await create(resource: resource, request: request)
             case .upsert:
-            resource = try await upsert(model: resource, in: db)
+            resource = try await upsert(resource: resource, request: request)
             case .save:
-            resource = try await save(model: resource, in: db)
+            resource = try await save(resource: resource, request: request)
         }
         return try read(resource)
     }
 
     open func create(createModels: [Create],
-                     in db: Database,
+                     request: Request,
                      method: CreateMethod? = nil) async throws -> [Read] {
         let method = method ?? .default
-        var models = try createModels.map(convert)
+        var resources = try createModels.map(convert)
         switch method {
             case .create:
-            models = try await create(models: models, in: db)
+            resources = try await create(resources: resources, request: request)
             case .upsert:
-            models = try await create(models: models, in: db)
+            resources = try await update(resources: resources, request: request)
             case .save:
-            models = try await create(models: models, in: db)
+            resources = try await save(resources: resources, request: request)
         }
-        return try models.map(read)
+        return try resources.map(read)
     }
     
 
     open func update(updateModel: Update, on req: Request) async throws -> Read {
 //        let updatedModel = try await update(updateModel: updateModel, on: req)
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, in: req.db)
+        let resource = try await readModel(id: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .update, resource)
-        let updatedResource = try await update(model: resource,
+        let updatedResource = try await update(resource: resource,
                                                with: updateModel,
-                                               in: req.db)
+                                               request: req)
         return try read(updatedResource)
     }
     
@@ -316,19 +323,6 @@ open class Controller<Resource: ResourceModel,
     }
     
     
-    open func performBatch(
-        action: @escaping AsyncBatchAction<Resource, Resource>,
-        on resources: [Resource],
-        in database: Database,
-        transaction: Bool = true,
-        concurrently: Bool = true
-    ) async throws -> [Resource] {
-        return try await database.performBatch(action: action,
-                                               on: resources,
-                                               transaction: transaction,
-                                               concurrently: concurrently)
-    }
-
     //MARK: Abstact methods
     
     //MARK: Abstact conversions
@@ -338,83 +332,84 @@ open class Controller<Resource: ResourceModel,
     }
     
     @discardableResult
-    open func apply(_ update: Update, to model: Resource) throws -> Resource {
+    open func apply(_ update: Update, to resource: Resource) throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func read(_ model: Resource) throws -> Read {
+    open func read(_ resource: Resource) throws -> Read {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
     //MARK: Abstract actions
-    open func readModel(id: Resource.ResolvedParameter, in db: Database) async throws -> Resource {
+    open func readModel(id: Resource.ResolvedParameter, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func readAllModels(in db: Database) async throws -> [Resource] {
+    open func readAllModels(request: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func create(model: Resource, in db: Database) async throws -> Resource {
+    open func create(resource: Resource, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func update(model: Resource, in db: Database) async throws -> Resource {
+    open func update(resource: Resource, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
 
     
-    open func delete(model: Resource, in db: Database, force: Bool = false) async throws -> Resource {
+    open func delete(resource: Resource, request: Request, force: Bool = false) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func save(model: Resource, in db: Database) async throws -> Resource {
+    open func save(resource: Resource, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func upsert(model: Resource, in db: Database) async throws -> Resource {
+    open func upsert(resource: Resource, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
     
-    open func create(models: [Resource], in db: Database) async throws -> [Resource] {
+    open func create(resources: [Resource], request: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func update(models: [Resource], in db: Database) async throws -> [Resource] {
+    open func update(resources: [Resource], request: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func delete(models: [Resource], in db: Database, force: Bool = false) async throws -> [Resource] {
+    open func delete(resources: [Resource], request: Request, force: Bool = false) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func save(models: [Resource], in db: Database) async throws -> [Resource] {
+    open func save(resources: [Resource], request: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func upsert(models: [Resource], in db: Database) async throws -> [Resource] {
-        return try await db.performBatch(action: self.update, on: models)
+    open func upsert(resources: [Resource], request: Request) async throws -> [Resource] {
+        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
+        throw Abort(.notFound)
     }
     
     //MARK: Other
     
-    open func update(model: Resource,
+    open func update(resource: Resource,
                      with updateModel: Update,
-                     in db: Database) async throws -> Resource {
+                     request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
