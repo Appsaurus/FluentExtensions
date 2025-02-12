@@ -169,43 +169,45 @@ public enum FilterCondition: Codable {
 }
 
 public typealias QueryBuilderParameterFilterOverrides<M: Model> = [String: QueryBuilderParameterFilterOverride<M>]
-public typealias QueryBuilderParameterFilterOverride<M: Model> = (_ query: QueryBuilder<M>, String, FilterCondition) throws -> DatabaseQuery.Filter?
+public typealias QueryBuilderParameterFilterOverride<M: Model> = (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?
 public typealias QueryParameterFilterOverrides = [String: (_ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
 
-public class QueryFilterBuilder {
-    public static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Parent> {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Child.schemaOrAlias)
+public extension QueryParameterFilter {
+    class Builder {
+        public static func Child<Parent: Model, Child: Model>(
+            _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
+        ) -> QueryBuilderParameterFilterOverride<Parent> {
+            { query, field, condition in
+                query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+                return try .build(from: condition, schema: Child.schemaOrAlias)
+            }
         }
-    }
-    
-    public static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Parent> {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Child.schemaOrAlias)
+        
+        public static func Child<Parent: Model, Child: Model>(
+            _ foreignKey: ParentPropertyKeyPath<Parent, Child>
+        ) -> QueryBuilderParameterFilterOverride<Parent> {
+            { query, field, condition in
+                query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+                return try .build(from: condition, schema: Child.schemaOrAlias)
+            }
         }
-    }
-    
-    public static func Parent<Parent: Model, Child: Model>(
-        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Child> {
-        { query, field, condition in
-            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Parent.schemaOrAlias)
+        
+        public static func Parent<Parent: Model, Child: Model>(
+            _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
+        ) -> QueryBuilderParameterFilterOverride<Child> {
+            { query, field, condition in
+                query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+                return try .build(from: condition, schema: Parent.schemaOrAlias)
+            }
         }
-    }
-    
-    public static func Parent<Parent: Model, Child: Model>(
-        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
-    ) -> QueryBuilderParameterFilterOverride<Child> {
-        { query, field, condition in
-            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, schema: Parent.schemaOrAlias)
+        
+        public static func Parent<Parent: Model, Child: Model>(
+            _ foreignKey: ParentPropertyKeyPath<Parent, Child>
+        ) -> QueryBuilderParameterFilterOverride<Child> {
+            { query, field, condition in
+                query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+                return try .build(from: condition, schema: Parent.schemaOrAlias)
+            }
         }
     }
 }
