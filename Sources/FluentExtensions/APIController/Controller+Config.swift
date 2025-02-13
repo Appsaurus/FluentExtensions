@@ -27,24 +27,24 @@ extension Controller {
     public class Config {
         public var baseRoute: [PathComponentRepresentable]
         public var middlewares: [Middleware]
-        public var createMethod: CreateMethod
-        public var updateMethod: UpdateMethod
-        public var forceDelete: Bool
         public var supportedActions: SupportedActions
+        public var saveMethod: SaveMethod
+        public var putAction: PUTRouteAction
+        public var forceDelete: Bool
         public var accessControl: AccessControl
         
         public init(baseRoute: [PathComponentRepresentable] = [],
-                   middlewares: [Middleware] = [],
-                   supportedActions: SupportedActions = .all,
-                   createMethod: CreateMethod = .default,
-                   updateMethod: UpdateMethod = .default,
-                   forceDelete: Bool = false,
-                   accessControl: AccessControl = AccessControl()) {
+                    middlewares: [Middleware] = [],
+                    supportedActions: SupportedActions = .all,
+                    saveMethod: SaveMethod = .default,
+                    putAction: PUTRouteAction = .default,
+                    forceDelete: Bool = false,
+                    accessControl: AccessControl = AccessControl()) {
             self.baseRoute = baseRoute
             self.middlewares = middlewares
             self.supportedActions = supportedActions
-            self.createMethod = createMethod
-            self.updateMethod = updateMethod
+            self.saveMethod = saveMethod
+            self.putAction = putAction
             self.forceDelete = forceDelete
             self.accessControl = accessControl
         }
@@ -58,14 +58,17 @@ extension Controller {
         case createBatch
         case update
         case updateBatch
+        case save
+        case saveBatch
         case delete
-//        case deleteBatch
+        //        case deleteBatch
     }
-
+    
     public enum AuthorizedAction {
         case read
         case create
         case update
+        case save
         case delete
     }
     
@@ -89,20 +92,20 @@ extension Controller {
             }
         }
     }
+    
+    
 }
 
-public enum CreateMethod: Decodable {
-    case create
-    case save
-    case upsert
-    public static var `default` = CreateMethod.create
-}
-
-public enum UpdateMethod: Decodable {
+public enum PUTRouteAction: Decodable {
     case update
     case save
+    public static var `default` = PUTRouteAction.save
+}
+
+public enum SaveMethod: Decodable {
+    case save
     case upsert
-    public static var `default` = UpdateMethod.update
+    public static var `default` = SaveMethod.upsert
 }
 
 

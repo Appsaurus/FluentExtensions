@@ -230,14 +230,20 @@ public extension DatabaseQuery.Filter {
         case let .`where`(field, method, value):
             //Allow overriding for things like nested relationship filters that require APIs that are not available here
             if let override = overrides[field] {
-                guard method == .filter else {
-                    return try override(field, condition)
+                switch method {
+//                case .equal:
+//                    guard let value = (value.value as? String) else {
+//                        throw QueryParameterFilterError.invalidFilterConfiguration
+//                    }
+//                    
+                case .filter:
+                    guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
+                        throw QueryParameterFilterError.invalidFilterConfiguration
+                    }
+                    let nestedCondition = try FilterCondition.decoded(from: nestedFilterString)
+                    return try? override(field, nestedCondition)
+                default: return try override(field, condition)
                 }
-                guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
-                    throw QueryParameterFilterError.invalidFilterConfiguration
-                }
-                let nestedCondition = try FilterCondition.decoded(from: nestedFilterString)
-                return try? override(field, nestedCondition)
             }
             else {
                 return .value(.path([FieldKey(field)], schema: schema),

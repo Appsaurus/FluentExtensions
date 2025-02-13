@@ -60,6 +60,15 @@ open class Controller<Resource: ResourceModel,
         if supportedActions.contains(.updateBatch) {
             routes.put("batch", use: updateBatch)
         }
+        
+        if supportedActions.contains(.save) {
+            routes.put(use: save)
+            routes.put(":id", use: save)
+        }
+        if supportedActions.contains(.saveBatch) {
+            routes.put("batch", use: saveBatch)
+        }
+        
         if supportedActions.contains(.delete) {
             routes.delete(":id", use: delete)
         }
@@ -72,6 +81,9 @@ open class Controller<Resource: ResourceModel,
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
+    
+    //NOTE: Async auth checks on each of these individually could cause a lot of lookups.
+    //Monitor and write one-off implementations or workarounds as need.
     
     //MARK: Read Routes
     open func read(_ req: Request) async throws -> Read {
@@ -92,8 +104,7 @@ open class Controller<Resource: ResourceModel,
         let model = try req.content.decode(Create.self)
         let resource = try convert(model)
         try await assertRequest(req, isAuthorizedTo: .create, resource)
-        let method = try? req.query.get(CreateMethod.self, at: "method")
-        return try await self.create(createModel: model, request: req, method: method)
+        return try await self.create(createModel: model, request: req)
     }
     
     open func createBatch(_ req: Request) async throws -> [Read] {
@@ -103,21 +114,68 @@ open class Controller<Resource: ResourceModel,
         return try await self.create(createModels: models, request: req)
     }
     
+    open func create(createModel: Create, request: Request) async throws -> Read {
+        var resource = try convert(createModel)
+        try await assertRequest(request, isAuthorizedTo: .create, resource)
+        resource = try await create(resource: resource, request: request)
+        return try read(resource)
+    }
+
+    open func create(createModels: [Create], request: Request) async throws -> [Read] {
+        var resources = try createModels.map(convert)
+        try await assertRequest(request, isAuthorizedTo: .create, resources)
+        return try await create(resources: resources, request: request).map(read)
+    }
+    
+    
     //MARK: Update
     open func update(_ req: Request) async throws -> Read {
         let updateModel = try req.content.decode(Update.self)
-        let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, request: req)
-        try await assertRequest(req, isAuthorizedTo: .update, resource)
-        let updatedResource = try await update(resource: resource,
-                                           with: updateModel,
-                                           request: req)
-        return try read(updatedResource)
+        return try await update(updateModel: updateModel, on: req)
     }
 
     open func updateBatch(_ req: Request) async throws -> [Read] {
         let updateModels = try req.content.decode([Update].self)
+        return try await self.update(updateModels: updateModels, on: req)
+    }
+    
+    
+    open func update(updateModel: Update, on req: Request) async throws -> Read {
+        let resourceID = try req.parameters.next(Resource.self)
+        let resource = try await readModel(id: resourceID, request: req)
+        try await assertRequest(req, isAuthorizedTo: .update, resource)
+        let updatedResource = try await update(resource: resource,
+                                               with: updateModel,
+                                               request: req)
+        return try read(updatedResource)
+    }
+    
+    open func update(updateModels: [Update], on req: Request) async throws -> [Read] {
         return try await updateModels.asyncMap({try await self.update(updateModel: $0, on: req)})
+    }
+    
+    //MARK: Save
+    open func save(_ req: Request) async throws -> Read {
+        let saveModel = try req.content.decode(Create.self)
+        return try await save(saveModel: saveModel, on: req)
+    }
+
+    open func saveBatch(_ req: Request) async throws -> [Read] {
+        let saveModels = try req.content.decode([Create].self)
+        return try await saveModels.asyncMap({try await self.save(saveModel: $0, on: req)})
+    }
+
+    
+    open func save(saveModel: Create, on req: Request) async throws -> Read {
+        let resourceID = try req.parameters.next(Resource.self)
+        let resource = try await readModel(id: resourceID, request: req)
+        try await assertRequest(req, isAuthorizedTo: .save, resource)
+        let savedResource = try await save(resource: resource, request: req)
+        return try read(savedResource)
+    }
+    
+    open func save(saveModels: [Create], on req: Request) async throws -> [Read] {
+        return try await saveModels.asyncMap({try await self.save(saveModel: $0, on: req)})
     }
     
     //MARK: Delete
@@ -154,10 +212,10 @@ open class Controller<Resource: ResourceModel,
             authorized = try await request(req, canCreate: resource)
         case .update:
             authorized = try await request(req, canUpdate: resource)
+        case .save:
+            authorized = try await request(req, canSave: resource)
         case .delete:
             authorized = try await request(req, canDelete: resource)
-        default:
-            throw Abort(.internalServerError)
         }
         return authorized && authorizedInjected
     }
@@ -182,10 +240,10 @@ open class Controller<Resource: ResourceModel,
             authorized = try await request(req, canCreate: resources)
         case .update:
             authorized = try await request(req, canUpdate: resources)
+        case .save:
+            authorized = try await request(req, canSave: resources)
         case .delete:
             authorized = try await request(req, canDelete: resources)
-        default:
-            throw Abort(.internalServerError)
         }
         return authorized && authorizedInjected
     }
@@ -199,6 +257,10 @@ open class Controller<Resource: ResourceModel,
     }
     
     open func request(_ req: Request, canUpdate resource: Resource) async throws -> Bool {
+        return true
+    }
+    
+    open func request(_ req: Request, canSave resource: Resource) async throws -> Bool {
         return true
     }
 
@@ -222,105 +284,17 @@ open class Controller<Resource: ResourceModel,
     open func request(_ req: Request, canUpdate resources: [Resource]) async throws -> Bool {
         return true
     }
-
+    
+    open func request(_ req: Request, canSave resources: [Resource]) async throws -> Bool {
+        return true
+    }
+    
     open func request(_ req: Request, canDelete resources: [Resource]) async throws -> Bool {
         return true
     }
+
+
     //MARK: End Access Control
-    
-    open func create(resource: Resource,
-                     request: Request,
-                     method: CreateMethod) async throws -> Resource {
-        switch method {
-            case .create:
-            return try await create(resource: resource, request: request)
-            case .upsert:
-            return try await upsert(resource: resource, request: request)
-            case .save:
-            return try await save(resource: resource, request: request)
-        }
-    }
-    
-    open func update(resource: Resource,
-                     request: Request,
-                     method: UpdateMethod) async throws -> Resource {
-        switch method {
-            case .update:
-            return try await update(resource: resource, request: request)
-            case .upsert:
-            return try await upsert(resource: resource, request: request)
-            case .save:
-            return try await save(resource: resource, request: request)
-        }
-    }
-    
-    open func create(resources: [Resource],
-                     request: Request,
-                     method: CreateMethod) async throws -> [Resource] {
-        switch method {
-            case .create:
-            return try await create(resources: resources, request: request)
-            case .upsert:
-            return try await upsert(resources: resources, request: request)
-            case .save:
-            return try await save(resources: resources, request: request)
-        }
-    }
-    
-    open func update(resources: [Resource],
-                     request: Request,
-                     method: UpdateMethod) async throws -> [Resource] {
-        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
-        throw Abort(.notFound)
-    }
-
-    open func create(createModel: Create,
-                     request: Request,
-                     method: CreateMethod? = nil) async throws -> Read {
-        let method = method ?? .default
-        var resource = try convert(createModel)
-        switch method {
-            case .create:
-            resource = try await create(resource: resource, request: request)
-            case .upsert:
-            resource = try await upsert(resource: resource, request: request)
-            case .save:
-            resource = try await save(resource: resource, request: request)
-        }
-        return try read(resource)
-    }
-
-    open func create(createModels: [Create],
-                     request: Request,
-                     method: CreateMethod? = nil) async throws -> [Read] {
-        let method = method ?? .default
-        var resources = try createModels.map(convert)
-        switch method {
-            case .create:
-            resources = try await create(resources: resources, request: request)
-            case .upsert:
-            resources = try await update(resources: resources, request: request)
-            case .save:
-            resources = try await save(resources: resources, request: request)
-        }
-        return try resources.map(read)
-    }
-    
-
-    open func update(updateModel: Update, on req: Request) async throws -> Read {
-//        let updatedModel = try await update(updateModel: updateModel, on: req)
-        let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, request: req)
-        try await assertRequest(req, isAuthorizedTo: .update, resource)
-        let updatedResource = try await update(resource: resource,
-                                               with: updateModel,
-                                               request: req)
-        return try read(updatedResource)
-    }
-    
-    open func update(updateModels: [Update], on req: Request) async throws -> [Read] {
-        return try await updateModels.asyncMap({try await self.update(updateModel: $0, on: req)})
-    }
     
     
     //MARK: Abstact methods
