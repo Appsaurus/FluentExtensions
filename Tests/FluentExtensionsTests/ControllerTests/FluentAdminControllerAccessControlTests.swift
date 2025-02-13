@@ -48,7 +48,7 @@ class FluentAdminControllerAccessControlTests: FluentAdminControllerTestCase {
         let allowedUpdate = TestClassModel()
         allowedUpdate.id = Self.classUUID
         
-        try app.test(.PUT, "\(basePath)/\(Self.classUUID)", beforeRequest: { req in
+        try app.test(.PUT, "\(basePath)/update/\(Self.classUUID)", beforeRequest: { req in
             try req.content.encode(allowedUpdate)
         }, afterResponse: { response in
             XCTAssertEqual(response.status, .ok)
@@ -58,7 +58,7 @@ class FluentAdminControllerAccessControlTests: FluentAdminControllerTestCase {
         let unauthorizedUpdate = TestClassModel()
         unauthorizedUpdate.id = Self.class2UUID
         
-        try app.test(.PUT, "\(basePath)/\(unauthorizedUpdate.id!)", beforeRequest: { req in
+        try app.test(.PUT, "\(basePath)/update/\(unauthorizedUpdate.id!)", beforeRequest: { req in
             try req.content.encode(unauthorizedUpdate)
         }, afterResponse: { response in
             XCTAssertEqual(response.status, .unauthorized)

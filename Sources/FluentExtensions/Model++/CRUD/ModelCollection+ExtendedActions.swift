@@ -11,11 +11,11 @@ public extension Collection where Element: Model {
                   transaction: Bool = true) async throws -> [Element] {
         switch method {
         case .upsert:
-            return try await upsert(in: database)
+            return try await upsert(in: database, transaction: transaction)
         case .update:
-            return try await update(in: database, force: true)
+            return try await update(in: database, force: true, transaction: transaction)
         case .save:
-            return try await save(in: database)
+            return try await save(in: database, transaction: transaction)
         }
     }
     
@@ -68,5 +68,26 @@ public extension Collection where Element: Model {
             on: database,
             transaction: transaction
         )
+    }
+    
+    @discardableResult
+    func restore(on database: Database) async throws -> Self {
+        guard self.count > 0 else { return self }
+        
+        for model in self {
+            try await model.restore(on: database)
+        }
+        return self
+    }
+    
+    @discardableResult
+    func restore(on database: Database, transaction: Bool) async throws -> Self {
+        if transaction {
+            try await database.transaction { transaction in
+                try await restore(on: transaction)
+            }
+        } else {
+            try await restore(on: database)
+        }
     }
 }

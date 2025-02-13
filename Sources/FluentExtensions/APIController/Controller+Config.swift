@@ -50,7 +50,7 @@ extension Controller {
         }
     }
     
-    public enum Action {
+    public enum Action: Codable, CaseIterable {
         case search
         case read
         case readAll
@@ -81,7 +81,7 @@ extension Controller {
         var supportedActions: [Controller.Action] {
             switch self {
             case .all:
-                return [.search, .read, .readAll, .create, .createBatch, .update, .updateBatch, .delete/*, .deleteBatch*/]
+                return Action.allCases
             case .none:
                 return []
             case .only(let actions):
@@ -106,6 +106,13 @@ public enum SaveMethod: Decodable {
     case save
     case upsert
     public static var `default` = SaveMethod.upsert
+}
+
+public enum UpdateMethod: Decodable {
+    case save
+    case upsert
+    case update
+    public static var `default` = UpdateMethod.upsert
 }
 
 

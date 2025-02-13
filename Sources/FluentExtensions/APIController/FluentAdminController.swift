@@ -19,8 +19,8 @@ where Model.ResolvedParameter == Model.IDValue,
     }
         
     open override func update(resource: Model,
-                     with updateModel: Model,
-                     request: Request) async throws -> Model {
+                              with updateModel: Model,
+                              request: Request) async throws -> Model {
 
         if (updateModel.id == nil) {
             updateModel.id = try resource.requireID()
@@ -29,7 +29,7 @@ where Model.ResolvedParameter == Model.IDValue,
             throw Abort(.badRequest)
         }
         return updateModel
-    }
+    }        
     
     open override func convert(_ create: Model) throws -> Model {
         return create

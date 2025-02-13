@@ -43,12 +43,25 @@ class FluentAdminControllerCRUDTests: FluentAdminControllerTestCase {
         let updatedClass = TestClassModel()
         updatedClass.id = Self.classUUID
         
-        try app.test(.PUT, "\(basePath)/\(Self.classUUID)", beforeRequest: { req in
+        try app.test(.PUT, "\(basePath)/update/\(Self.classUUID)", beforeRequest: { req in
             try req.content.encode(updatedClass)
         }, afterResponse: { response in
             XCTAssertEqual(response.status, .ok)
             let updatedModel = try response.content.decode(TestClassModel.self)
             XCTAssertEqual(updatedModel.id, Self.classUUID)
+        })
+    }
+    
+    func testSave() throws {
+        let savedClass = TestClassModel()
+        savedClass.id = Self.classUUID
+        
+        try app.test(.PUT, "\(basePath)/\(Self.classUUID)", beforeRequest: { req in
+            try req.content.encode(savedClass)
+        }, afterResponse: { response in
+            XCTAssertEqual(response.status, .ok)
+            let updatedModel = try response.content.decode(TestClassModel.self)
+            XCTAssertEqual(savedClass.id, Self.classUUID)
         })
     }
     

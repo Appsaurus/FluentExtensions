@@ -38,8 +38,60 @@ open class FluentController<Model: FluentResourceModel,
     }
     //MARK: End Routes
     
+    //MARK: Abstract Implementations
     
-    //MARK: CRUD Actions
+    open override func readAllModels(request: Request) async throws -> [Model] {
+        return try await Model.query(on: request.db).all()
+    }
+    
+    open override func create(resource: Model, request: Request) async throws -> Model {
+        try await create(model: resource, in: request.db)
+    }
+    
+    open override func update(resource: Model, request: Request) async throws -> Model {
+        try await update(model: resource, in: request.db)
+    }
+    
+    open override func save(resource: Model, request: Request) async throws -> Model {
+        switch config.saveMethod {
+        case .save:
+            try await save(model: resource, in: request.db)
+        case .upsert:
+            try await upsert(model: resource, in: request.db)
+        }
+    }
+    
+    open override func delete(resource: Model, request: Request, force: Bool = false) async throws -> Model {
+        try await delete(model: resource, in: request.db)
+    }
+    
+    open override func create(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.create, on: resources)
+    }
+    
+    open override func update(resources: [Model], request: Request) async throws -> [Model] {
+        try await request.db.performBatch(action: self.update, on: resources)
+    }
+    
+    open override func save(resources: [Model], request: Request) async throws -> [Model] {
+        switch config.saveMethod {
+        case .save:
+            try await request.db.performBatch(action: self.save, on: resources)
+        case .upsert:
+            try await request.db.performBatch(action: self.upsert, on: resources)
+        }
+        
+
+    }
+    
+    open override func delete(resources: [Model], request: Request, force: Bool = false) async throws -> [Model] {
+        try await resources.delete(force: force, on: request.db)
+        return resources
+    }
+    
+    //MARK: End Abstract Implementations
+    
+    //MARK: Database-Level Implementations
     
     open func create(model: Model, in db: Database) async throws -> Model {
         try await model.create(in: db)
@@ -60,56 +112,6 @@ open class FluentController<Model: FluentResourceModel,
     open func delete(model: Model, in db: Database, force: Bool = false) async throws -> Model {
         try await model.delete(from: db, force: force)
     }
-    
-    //MARK: Abstract Implementations
-    
-    open override func readAllModels(request: Request) async throws -> [Model] {
-        return try await Model.query(on: request.db).all()
-    }
-    
-    open override func create(resource: Model, request: Request) async throws -> Model {
-        try await create(model: resource, in: request.db)
-    }
-    
-    open override func update(resource: Model, request: Request) async throws -> Model {
-        try await update(model: resource, in: request.db)
-    }
-    
-    open override func save(resource: Model, request: Request) async throws -> Model {
-        try await save(model: resource, in: request.db)
-    }
-    
-    open override func upsert(resource: Model, request: Request) async throws -> Model {
-        try await upsert(model: resource, in: request.db)
-    }
-    
-    open override func delete(resource: Model, request: Request, force: Bool = false) async throws -> Model {
-        try await delete(model: resource, in: request.db)
-    }
-    
-    open override func create(resources: [Model], request: Request) async throws -> [Model] {
-        try await request.db.performBatch(action: self.create, on: resources)
-    }
-    
-    open override func update(resources: [Model], request: Request) async throws -> [Model] {
-        try await request.db.performBatch(action: self.update, on: resources)
-    }
-    
-    open override func save(resources: [Model], request: Request) async throws -> [Model] {
-        try await request.db.performBatch(action: self.save, on: resources)
-
-    }
-    
-    open override func upsert(resources: [Model], request: Request) async throws -> [Model] {
-        try await request.db.performBatch(action: self.upsert, on: resources)
-    }
-    
-    open override func delete(resources: [Model], request: Request, force: Bool = false) async throws -> [Model] {
-        try await resources.delete(force: force, on: request.db)
-        return resources
-    }
-    
-    //MARK: End Abstract Implementations
     
     open func isJoinedRequest(_ request: Request) -> Bool {
         if let joinedParam = try? request.query.get(Bool.self, at: "joined") {
@@ -185,4 +187,6 @@ open class FluentController<Model: FluentResourceModel,
                      for searchQuery: String) throws -> QueryBuilder<Model> {
         return queryBuilder
     }
+    
+    //MARK: End Database-Level Implementations
 }
