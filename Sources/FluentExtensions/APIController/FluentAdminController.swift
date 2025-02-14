@@ -161,7 +161,7 @@ where Model.ResolvedParameter == Model.IDValue,
                   let pivots = try await siblingRelationship
                       .$pivots
                       .query(on: request.db)
-                      .filterByQueryParameters(request: request)
+                      .filterWithQueryParameter(in: request)
                       .all()
                   try await pivots.delete(from: request.db)
                   return .ok

@@ -86,39 +86,7 @@ public class QueryParameterFilter {
                   queryValueType: type(of: value.value))
     }
     
-    public convenience init(schema: Schema.Type,
-                            fieldName: String,
-                            withQueryValueAt queryParameterKey: String,
-                            as queryValueType: Any.Type? = nil,
-                            from queryContainer: URLQueryContainer) throws {
-        
-        let decoder = URLEncodedFormDecoder()
-        
-        guard let config = queryContainer[String.self, at: queryParameterKey] else {
-            throw QueryParameterFilterError.invalidFilterConfiguration
-        }
-        
-        let filterConfig = config.toFilterConfig
-        
-        let method = filterConfig.method
-        let value = filterConfig.value
-        
-        let multiple = [.in, .notIn].contains(method)
-        var filterValue: QueryParameterFilter.Value<String, [String]>
-        
-        if multiple {
-            let str = value.components(separatedBy: ",").map { "\(queryParameterKey)[]=\($0)" }.joined(separator: "&")
-            filterValue = try .multiple(decoder.decode(SingleValueDecoder.self, from: str).get(at: [queryParameterKey.codingKey]))
-        } else {
-            let str = "\(queryParameterKey)=\(value)"
-            filterValue = try .single(decoder.decode(SingleValueDecoder.self, from: str).get(at: [queryParameterKey.codingKey]))
-        }
-        self.init(schema: schema,
-                  name: fieldName,
-                  method: method,
-                  value: filterValue,
-                  queryValueType: queryValueType)
-    }
+    
 }
 
 public enum FilterCondition: Codable {
@@ -169,85 +137,6 @@ public enum FilterCondition: Codable {
 }
 
 
-public extension QueryParameterFilter {
-    static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
-    ) -> (_ query: QueryBuilder<Parent>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, builder: .init(query, schema: Child.schemaOrAlias))
-        }
-    }
-    
-    static func Child<Parent: Model, Child: Model>(
-        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
-    ) -> (_ query: QueryBuilder<Parent>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
-        { query, field, condition in
-            query.join(Child.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, builder: .init(query, schema: Child.schemaOrAlias))
-        }
-    }
-    
-    static func Parent<Parent: Model, Child: Model>(
-        _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
-    ) -> (_ query: QueryBuilder<Child>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
-        { query, field, condition in
-            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, builder: .init(query, schema: Parent.schemaOrAlias))
-        }
-    }
-    
-    static func Parent<Parent: Model, Child: Model>(
-        _ foreignKey: ParentPropertyKeyPath<Parent, Child>
-    ) -> (_ query: QueryBuilder<Child>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
-        { query, field, condition in
-            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
-            return try .build(from: condition, builder: .init(query, schema: Parent.schemaOrAlias))
-        }
-    }
-}
-    
-
-public extension QueryParameterFilter {
-    class Builder<M: Model> {
-        public class Config {
-            
-            public var nestedBuilders: [String: (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
-            public var fieldOverrides: [String: (_ method: QueryParameterFilter.Method, _ value: AnyCodable) throws -> DatabaseQuery.Filter?]
-            
-            public init(nestedBuilders: [String : (QueryBuilder<M>, String, FilterCondition) throws -> DatabaseQuery.Filter?] = [:],
-                        fieldOverrides: [String : (QueryParameterFilter.Method, AnyCodable) throws -> DatabaseQuery.Filter?] = [:]) {
-                self.nestedBuilders = nestedBuilders
-                self.fieldOverrides =                         fieldOverrides
-            }
-            
-        }
-        
-        public let query: QueryBuilder<M>
-        public let schema: String
-        public let config: Config
-        
-        public init(_ query: QueryBuilder<M>, schema: String? = nil, config: Config = Config()) {
-            self.query = query
-            self.schema = schema ?? M.schemaOrAlias
-            self.config = config
-        }
-        
-        public func addNestedQueryBuilder(
-            for field: String,
-            builder: @escaping (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?
-        ) {
-            config.nestedBuilders[field] = builder
-        }
-        
-        public func addWhereOverride(
-            for field: String,
-            override: @escaping (_ method: QueryParameterFilter.Method, _ value: AnyCodable) throws -> DatabaseQuery.Filter?
-        ) {
-            config.fieldOverrides[field] = override
-        }
-    }
-}
 
 public extension DatabaseQuery.Filter {
     
@@ -256,11 +145,6 @@ public extension DatabaseQuery.Filter {
         let condition = try FilterCondition.decoded(from: filterString)
         return try build(from: condition, builder: builder)
     }
-
-//    static func build<M>(from condition: FilterCondition,
-//                         query: QueryBuilder<M>) throws -> DatabaseQuery.Filter? {
-//        try build(from: condition, builder: .init(query))
-//    }
     
     static func build<M>(from condition: FilterCondition,
                          builder: QueryParameterFilter.Builder<M>) throws -> DatabaseQuery.Filter? {
@@ -302,8 +186,8 @@ public extension DatabaseQuery.Filter {
 public extension QueryBuilder {
     
     func filterWithQueryParameter(at queryParameterKey: String = "filter",
-                               in request: Request,
-                               builder: QueryParameterFilter.Builder<Model>) throws -> Self {
+                                  in request: Request,
+                                  builder: QueryParameterFilter.Builder<Model>? = nil) throws -> Self {
         guard let filterString: String = request.query[queryParameterKey] else {
             return self
         }
@@ -311,22 +195,11 @@ public extension QueryBuilder {
     }
     
     func filterWithQueryParameterString(_ queryParameterFilterString: String,
-                                     builder: QueryParameterFilter.Builder<Model>) throws -> Self {
-        if let filterCondition = try DatabaseQuery.Filter.build(from: queryParameterFilterString, builder: builder) {
+                                        builder: QueryParameterFilter.Builder<Model>? = nil) throws -> Self {
+        if let filterCondition = try DatabaseQuery.Filter.build(from: queryParameterFilterString, builder: builder ?? QueryParameterFilter.Builder<Model>(self)) {
             return self.filter(filterCondition)
         }
         return self
-    }
-}
-
-public extension Request {
-    
-    func decodeParameterFilter<T: Model>(withQueryParameter queryParameter: String = "filter",
-                                         builder: QueryParameterFilter.Builder<T>) throws -> DatabaseQuery.Filter? {
-        guard let filterString: String = query[queryParameter] else {
-            throw QueryParameterFilterError.invalidFilterConfiguration
-        }
-        return try DatabaseQuery.Filter.build(from: filterString, builder: builder)
     }
 }
 
