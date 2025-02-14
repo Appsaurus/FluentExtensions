@@ -155,7 +155,7 @@ public extension DatabaseQuery.Filter {
         switch condition {
         case let .`where`(field, method, value):
             if let override = fieldFilterOverrides[field] {
-                return try override(method, value)
+                return try override(builder.query, method, value)
             }
             switch method {
             case .filter:

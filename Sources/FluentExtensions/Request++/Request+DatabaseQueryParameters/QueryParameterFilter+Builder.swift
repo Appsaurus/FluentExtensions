@@ -10,15 +10,18 @@ import Codability
 
 public extension QueryParameterFilter {
     class Builder<M: Model> {
+        public typealias NestedBuilder = (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?
+        public typealias FieldOverride = (_ query: QueryBuilder<M>, _ method: QueryParameterFilter.Method, _ value: AnyCodable) throws -> DatabaseQuery.Filter?
+        
         public class Config {
             
-            public var nestedBuilders: [String: (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?]
-            public var fieldOverrides: [String: (_ method: QueryParameterFilter.Method, _ value: AnyCodable) throws -> DatabaseQuery.Filter?]
+            public var nestedBuilders: [String: NestedBuilder]
+            public var fieldOverrides: [String: FieldOverride]
             
-            public init(nestedBuilders: [String : (QueryBuilder<M>, String, FilterCondition) throws -> DatabaseQuery.Filter?] = [:],
-                        fieldOverrides: [String : (QueryParameterFilter.Method, AnyCodable) throws -> DatabaseQuery.Filter?] = [:]) {
+            public init(nestedBuilders: [String: NestedBuilder] = [:],
+                        fieldOverrides: [String: FieldOverride] = [:]) {
                 self.nestedBuilders = nestedBuilders
-                self.fieldOverrides =                         fieldOverrides
+                self.fieldOverrides = fieldOverrides
             }
             
         }
@@ -35,14 +38,14 @@ public extension QueryParameterFilter {
         
         public func addNestedQueryBuilder(
             for field: String,
-            builder: @escaping (_ query: QueryBuilder<M>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter?
+            builder: @escaping NestedBuilder
         ) {
             config.nestedBuilders[field] = builder
         }
         
         public func addWhereOverride(
             for field: String,
-            override: @escaping (_ method: QueryParameterFilter.Method, _ value: AnyCodable) throws -> DatabaseQuery.Filter?
+            override: @escaping FieldOverride
         ) {
             config.fieldOverrides[field] = override
         }
