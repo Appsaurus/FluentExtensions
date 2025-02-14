@@ -17,7 +17,7 @@ open class FluentController<Model: FluentResourceModel,
     open var defaultSort: DatabaseQuery.Sort? = .sort(.path([Model.idFieldKey],
                                                        schema: Model.schemaOrAlias), .ascending)
     
-    open var queryParameterFilterOverrides: QueryBuilderParameterFilterOverrides<Model> = [:]
+    open var parameterFilterConfig = QueryParameterFilter.Builder<Model>.Config()
     
     public override init(config: Config = Config()) {
         let modifiedConfig = config
@@ -142,12 +142,7 @@ open class FluentController<Model: FluentResourceModel,
         query = try sortSearch(query: query, on: request)
         return query
     }
-    
-    open func filterWithQueryParameters(query: QueryBuilder<Model>,
-                                        on request: Request,
-                                        overrides: QueryBuilderParameterFilterOverrides<Model>) throws -> QueryBuilder<Model> {
-        try query.filterWithQueryParameter(in: request, overrides: overrides)
-    }
+
     
     open func filterSearch(query: QueryBuilder<Model>,
                            on request: Request) throws -> QueryBuilder<Model> {
@@ -157,7 +152,7 @@ open class FluentController<Model: FluentResourceModel,
             query = try filter(queryBuilder: query, for: queryString)
         }
         
-        query = try filterWithQueryParameters(query: query, on: request, overrides: self.queryParameterFilterOverrides)
+        query = try query.filterWithQueryParameter(in: request, builder: .init(query, config: self.parameterFilterConfig))
 
         return query
     }

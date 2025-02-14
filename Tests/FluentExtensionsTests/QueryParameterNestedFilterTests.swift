@@ -35,9 +35,9 @@ final class BChildren: ModelAlias {
 class TestParentController: FluentAdminController<TestParentModel> {
     public override init(config: Config = Config()) {
         super.init(config: config)
-        queryParameterFilterOverrides = [
-            "optionalChildren": QueryParameterFilter.Builder.Child(\TestChildModel.$optionalParent),
-            "children": QueryParameterFilter.Builder.Child(\TestChildModel.$parent)
+        parameterFilterConfig.nestedBuilders = [
+            "optionalChildren": QueryParameterFilter.Child(\TestChildModel.$optionalParent),
+            "children": QueryParameterFilter.Child(\TestChildModel.$parent)
         ]
     }
 }
@@ -46,9 +46,9 @@ class TestParentController: FluentAdminController<TestParentModel> {
 class TestChildController: FluentAdminController<TestChildModel> {
     public override init(config: Config = Config()) {
         super.init(config: config)
-        queryParameterFilterOverrides = [
-            "parent": QueryParameterFilter.Builder.Parent(\TestChildModel.$parent),
-            "optionalParent": QueryParameterFilter.Builder.Parent(\TestChildModel.$optionalParent)
+        parameterFilterConfig.nestedBuilders = [
+            "parent": QueryParameterFilter.Parent(\TestChildModel.$parent),
+            "optionalParent": QueryParameterFilter.Parent(\TestChildModel.$optionalParent)
         ]
     }
 }
