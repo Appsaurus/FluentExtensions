@@ -169,7 +169,7 @@ public extension DatabaseQuery.Filter {
                 }
                 return try? nestedBuilder(builder.query, field, nestedCondition)
             default:
-                return .value(.path([FieldKey(field)], schema: schema),
+                return .value(.path([builder.config.fieldKeyMap[field] ?? FieldKey(field)], schema: schema),
                               method.toDatabaseQueryFilterMethod(),
                               value.toDatabaseQueryValue())
             }
@@ -203,7 +203,7 @@ public extension QueryBuilder {
     }
 }
 
-extension QueryParameterFilter.Method {
+public extension QueryParameterFilter.Method {
     func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
         switch self {
         case .equal: return .equal
@@ -224,17 +224,17 @@ extension QueryParameterFilter.Method {
         }
     }
 }
-extension AnyCodable {
+public extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
         switch value {
-        case let stringValue as String:
-            return .bind(stringValue)
-        case let intValue as Int:
-            return .bind(Int64(intValue))
         case let doubleValue as Double:
             return .bind(doubleValue)
+        case let intValue as Int:
+            return .bind(Int64(intValue))
         case let boolValue as Bool:
             return .bind(boolValue)
+        case let stringValue as String:
+            return .bind(stringValue)
         case let arrayValue as [Any]:
             return .array(arrayValue.map { AnyCodable($0).toDatabaseQueryValue() })
         default:

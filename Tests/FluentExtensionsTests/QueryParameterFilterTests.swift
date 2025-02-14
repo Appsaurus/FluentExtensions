@@ -69,13 +69,13 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
 
     func testNestedLogicalOperators() async throws {
         let models = try await getFilteredItems(.and([
-            .field("booleanField", "eq", true),
+            .field("booleanField", "eq", false),
             .or([
                 .field("intField", "gt", 10),
                 .field("doubleField", "lt", 5.0)
             ])
         ]))
-        XCTAssert(models.allSatisfy { $0.booleanField && ($0.intField > 10 || $0.doubleField < 5.0) })
+        XCTAssert(models.allSatisfy { $0.booleanField == false && ($0.intField > 10 || $0.doubleField < 5.0) })
     }
 
     func testMultipleFieldTypes() async throws {
@@ -85,6 +85,14 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
             .field("booleanField", "eq", true)
         ]))
         XCTAssert(models.allSatisfy { $0.stringField.starts(with: "String") && $0.intField >= 10 && $0.booleanField })
+    }
+    
+    func testStringInputResiliency() async throws {
+        let models = try await getFilteredItems(.and([
+            .field("intField", "gte", "10"),
+            .field("booleanField", "eq", "false")
+        ]))
+        XCTAssert(models.allSatisfy { $0.intField >= 10 && $0.booleanField == false })
     }
 
     func testNestedFields() async throws {

@@ -94,6 +94,28 @@ class QueryParameterTests: FluentTestModels.TestCase {
             let models = try response.content.decode([KitchenSink].self)
             models.forEach { XCTAssert($0.doubleField < value) }
         }
+        
+        //Test resiliency with string value
+        
+        let stringValue = "\(value)"
+        try app.test(.GET, "\(basePath)?doubleField=eq:\(stringValue)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 1)
+            models.forEach { XCTAssert($0.doubleField == value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=gt:\(stringValue)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach { XCTAssert($0.doubleField > value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=lt:\(stringValue)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach { XCTAssert($0.doubleField < value) }
+        }
     }
     
     func testIntFilters() throws {

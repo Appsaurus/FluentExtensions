@@ -17,11 +17,14 @@ public extension QueryParameterFilter {
             
             public var nestedBuilders: [String: NestedBuilder]
             public var fieldOverrides: [String: FieldOverride]
+            public var fieldKeyMap: [String: FieldKey]
             
             public init(nestedBuilders: [String: NestedBuilder] = [:],
-                        fieldOverrides: [String: FieldOverride] = [:]) {
+                        fieldOverrides: [String: FieldOverride] = [:],
+                        fieldKeyMap: [String: FieldKey] = [:]) {
                 self.nestedBuilders = nestedBuilders
                 self.fieldOverrides = fieldOverrides
+                self.fieldKeyMap = fieldKeyMap
             }
             
         }
