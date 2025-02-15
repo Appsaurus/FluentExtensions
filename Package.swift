@@ -55,7 +55,8 @@ let package = Package(
                            .product(name: "CodableExtensions", package: "CodableExtensions"),
                            .product(name: "RuntimeExtensions", package: "RuntimeExtensions"),
                            .product(name: "VaporExtensions", package: "VaporExtensions"),
-                           .product(name: "XCTVaporExtensions", package: "VaporExtensions")
+                           .product(name: "XCTVaporExtensions", package: "VaporExtensions"),
+                           .target(name: "FluentExtensions")
                            ]),
 
         .target(
