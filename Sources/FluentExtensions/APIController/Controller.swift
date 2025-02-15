@@ -31,7 +31,7 @@ open class Controller<Resource: ResourceModel,
         try registerRoutes(routes: router)
     }
     
-    open func registerRoutes(routes: RoutesBuilder) throws {        
+    open func registerRoutes(routes: RoutesBuilder) throws {
         try registerCRUDRoutes(routes: routes)
     }
     
@@ -113,7 +113,7 @@ open class Controller<Resource: ResourceModel,
     //MARK: Read Routes
     open func read(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let model = try await readModel(id: resourceID, request: req)
+        let model = try await readModel(parameter: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .read, model)
         return try read(model)
     }
@@ -167,7 +167,7 @@ open class Controller<Resource: ResourceModel,
     
     open func update(updateModel: Update, on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, request: req)
+        let resource = try await readModel(parameter: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .update, resource)
         let updatedResource = try await update(resource: resource,
                                                with: updateModel,
@@ -193,7 +193,7 @@ open class Controller<Resource: ResourceModel,
     
     open func save(saveModel: Create, on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(id: resourceID, request: req)
+        let resource = try await readModel(parameter: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .save, resource)
         let savedResource = try await save(resource: resource, request: req)
         return try read(savedResource)
@@ -207,7 +207,7 @@ open class Controller<Resource: ResourceModel,
     
     open func delete(_ req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await self.readModel(id: resourceID, request: req)
+        let resource = try await self.readModel(parameter: resourceID, request: req)
         try await assertRequest(req, isAuthorizedTo: .delete, resource)
         let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? config.forceDelete
         let deletedModel = try await self.delete(resource: resource, request: req, force: forceDelete)
@@ -343,7 +343,7 @@ open class Controller<Resource: ResourceModel,
     }
     
     //MARK: Abstract actions
-    open func readModel(id: Resource.ResolvedParameter, request: Request) async throws -> Resource {
+    open func readModel(parameter: Resource.ResolvedParameter, request: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }

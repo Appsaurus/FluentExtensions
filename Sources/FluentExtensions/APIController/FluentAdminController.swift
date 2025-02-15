@@ -9,14 +9,12 @@
 open class FluentAdminController<Model: FluentResourceModel>: FluentController<Model,Model,Model,Model>
 where Model.ResolvedParameter == Model.IDValue,
       Model: Content {
-    
-    open override func readModel(id: Model.ResolvedParameter, request: Request) async throws -> Model {
-        return try await readModel(id: id, in: request.db)
+
+    //MARK: Abstract Implementations
+    open override func resolveID(for parameter: Model.ResolvedParameter, request: Request) async throws -> Model.IDValue {
+        return parameter
     }
     
-    open func readModel(id: Model.IDValue, in db: Database) async throws -> Model {
-        return try await Model.find(id, on: db).unwrapped(or: Abort(.notFound))
-    }
     
     open override func update(resource: Model,
                               with updateModel: Model,

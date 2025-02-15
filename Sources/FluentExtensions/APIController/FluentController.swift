@@ -37,8 +37,18 @@ open class FluentController<Model: FluentResourceModel,
         return try page.transformDatum(with: read)
     }
     //MARK: End Routes
+        
+    open func resolveID(for parameter: Model.ResolvedParameter, request: Request) async throws -> Model.IDValue {
+        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
+        throw Abort(.notFound)
+    }
     
     //MARK: Abstract Implementations
+
+    open override func readModel(parameter: Model.ResolvedParameter, request: Request) async throws -> Model {
+        let resolvedID = try await resolveID(for: parameter, request: request)
+        return try await readModel(id: resolvedID, request: request)
+    }
     
     open override func readAllModels(request: Request) async throws -> [Model] {
         return try await Model.query(on: request.db).all()
@@ -119,19 +129,29 @@ open class FluentController<Model: FluentResourceModel,
         }
         return false
     }
+    
     open func join(query: QueryBuilder<Model>) -> QueryBuilder<Model> {
         return query
     }
     
-    public func buildSearchQuery(request: Request) throws -> QueryBuilder<Model> {
-        return try buildSearchQuery(joined: isJoinedRequest(request), request: request)
+    open func buildQuery(on request: Request, join: Bool? = nil) throws -> QueryBuilder<Model> {
+        let query = Model.query(on: request)
+        let shouldJoin = join != nil ? join : isJoinedRequest(request)
+        guard shouldJoin == true else {
+            return query
+        }
+        return self.join(query: query)
     }
     
-    open func buildSearchQuery(joined: Bool, request: Request) throws -> QueryBuilder<Model> {
-        var query = Model.query(on: request)
-        if isJoinedRequest(request) {
-            query = join(query: query)
-        }
+    open func readModel(id: Model.IDValue, request: Request, join: Bool? = nil) async throws -> Model {
+        try await buildQuery(on: request, join: join)
+            .filter(\._$id == id)
+            .first()
+            .unwrapped(or: Abort(.notFound))
+    }
+    
+    open func buildSearchQuery(request: Request, join: Bool? = nil) throws -> QueryBuilder<Model> {
+        let query = try buildQuery(on: request, join: join)
         return try applyQueryConstraints(query: query, on: request)
     }
     
