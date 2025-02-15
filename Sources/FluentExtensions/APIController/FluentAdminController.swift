@@ -11,14 +11,14 @@ where Model.ResolvedParameter == Model.IDValue,
       Model: Content {
 
     //MARK: Abstract Implementations
-    open override func resolveID(for parameter: Model.ResolvedParameter, request: Request) async throws -> Model.IDValue {
+    open override func resolveID(for parameter: Model.ResolvedParameter, on req: Request) async throws -> Model.IDValue {
         return parameter
     }
     
     
     open override func update(resource: Model,
                               with updateModel: Model,
-                              request: Request) async throws -> Model {
+                                                   on req: Request) async throws -> Model {
         
         if (updateModel.id == nil) {
             updateModel.id = try resource.requireID()
@@ -62,7 +62,7 @@ where Model.ResolvedParameter == Model.IDValue,
         
         let searchPath = path + ["search"]
         routes.get(searchPath.pathComponents) { request in
-            return try await childController.search(request)
+            return try await childController.search(on: request)
         }
         
         //Get currently attached children

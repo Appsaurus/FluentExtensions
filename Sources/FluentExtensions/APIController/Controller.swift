@@ -102,7 +102,7 @@ open class Controller<Resource: ResourceModel,
     //MARK: Begin Routes
     
     //MARK: Search Routes
-    open func search(_ req: Request) async throws -> SearchResult {
+    open func search(on req: Request) async throws -> SearchResult {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
@@ -111,55 +111,55 @@ open class Controller<Resource: ResourceModel,
     //Monitor and write one-off implementations or workarounds as need.
     
     //MARK: Read Routes
-    open func read(_ req: Request) async throws -> Read {
+    open func read(on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let model = try await readModel(parameter: resourceID, request: req)
+        let model = try await readModel(parameter: resourceID, on: req)
         try await assertRequest(req, isAuthorizedTo: .read, model)
         return try read(model)
     }
     
-    open func readAll(_ req: Request) async throws -> [Read] {
-        let models = try await readAllModels(request: req)
+    open func readAll(on req: Request) async throws -> [Read] {
+        let models = try await readAllModels(on: req)
         try await assertRequest(req, isAuthorizedTo: .read, models)
         return try models.map(read)
     }
     
     //MARK: Create Routes
-    open func create(_ req: Request) async throws -> Read {
+    open func create(on req: Request) async throws -> Read {
         let model = try req.content.decode(Create.self)
         let resource = try convert(model)
         try await assertRequest(req, isAuthorizedTo: .create, resource)
-        return try await self.create(createModel: model, request: req)
+        return try await self.create(createModel: model, on: req)
     }
     
-    open func createBatch(_ req: Request) async throws -> [Read] {
+    open func createBatch(on req: Request) async throws -> [Read] {
         let models = try req.content.decode([Create].self)
         let resources = try models.map(convert)
         try await assertRequest(req, isAuthorizedTo: .create, resources)
-        return try await self.create(createModels: models, request: req)
+        return try await self.create(createModels: models, on: req)
     }
     
-    open func create(createModel: Create, request: Request) async throws -> Read {
+    open func create(createModel: Create, on req: Request) async throws -> Read {
         var resource = try convert(createModel)
-        try await assertRequest(request, isAuthorizedTo: .create, resource)
-        resource = try await create(resource: resource, request: request)
+        try await assertRequest(req, isAuthorizedTo: .create, resource)
+        resource = try await create(resource: resource, on: req)
         return try read(resource)
     }
     
-    open func create(createModels: [Create], request: Request) async throws -> [Read] {
+    open func create(createModels: [Create], on req: Request) async throws -> [Read] {
         var resources = try createModels.map(convert)
-        try await assertRequest(request, isAuthorizedTo: .create, resources)
-        return try await create(resources: resources, request: request).map(read)
+        try await assertRequest(req, isAuthorizedTo: .create, resources)
+        return try await create(resources: resources, on: req).map(read)
     }
     
     
     //MARK: Update
-    open func update(_ req: Request) async throws -> Read {
+    open func update(on req: Request) async throws -> Read {
         let updateModel = try req.content.decode(Update.self)
         return try await update(updateModel: updateModel, on: req)
     }
     
-    open func updateBatch(_ req: Request) async throws -> [Read] {
+    open func updateBatch(on req: Request) async throws -> [Read] {
         let updateModels = try req.content.decode([Update].self)
         return try await self.update(updateModels: updateModels, on: req)
     }
@@ -167,11 +167,11 @@ open class Controller<Resource: ResourceModel,
     
     open func update(updateModel: Update, on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(parameter: resourceID, request: req)
+        let resource = try await readModel(parameter: resourceID, on: req)
         try await assertRequest(req, isAuthorizedTo: .update, resource)
         let updatedResource = try await update(resource: resource,
                                                with: updateModel,
-                                               request: req)
+                                               on: req)
         return try read(updatedResource)
     }
     
@@ -180,12 +180,12 @@ open class Controller<Resource: ResourceModel,
     }
     
     //MARK: Save
-    open func save(_ req: Request) async throws -> Read {
+    open func save(on req: Request) async throws -> Read {
         let saveModel = try req.content.decode(Create.self)
         return try await save(saveModel: saveModel, on: req)
     }
     
-    open func saveBatch(_ req: Request) async throws -> [Read] {
+    open func saveBatch(on req: Request) async throws -> [Read] {
         let saveModels = try req.content.decode([Create].self)
         return try await saveModels.asyncMap({try await self.save(saveModel: $0, on: req)})
     }
@@ -193,9 +193,9 @@ open class Controller<Resource: ResourceModel,
     
     open func save(saveModel: Create, on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(parameter: resourceID, request: req)
+        let resource = try await readModel(parameter: resourceID, on: req)
         try await assertRequest(req, isAuthorizedTo: .save, resource)
-        let savedResource = try await save(resource: resource, request: req)
+        let savedResource = try await save(resource: resource, on: req)
         return try read(savedResource)
     }
     
@@ -205,12 +205,12 @@ open class Controller<Resource: ResourceModel,
     
     //MARK: Delete
     
-    open func delete(_ req: Request) async throws -> Read {
+    open func delete(on req: Request) async throws -> Read {
         let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await self.readModel(parameter: resourceID, request: req)
+        let resource = try await self.readModel(parameter: resourceID, on: req)
         try await assertRequest(req, isAuthorizedTo: .delete, resource)
         let forceDelete = (try? req.query.get(Bool.self, at: "force")) ?? config.forceDelete
-        let deletedModel = try await self.delete(resource: resource, request: req, force: forceDelete)
+        let deletedModel = try await self.delete(resource: resource, on: req, force: forceDelete)
         return try read(deletedModel)
     }
     
@@ -343,53 +343,53 @@ open class Controller<Resource: ResourceModel,
     }
     
     //MARK: Abstract actions
-    open func readModel(parameter: Resource.ResolvedParameter, request: Request) async throws -> Resource {
+    open func readModel(parameter: Resource.ResolvedParameter, on req: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func readAllModels(request: Request) async throws -> [Resource] {
+    open func readAllModels(on req: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func create(resource: Resource, request: Request) async throws -> Resource {
+    open func create(resource: Resource, on req: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func update(resource: Resource, request: Request) async throws -> Resource {
+    open func update(resource: Resource, on req: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
     
-    open func delete(resource: Resource, request: Request, force: Bool = false) async throws -> Resource {
+    open func delete(resource: Resource, on req: Request, force: Bool = false) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func save(resource: Resource, request: Request) async throws -> Resource {
+    open func save(resource: Resource, on req: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func create(resources: [Resource], request: Request) async throws -> [Resource] {
+    open func create(resources: [Resource], on req: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func update(resources: [Resource], request: Request) async throws -> [Resource] {
+    open func update(resources: [Resource], on req: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func delete(resources: [Resource], request: Request, force: Bool = false) async throws -> [Resource] {
+    open func delete(resources: [Resource], on req: Request, force: Bool = false) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
     
-    open func save(resources: [Resource], request: Request) async throws -> [Resource] {
+    open func save(resources: [Resource], on req: Request) async throws -> [Resource] {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
@@ -398,7 +398,7 @@ open class Controller<Resource: ResourceModel,
     
     open func update(resource: Resource,
                      with updateModel: Update,
-                     request: Request) async throws -> Resource {
+                     on req: Request) async throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }
