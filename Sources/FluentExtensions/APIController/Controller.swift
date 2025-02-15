@@ -27,12 +27,12 @@ open class Controller<Resource: ResourceModel,
     
     //MARK: Register Routes
     open func boot(routes: RoutesBuilder) throws {
-        try registerRoutes(routes: routes)
+        let router = routes.grouped(config.baseRoute.pathComponents)
+        try registerRoutes(routes: router)
     }
     
-    open func registerRoutes(routes: RoutesBuilder) throws {
-        let router = routes.grouped(config.baseRoute.pathComponents)
-        try registerCRUDRoutes(routes: router)
+    open func registerRoutes(routes: RoutesBuilder) throws {        
+        try registerCRUDRoutes(routes: routes)
     }
     
     open func registerCRUDRoutes(routes: RoutesBuilder) throws {

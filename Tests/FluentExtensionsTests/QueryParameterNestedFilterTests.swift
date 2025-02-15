@@ -83,8 +83,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         let parentController = TestParentController(config: Controller.Config(baseRoute: [parentBasePath]))
         let childController = TestChildController(config: Controller.Config(baseRoute: [childBasePath]))
         
-        try parentController.registerRoutes(routes: router)
-        try childController.registerRoutes(routes: router)
+        try router.register(parentController, childController)        
     }
     
     // Generic helper function to create filter URL

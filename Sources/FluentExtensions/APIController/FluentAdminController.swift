@@ -17,11 +17,11 @@ where Model.ResolvedParameter == Model.IDValue,
     open func readModel(id: Model.IDValue, in db: Database) async throws -> Model {
         return try await Model.find(id, on: db).unwrapped(or: Abort(.notFound))
     }
-        
+    
     open override func update(resource: Model,
                               with updateModel: Model,
                               request: Request) async throws -> Model {
-
+        
         if (updateModel.id == nil) {
             updateModel.id = try resource.requireID()
         }
@@ -29,7 +29,7 @@ where Model.ResolvedParameter == Model.IDValue,
             throw Abort(.badRequest)
         }
         return updateModel
-    }        
+    }
     
     open override func convert(_ create: Model) throws -> Model {
         return create
@@ -51,7 +51,7 @@ where Model.ResolvedParameter == Model.IDValue,
                                                                    pathSlug: String = "children",
                                                                    queryParamKey: String = "ids",
                                                                    childForeignKeyPath: ChildrenPropertyKeyPath<Model, C>,
-                                                                   childController: FluentController<C, CC, CR, CU>) {
+                                                                   childController: FluentController<C, CC, CR, CU> = .init()) {
         let path = Model.childCRUDPath(childForeignKeyPath, slug: pathSlug)
         
         //Replace attached children with new children
@@ -98,8 +98,8 @@ where Model.ResolvedParameter == Model.IDValue,
     
     //Siblings
     public func pivotCRUDRoutes<S, P>(_ routes: RoutesBuilder,
-                                                  relationshipName: String = Model.crudPathName + "_" + S.crudPathName,
-                                              through siblingKeyPath: SiblingPropertyKeyPath<Model, S, P>)
+                                      relationshipName: String = Model.crudPathName + "_" + S.crudPathName,
+                                      through siblingKeyPath: SiblingPropertyKeyPath<Model, S, P>)
     where S: FluentResourceModel,
           P: FluentResourceModel,
           P.ResolvedParameter == P.IDValue,
@@ -130,7 +130,7 @@ where Model.ResolvedParameter == Model.IDValue,
                   let database = request.db
                   let pivotProperty = model[keyPath: siblingKeyPath].$pivots
                   return try await pivotProperty.replace(with: pivotEntities, in: database)
-                  .map(pivotController.read)
+                      .map(pivotController.read)
               }
               
               let attachPath = pivotPath + ["attach"]
@@ -155,7 +155,7 @@ where Model.ResolvedParameter == Model.IDValue,
                       .detach(pivotEntities, in: request.db)
                       .map(pivotController.read)
               }
-                            
+              
               routes.delete(detachPath, params: Model.self) { (request, model) async throws -> HTTPResponseStatus in
                   let siblingRelationship = model[keyPath: siblingKeyPath]
                   let pivots = try await siblingRelationship
@@ -171,7 +171,7 @@ where Model.ResolvedParameter == Model.IDValue,
     public func siblingCRUDRoutes<P, S, SC, SR, SU>(_ routes: RoutesBuilder,
                                                     relationshipName: String = Model.crudPathName + "_" + S.crudPathName,
                                                     through siblingKeyPath: SiblingPropertyKeyPath<Model, S, P>,
-                                                    siblingController: FluentController<S, SC, SR, SU>)
+                                                    siblingController: FluentController<S, SC, SR, SU> = .init())
     where S: FluentResourceModel {
         
         let siblingPath = Model.siblingCRUDPath(relationshipName: relationshipName)

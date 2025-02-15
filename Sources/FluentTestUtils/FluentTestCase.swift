@@ -8,7 +8,7 @@
 import FluentKit
 import XCTVaporExtensions
 import Fluent
-
+import FluentExtensions
 
 open class FluentTestCase: VaporTestCase {
 
@@ -23,6 +23,7 @@ open class FluentTestCase: VaporTestCase {
         try super.addConfiguration(to: app)
         try configure(app.databases)
         try configure(app.databases.middleware)
+        app.middleware.use(LogMiddleware())
         try migrate(app.migrations)
         if autoReverts { try app.autoRevert().wait() }
         if autoMigrates { try app.autoMigrate().wait() }

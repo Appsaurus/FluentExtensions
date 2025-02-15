@@ -29,14 +29,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "A27952D4-8943-4638-8506-6825BEE3DE90"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Tests/FluentExtensionsTests/QueryParameterFilterTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "78"
-            endingLineNumber = "78"
+            startingLineNumber = "79"
+            endingLineNumber = "79"
             landmarkName = "testNestedLogicalOperators()"
             landmarkType = "7">
             <Locations>
@@ -68,6 +68,36 @@
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "78"
                   endingLineNumber = "78"
+                  offsetFromSymbolStart = "36">
+               </Location>
+               <Location
+                  uuid = "A27952D4-8943-4638-8506-6825BEE3DE90 - 2b89b49fde2926fb"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for FluentExtensionsTests.QueryParameterFilterTests.testNestedLogicalOperators() async throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterFilterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "79"
+                  endingLineNumber = "79"
+                  offsetFromSymbolStart = "316">
+               </Location>
+               <Location
+                  uuid = "A27952D4-8943-4638-8506-6825BEE3DE90 - 6b541143cc4c411c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (FluentTestModels.KitchenSink) -&gt; Swift.Bool in implicit closure #2 () throws -&gt; Swift.Bool in FluentExtensionsTests.QueryParameterFilterTests.testNestedLogicalOperators() async throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterFilterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "79"
+                  endingLineNumber = "79"
                   offsetFromSymbolStart = "36">
                </Location>
             </Locations>

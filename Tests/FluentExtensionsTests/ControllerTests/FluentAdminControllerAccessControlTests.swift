@@ -18,6 +18,7 @@ class FluentAdminControllerAccessControlTests: FluentAdminControllerTestCase {
         
         // Initialize controller with access control configuration
         let config = FluentAdminController<TestClassModel>.Config(baseRoute: [basePath])
+        
         config.accessControl.resource[.read] = { req, resource in
             // Simulate a resource that requires authorization
             return false
@@ -34,7 +35,7 @@ class FluentAdminControllerAccessControlTests: FluentAdminControllerTestCase {
         }
         
         controller.config = config
-        try controller.registerRoutes(routes: router)
+        try router.register(controller)        
     }
     
     func testUnauthorizedRead() throws {

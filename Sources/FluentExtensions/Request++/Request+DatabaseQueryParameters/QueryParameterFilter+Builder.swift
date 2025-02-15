@@ -32,11 +32,12 @@ public extension QueryParameterFilter {
         public let query: QueryBuilder<M>
         public let schema: String
         public let config: Config
-        
+//        public let properties: [PropertyInfo] = []
         public init(_ query: QueryBuilder<M>, schema: String? = nil, config: Config = Config()) {
             self.query = query
             self.schema = schema ?? M.schemaOrAlias
             self.config = config
+//            self.properties = M.propertiesInfo()
         }
         
         public func addNestedQueryBuilder(
