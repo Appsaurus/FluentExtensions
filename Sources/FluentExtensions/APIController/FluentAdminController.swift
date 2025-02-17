@@ -16,6 +16,29 @@ where Model.ResolvedParameter == Model.IDValue,
     }
     
     
+    open override func save(saveModel: Model, on req: Request) async throws -> Model {
+        if let parameterResourceID = try? req.parameters.next(Model.self) {
+            let parameterResource = try await readModel(parameter: parameterResourceID, on: req)
+            if saveModel.id == nil {
+                saveModel.id = try parameterResource.requireID()
+            }
+        }
+        return try await super.save(saveModel: saveModel, on: req)
+    }
+    open override func request(_ req: Request, canSave resource: Model) async throws -> Bool {
+        guard try await super.request(req, canSave: resource) else {
+            return false
+        }
+        if let parameterResourceID = try? req.parameters.next(Model.self) {
+            if let id = resource.id {
+                guard id == parameterResourceID else {
+                    throw Abort(.badRequest)
+                }
+            }
+        }
+        return true
+    }
+    
     open override func update(resource: Model,
                               with updateModel: Model,
                                                    on req: Request) async throws -> Model {

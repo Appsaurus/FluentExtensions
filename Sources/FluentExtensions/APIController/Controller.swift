@@ -147,7 +147,7 @@ open class Controller<Resource: ResourceModel,
     }
     
     open func create(createModels: [Create], on req: Request) async throws -> [Read] {
-        var resources = try createModels.map(convert)
+        let resources = try createModels.map(convert)
         try await assertRequest(req, isAuthorizedTo: .create, resources)
         return try await create(resources: resources, on: req).map(read)
     }
@@ -192,10 +192,9 @@ open class Controller<Resource: ResourceModel,
     
     
     open func save(saveModel: Create, on req: Request) async throws -> Read {
-        let resourceID = try req.parameters.next(Resource.self)
-        let resource = try await readModel(parameter: resourceID, on: req)
-        try await assertRequest(req, isAuthorizedTo: .save, resource)
-        let savedResource = try await save(resource: resource, on: req)
+        let saveResource = try convert(saveModel)
+        try await assertRequest(req, isAuthorizedTo: .save, saveResource)
+        let savedResource = try await save(resource: saveResource, on: req)
         return try read(savedResource)
     }
     
@@ -326,6 +325,7 @@ open class Controller<Resource: ResourceModel,
     //MARK: Abstact methods
     
     //MARK: Abstact conversions
+    
     open func convert(_ create: Create) throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)

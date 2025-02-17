@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "FluentExtensions",
     platforms: [
-        .macOS(.v12),
+        .macOS(.v12),   
 //        .iOS(.v13),
         .tvOS(.v13),
         .watchOS(.v6)
