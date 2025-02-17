@@ -51,7 +51,11 @@ open class FluentController<Model: FluentResourceModel,
     }
     
     open override func readAllModels(on req: Request) async throws -> [Model] {
-        return try await buildQuery(on: req).all()
+        let query = try buildQuery(on: req)
+        if let defaultSort {
+            query.sort(defaultSort)
+        }
+        return try await query.all()
     }
     
     open override func create(resource: Model, on req: Request) async throws -> Model {
