@@ -1,6 +1,6 @@
 //
 //  QueryParemeterFilter+NestedFilters.swift
-//  
+//
 //
 //  Created by Brian Strobach on 2/13/25.
 //
@@ -41,6 +41,15 @@ public extension QueryParameterFilter {
         { query, field, condition in
             query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
             return try .build(from: condition, builder: .init(query, schema: Parent.schemaOrAlias))
+        }
+    }
+    
+    static func Siblings<From: Model, To: Model, Through: Model>(
+        _ siblingsKey: KeyPath<From, SiblingsProperty<From, To, Through>>
+    ) -> (_ query: QueryBuilder<From>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
+        { query, field, condition in
+            query.join(siblings: siblingsKey)
+            return try .build(from: condition, builder: .init(query, schema: To.schemaOrAlias))
         }
     }
 }
