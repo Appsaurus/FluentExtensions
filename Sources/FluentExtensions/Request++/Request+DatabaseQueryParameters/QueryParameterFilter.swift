@@ -2,6 +2,7 @@ import Foundation
 import Codability
 import Vapor
 import Fluent
+import SQLKit
 
 public class QueryParameterFilter {
     public var schema: Schema.Type
@@ -47,6 +48,9 @@ public class QueryParameterFilter {
         case contains = "ct"
         case notContains = "nct"
         case filter = "filter"
+        case containsAll = "ca"
+        case containedBy = "icb"
+        case containsAny = "any"
     }
     
     public func queryField(for schema: Schema.Type? = nil) -> DatabaseQuery.Field {
@@ -221,9 +225,32 @@ public extension QueryParameterFilter.Method {
         case .contains: return .contains(inverse: false, .anywhere)
         case .notContains: return .contains(inverse: true, .anywhere)
         case .filter: return .equal  // This won't be used directly
+        case .containsAll: return .containsArray //PSQL only
+        case .containedBy: return .isContainedByArray //PSQL only
+        case .containsAny: return .overlaps //PSQL only
         }
     }
 }
+
+//https://www.postgresql.org/docs/8.3/functions-array.html
+public extension DatabaseQuery.Filter.Method {
+    //PSQL only
+    static var containsArray: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("@>"))
+    }
+
+    //PSQL only
+    static var isContainedByArray: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("<@"))
+    }
+
+    //PSQL only
+    static var overlaps: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("&&"))
+    }
+        
+}
+
 public extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
         switch value {
