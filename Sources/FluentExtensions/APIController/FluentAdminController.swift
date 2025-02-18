@@ -9,56 +9,22 @@
 open class FluentAdminController<Model: FluentResourceModel>: FluentController<Model,Model,Model,Model>
 where Model.ResolvedParameter == Model.IDValue,
       Model: Content {
+    
 
     //MARK: Abstract Implementations
-    open override func resolveID(for parameter: Model.ResolvedParameter, on req: Request) async throws -> Model.IDValue {
+    open override func resolveResourceID(for parameter: Model.ResolvedParameter, on req: Request) async throws -> Model.IDValue {
         return parameter
-    }
-    
-    
-    open override func save(saveModel: Model, on req: Request) async throws -> Model {
-        if let parameterResourceID = try? req.parameters.next(Model.self) {
-            let parameterResource = try await readModel(parameter: parameterResourceID, on: req)
-            if saveModel.id == nil {
-                saveModel.id = try parameterResource.requireID()
-            }
-        }
-        return try await super.save(saveModel: saveModel, on: req)
-    }
-    open override func request(_ req: Request, canSave resource: Model) async throws -> Bool {
-        guard try await super.request(req, canSave: resource) else {
-            return false
-        }
-        if let parameterResourceID = try? req.parameters.next(Model.self) {
-            if let id = resource.id {
-                guard id == parameterResourceID else {
-                    throw Abort(.badRequest)
-                }
-            }
-        }
-        return true
     }
     
     open override func update(resource: Model,
                               with updateModel: Model,
-                                                   on req: Request) async throws -> Model {
+                              on req: Request) async throws -> Model {
         
-        if (updateModel.id == nil) {
-            updateModel.id = try resource.requireID()
-        }
-        if (updateModel.id != resource.id) {
-            throw Abort(.badRequest)
-        }
-        return updateModel
+        return updateModel //Request must supply entire model as update
     }
     
     open override func convert(_ create: Model) throws -> Model {
         return create
-    }
-    
-    @discardableResult
-    open override func apply(_ update: Model, to model: Model) throws -> Model {
-        return update
     }
     
     open override func read(_ model: Model) throws -> Model {

@@ -277,15 +277,21 @@ open class Controller<Resource: ResourceModel,
         return true
     }
     
+    open func validateCreate(req: Request, for resource: Resource) async throws {}
     open func request(_ req: Request, canCreate resource: Resource) async throws -> Bool {
+        try await validateCreate(req: req, for: resource)
         return true
     }
     
+    open func validateUpdate(req: Request, for resource: Resource) async throws {}
     open func request(_ req: Request, canUpdate resource: Resource) async throws -> Bool {
+        try await validateUpdate(req: req, for: resource)
         return true
     }
     
+    open func validateSave(req: Request, for resource: Resource) async throws {}
     open func request(_ req: Request, canSave resource: Resource) async throws -> Bool {
+        try await validateSave(req: req, for: resource)
         return true
     }
     
@@ -327,12 +333,6 @@ open class Controller<Resource: ResourceModel,
     //MARK: Abstact conversions
     
     open func convert(_ create: Create) throws -> Resource {
-        assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
-        throw Abort(.notFound)
-    }
-    
-    @discardableResult
-    open func apply(_ update: Update, to resource: Resource) throws -> Resource {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
     }

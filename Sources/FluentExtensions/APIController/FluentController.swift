@@ -38,15 +38,79 @@ open class FluentController<Model: FluentResourceModel,
     }
     //MARK: End Routes
         
-    open func resolveID(for parameter: Model.ResolvedParameter, on req: Request) async throws -> Model.IDValue {
+    
+    open func requireResourceID(on req: Request) async throws -> Model.IDValue {
+        guard let id = try await resolveResourceID(on: req) else {
+            throw Abort(.badRequest)
+        }
+        return id
+    }
+    open func resolveResourceID(on req: Request) async throws -> Model.IDValue? {
+        if let parameterID = try? req.parameters.next(Model.self) {
+            return try await resolveResourceID(for: parameterID, on: req)
+        }
+        return nil
+    }
+    
+    open func resolveResourceID(for parameter: Model.ResolvedParameter, on req: Request) async throws -> Model.IDValue {
         assertionFailure(String(describing: self) + " is abstract. You must implement " + #function)
         throw Abort(.notFound)
+    }
+    
+    @discardableResult
+    open func prepareModelForCreating(model: Model, on req: Request) async throws -> Model {
+        return model
+    }
+    
+    @discardableResult
+    open func prepareModelForSaving(model: Model, on req: Request) async throws -> Model {
+        try await prepareModelForCreating(model: model, on: req)
+        try await prepareModelForUpdating(model: model, on: req)
+        return model
+    }
+    
+    @discardableResult
+    open func prepareModelForUpdating(model: Model, on req: Request) async throws -> Model {
+        if let parameterResourceID = try? req.parameters.next(Model.self) {
+            let parameterResource = try await readModel(parameter: parameterResourceID, on: req)
+            if model.id == nil {
+                model.id = try parameterResource.requireID()
+            }
+        }
+        return model
+    }
+    
+    open override func validateCreate(req: Request, for resource: Model) async throws {
+        let parameterResourceID = try await resolveResourceID(on: req)
+        guard parameterResourceID == nil else {
+            throw Abort(.badRequest)
+        }
+        try await super.validateCreate(req: req, for: resource)
+    }
+    
+    open override func validateSave(req: Request, for resource: Model) async throws {
+        if let parameterResourceID = try await resolveResourceID(on: req) {
+            guard parameterResourceID == resource.id else {
+                throw Abort(.badRequest)
+            }
+        }
+        try await super.validateSave(req: req, for: resource)
+        
+    }
+    
+    open override func validateUpdate(req: Request, for resource: Model) async throws {
+        let parameterResourceID = try await requireResourceID(on: req)
+        let resourceID = try resource.requireID()
+        guard resourceID == parameterResourceID else {
+            throw Abort(.badRequest)
+        }
+        try await super.validateUpdate(req: req, for: resource)
     }
     
     //MARK: Abstract Implementations
 
     open override func readModel(parameter: Model.ResolvedParameter, on req: Request) async throws -> Model {
-        let resolvedID = try await resolveID(for: parameter, on: req)
+        let resolvedID = try await resolveResourceID(for: parameter, on: req)
         return try await readModel(id: resolvedID, on: req)
     }
     
@@ -59,19 +123,33 @@ open class FluentController<Model: FluentResourceModel,
     }
     
     open override func create(resource: Model, on req: Request) async throws -> Model {
-        try await create(model: resource, in: req.db)
+        try await prepareModelForCreating(model: resource, on: req)
+        return try await create(model: resource, in: req.db)
     }
+        
     
     open override func update(resource: Model, on req: Request) async throws -> Model {
-        try await update(model: resource, in: req.db)
+        try await prepareModelForUpdating(model: resource, on: req)
+        return try await update(model: resource, in: req.db)
+    }
+
+    
+    open override func request(_ req: Request, canSave resource: Model) async throws -> Bool {
+        guard try await super.request(req, canSave: resource) else {
+            return false
+        }
+        try await validateSave(req: req, for: resource)
+        return true
     }
     
+
     open override func save(resource: Model, on req: Request) async throws -> Model {
+        try await prepareModelForSaving(model: resource, on: req)
         switch config.saveMethod {
         case .save:
-            try await save(model: resource, in: req.db)
+            return try await save(model: resource, in: req.db)
         case .upsert:
-            try await upsert(model: resource, in: req.db)
+            return try await upsert(model: resource, in: req.db)
         }
     }
     

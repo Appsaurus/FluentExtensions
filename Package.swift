@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "FluentExtensions",
     platforms: [
-        .macOS(.v12),   
+        .macOS(.v12),
 //        .iOS(.v13),
         .tvOS(.v13),
         .watchOS(.v6)
@@ -29,7 +29,6 @@ let package = Package(
         .package(url: "https://github.com/vapor/sql-kit.git", from: "3.1.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from:"4.0.0"),
         .package(url: "https://github.com/Appsaurus/Swiftest.git", from: "1.0.0"),
-//        .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.0.5"),
         .package(url: "https://github.com/Appsaurus/VaporExtensions.git", from: "1.2.1"),
 		.package(url: "https://github.com/Appsaurus/CodableExtensions", from: "1.1.0"),
         .package(url: "https://github.com/Appsaurus/RuntimeExtensions", exact: "1.0.2"),
