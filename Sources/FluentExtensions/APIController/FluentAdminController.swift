@@ -104,11 +104,14 @@ where Model.ResolvedParameter == Model.IDValue,
           P: FluentResourceModel {
               let pivotPath = Model.pivotCRUDPath(relationshipName: relationshipName)
               
-              routes.get(pivotPath) { (request: Request, model: Model) async throws -> [PR] in
+              func readAllPivots(model: Model, on req: Request) async throws -> [PR] {
                   let query = model[keyPath: siblingKeyPath]
                       .$pivots
-                      .query(on: request.db)
-                  return try await pivotController.executeRead(query: query, on: request)
+                      .query(on: req.db)
+                  return try await pivotController.executeRead(query: query, on: req, join: true)
+              }
+              routes.get(pivotPath) { (request: Request, model: Model) async throws -> [PR] in
+                  return try await readAllPivots(model: model, on: request)
               }
               
               //Replace
@@ -125,10 +128,10 @@ where Model.ResolvedParameter == Model.IDValue,
                   let pivotEntities = try request.content.decode([P].self)
                   try await pivotEntities.upsert(in: request.db)
                   let siblingRelationship = model[keyPath: siblingKeyPath]
-                  return try await siblingRelationship
+                  try await siblingRelationship
                       .$pivots
                       .attach(pivotEntities, in: request.db)
-                      .map(pivotController.read)
+                  return try await readAllPivots(model: model, on: request)
               }
               
               let detachPath = pivotPath + ["detach"]
@@ -136,10 +139,10 @@ where Model.ResolvedParameter == Model.IDValue,
                   //TODO: Confirm exist and already attached.
                   let pivotEntities = try request.content.decode([P].self)
                   let siblingRelationship = model[keyPath: siblingKeyPath]
-                  return try await siblingRelationship
+                  try await siblingRelationship
                       .$pivots
                       .detach(pivotEntities, in: request.db)
-                      .map(pivotController.read)
+                  return try await readAllPivots(model: model, on: request)
               }
               
               routes.delete(detachPath, params: Model.self) { (request, model) async throws -> HTTPResponseStatus in

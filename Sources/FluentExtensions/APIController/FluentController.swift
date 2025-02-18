@@ -287,13 +287,13 @@ open class FluentController<Model: FluentResourceModel,
         return queryBuilder
     }
     
-    open func executeRead(query: QueryBuilder<Model>, on req: Request) async throws -> [Read] {
-        let query = configure(query: query, on: req)
+    open func executeRead(query: QueryBuilder<Model>, on req: Request, join: Bool? = nil) async throws -> [Read] {
+        let query = configure(query: query, on: req, join: join)
         return try await readResults(of: query, on: req)
     }
     
-    open func executePaged(query: QueryBuilder<Model>, on req: Request) async throws -> Page<Read> {
-        let query = configure(query: query, on: req)
+    open func executeReadPage(query: QueryBuilder<Model>, on req: Request, join: Bool? = nil) async throws -> Page<Read> {
+        let query = configure(query: query, on: req, join: join)
         return try await readPage(of: query, on: req)
     }
     
