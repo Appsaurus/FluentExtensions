@@ -118,8 +118,8 @@ where Model.ResolvedParameter == Model.IDValue,
               routes.put([P].self, at: pivotPath) { (request, model: Model, pivotEntities) async throws -> [PR] in
                   let database = request.db
                   let pivotProperty = model[keyPath: siblingKeyPath].$pivots
-                  return try await pivotProperty.replace(with: pivotEntities, in: database)
-                      .map(pivotController.read)
+                  try await pivotProperty.replace(with: pivotEntities, in: database)
+                  return try await readAllPivots(model: model, on: request)
               }
               
               let attachPath = pivotPath + ["attach"]
