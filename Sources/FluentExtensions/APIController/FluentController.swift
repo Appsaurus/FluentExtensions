@@ -32,9 +32,7 @@ open class FluentController<Model: FluentResourceModel,
     
     open override func search(on req: Request) async throws -> Page<Read> {
         let query = try buildSearchQuery(on: req)
-        let page = try await query.paginate(for: req)
-        try await assertRequest(req, isAuthorizedTo: .read, page.items)
-        return try page.transformDatum(with: read)
+        return try await readPage(of: query, on: req)
     }
     //MARK: End Routes
         
@@ -216,13 +214,17 @@ open class FluentController<Model: FluentResourceModel,
         return query
     }
     
-    open func buildQuery(on request: Request, join: Bool? = nil) throws -> QueryBuilder<Model> {
-        let query = Model.query(on: request)
+    open func configure(query: QueryBuilder<Model>, on request: Request, join: Bool? = nil) -> QueryBuilder<Model> {
         let shouldJoin = join != nil ? join : isJoinedRequest(request)
         guard shouldJoin == true else {
             return query
         }
         return self.join(query: query)
+    }
+    
+    open func buildQuery(on request: Request, join: Bool? = nil) throws -> QueryBuilder<Model> {
+        let query = Model.query(on: request)
+        return configure(query: query, on: request, join: join)
     }
     
     open func readModel(id: Model.IDValue, on req: Request, join: Bool? = nil) async throws -> Model {
@@ -283,6 +285,24 @@ open class FluentController<Model: FluentResourceModel,
     open func filter(queryBuilder: QueryBuilder<Model>,
                      for searchQuery: String) throws -> QueryBuilder<Model> {
         return queryBuilder
+    }
+    
+    open func executeRead(query: QueryBuilder<Model>, on req: Request) async throws -> [Read] {
+        let query = configure(query: query, on: req)
+        return try await readResults(of: query, on: req)
+    }
+    
+    open func executePaged(query: QueryBuilder<Model>, on req: Request) async throws -> Page<Read> {
+        let query = configure(query: query, on: req)
+        return try await readPage(of: query, on: req)
+    }
+    
+    open func readResults(of query: QueryBuilder<Model>, on req: Request) async throws -> [Read] {
+        try await query.all().map(read)
+    }
+    
+    open func readPage(of query: QueryBuilder<Model>, on req: Request) async throws -> Page<Read> {
+        try await query.paginate(for: req).transformDatum(with: read)
     }
     
     //MARK: End Database-Level Implementations

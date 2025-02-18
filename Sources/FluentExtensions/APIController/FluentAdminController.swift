@@ -58,9 +58,8 @@ where Model.ResolvedParameter == Model.IDValue,
         routes.get(path, params: Model.self) { (request, model) async throws -> [CR] in
             let _ = try model.requireID()
             let children = model[keyPath: childForeignKeyPath]
-            return try await children.query(on: request.db)
-                .all()
-                .map(childController.read)
+            let query = children.query(on: request.db)
+            return try await childController.executeRead(query: query, on: request)
         }
         
         let attachPath = path + ["attach"]
@@ -106,10 +105,10 @@ where Model.ResolvedParameter == Model.IDValue,
               let pivotPath = Model.pivotCRUDPath(relationshipName: relationshipName)
               
               routes.get(pivotPath) { (request: Request, model: Model) async throws -> [PR] in
-                  return try await model[keyPath: siblingKeyPath]
+                  let query = model[keyPath: siblingKeyPath]
                       .$pivots
-                      .query(on: request.db).all()
-                      .map(pivotController.read)
+                      .query(on: request.db)
+                  return try await pivotController.executeRead(query: query, on: request)
               }
               
               //Replace
@@ -172,10 +171,8 @@ where Model.ResolvedParameter == Model.IDValue,
                 let siblingEntities = try request.content.decode([S].self)
                 let siblingRelationship = model[keyPath: siblingKeyPath]
                 try await siblingRelationship.replace(with: siblingEntities, on: database)
-                return try await siblingRelationship
-                    .query(on: request.db)
-                    .all()
-                    .map(siblingController.read)
+                let query = siblingRelationship.query(on: request.db)
+                return try await siblingController.executeRead(query: query, on: request)
             }
         }
         
