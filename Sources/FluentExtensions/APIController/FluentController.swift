@@ -162,12 +162,10 @@ open class FluentController<Model: FluentResourceModel,
     open override func save(resources: [Model], on req: Request) async throws -> [Model] {
         switch config.saveMethod {
         case .save:
-            try await req.db.performBatch(action: self.save, on: resources)
+            return try await req.db.performBatch(action: self.save, on: resources)
         case .upsert:
-            try await req.db.performBatch(action: self.upsert, on: resources)
+            return try await req.db.performBatch(action: self.upsert, on: resources)
         }
-        
-
     }
     
     open override func delete(resources: [Model], on req: Request, force: Bool = false) async throws -> [Model] {

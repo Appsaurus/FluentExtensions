@@ -83,11 +83,11 @@ public extension Collection where Element: Model {
     @discardableResult
     func restore(on database: Database, transaction: Bool) async throws -> Self {
         if transaction {
-            try await database.transaction { transaction in
+            return try await database.transaction { transaction in
                 try await restore(on: transaction)
             }
         } else {
-            try await restore(on: database)
+            return try await restore(on: database)
         }
     }
 }
