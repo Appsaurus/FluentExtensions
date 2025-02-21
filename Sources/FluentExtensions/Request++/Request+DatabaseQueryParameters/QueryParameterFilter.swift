@@ -117,7 +117,7 @@ public class QueryParameterFilter {
         case isNotNull = "isNotNull" // Value is not null
         
         // Convert to database query filter method
-        func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
+        public func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
             switch self {
             case .equals, .equalsString, .equalsStringSensitive, .weakEquals:
                 return .equal
