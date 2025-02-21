@@ -8,11 +8,12 @@ public class QueryParameterFilter {
     public var schema: Schema.Type
     public var name: String
     public var method: QueryParameterFilter.Method
-    public var value: Value<String, [String]>
+    public var value: Value<String>
     public var queryValueType: Any.Type? = nil
     
     
     func encodableValue(for value: String) throws -> Encodable {
+        
         switch queryValueType {
         case is Bool.Type:
             return try value.bool.unwrapped(or: Abort(.badRequest))
@@ -28,9 +29,16 @@ public class QueryParameterFilter {
         return try values.map({try encodableValue(for: $0)})
     }
     
-    public enum Value<S, M> {
+    func encodableValue(for rangeValue: QueryParameterRangeValue) throws -> [Encodable] {
+        let lowerBound = rangeValue.lowerBound == "null" ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
+        let upperBound = rangeValue.upperBound == "null" ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
+        return [lowerBound, upperBound]
+    }
+    
+    public enum Value<S: Comparable> {
         case single(S)
-        case multiple(M)
+        case multiple([S])
+        case range(QueryParameterRangeValue)
     }
     
     public enum Method: String, Codable, CaseIterable {
@@ -54,6 +62,20 @@ public class QueryParameterFilter {
             case cany = "cany"   // arrIncludesSome
             case `in` = "in"     // arrIncludes
             case notIn = "notIn" // arrNotIncludes
+            case bt = "bt"       // between
+            case bti = "bti"     // betweenInclusive
+            case fz = "fz"       // fuzzy
+            case emp = "emp"     // empty
+            case nemp = "nemp"   // notEmpty
+            case nul = "nul"     // isNull
+            case nnul = "nnul"   // isNotNull
+            case rng = "rng"     // inNumberRange
+            case st = "st"       // searchText
+            case wk = "wk"       // weakEquals
+            case es = "es"       // equalsString
+            case ess = "ess"     // equalsStringSensitive
+            case inc = "inc"     // includesString
+            case incs = "incs"   // includesStringSensitive
             
             public func toMethod() -> Method {
                 switch self {
@@ -75,6 +97,20 @@ public class QueryParameterFilter {
                 case .cany: return .arrIncludesSome
                 case .in: return .arrIncludes
                 case .notIn: return .arrNotIncludes
+                case .bt: return .between
+                case .bti: return .betweenInclusive
+                case .fz: return .fuzzy
+                case .emp: return .empty
+                case .nemp: return .notEmpty
+                case .nul: return .isNull
+                case .nnul: return .isNotNull
+                case .rng: return .inNumberRange
+                case .st: return .searchText
+                case .wk: return .weakEquals
+                case .es: return .equalsString
+                case .ess: return .equalsStringSensitive
+                case .inc: return .includesString
+                case .incs: return .includesStringSensitive
                 }
             }
         }
@@ -180,7 +216,7 @@ public class QueryParameterFilter {
     internal init(schema: Schema.Type,
                   name: String,
                   method: QueryParameterFilter.Method,
-                  value: QueryParameterFilter.Value<String, [String]>,
+                  value: QueryParameterFilter.Value<String>,
                   queryValueType: Any.Type? = nil) {
         self.schema = schema
         self.name = name

@@ -27,6 +27,10 @@ public extension QueryBuilder {
             filter = try .buildSimpleFilter(field: queryField,
                                         method: queryParameterFilter.method,
                                         value: AnyCodable(queryParameterFilter.encodableValue(for: multipleValues)))
+        case .range(let rangeValue):
+            filter = try .buildSimpleFilter(field: queryField,
+                                        method: queryParameterFilter.method,
+                                        value: AnyCodable(queryParameterFilter.encodableValue(for: rangeValue)))
             
         }
         guard let filter else {
