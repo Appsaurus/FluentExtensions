@@ -33,25 +33,137 @@ public class QueryParameterFilter {
     }
     
     public enum Method: String, Codable, CaseIterable {
-        case equal = "eq"
-        case notEqual = "neq"
-        case `in` = "in"
-        case notIn = "nin"
-        case greaterThan = "gt"
-        case greaterThanOrEqual = "gte"
-        case lessThan = "lt"
-        case lessThanOrEqual = "lte"
-        case startsWith = "sw"
-        case notStartsWith = "nsw"
-        case endsWith = "ew"
-        case notEndsWith = "new"
-        case contains = "ct"
-        case notContains = "nct"
+        public enum Aliases: String, Codable, CaseIterable {
+            //Shorthand Aliases
+            case eq = "eq"       // equals
+            case neq = "neq"     // notEquals
+            case nin = "nin"     // arrNotIncludes
+            case gt = "gt"       // greaterThan
+            case gte = "gte"     // greaterThanOrEqualTo
+            case lt = "lt"       // lessThan
+            case lte = "lte"     // lessThanOrEqualTo
+            case sw = "sw"       // startsWith
+            case nsw = "nsw"     // notStartsWith
+            case ew = "ew"       // endsWith
+            case new = "new"     // notEndsWith
+            case ct = "ct"       // contains
+            case nct = "nct"     // notContains
+            case ca = "ca"       // containsAll
+            case cb = "cb"       // containedBy
+            case cany = "cany"   // containsAny
+            case `in` = "in"     // arrIncludes
+            case notIn = "notIn" // arrNotIncludes
+            
+            public func toMethod() -> Method {
+                switch self {
+                case .eq: return .equals
+                case .neq: return .notEquals
+                case .nin: return .arrNotIncludes
+                case .gt: return .greaterThan
+                case .gte: return .greaterThanOrEqualTo
+                case .lt: return .lessThan
+                case .lte: return .lessThanOrEqualTo
+                case .sw: return .startsWith
+                case .nsw: return .notStartsWith
+                case .ew: return .endsWith
+                case .new: return .notEndsWith
+                case .ct: return .contains
+                case .nct: return .arrNotIncludes
+                case .ca: return .arrIncludesAll
+                case .cb: return .arrIsContainedBy
+                case .cany: return .arrIncludesSome
+                case .in: return .arrIncludes
+                case .notIn: return .arrNotIncludes
+                }
+            }
+        }
+        
+        // Material React Table (MRT) Filters
+        case between = "between" // Value falls between two bounds (exclusive), with numeric handling
+        case betweenInclusive = "betweenInclusive" // Value falls between two bounds (inclusive), with numeric handling
+        case contains = "contains" // String contains the filter text (case-insensitive)
+        case empty = "empty" // Value is empty or only whitespace
+        case endsWith = "endsWith" // String ends with filter text (case-insensitive)
+        case fuzzy = "fuzzy" // Fuzzy matching using match-sorter ranking algorithm
+        case greaterThan = "greaterThan" // Value exceeds filter (numbers and strings)
+        case greaterThanOrEqualTo = "greaterThanOrEqualTo" // Value equals or exceeds filter (numbers and strings)
+        case lessThan = "lessThan" // Value is below filter (numbers and strings)
+        case lessThanOrEqualTo = "lessThanOrEqualTo" // Value equals or is below filter (numbers and strings)
+        case notEmpty = "notEmpty" // Value contains non-whitespace characters
+        case notEquals = "notEquals" // Value differs from filter text (case-insensitive)
+        case startsWith = "startsWith" // String begins with filter text (case-insensitive)
+        
+        // TanStack Table Filters
+        case arrIncludes = "arrIncludes" //Item inclusion within an array
+        case arrIncludesAll = "arrIncludesAll" //All items included in an array
+        case arrIncludesSome = "arrIncludesSome" //Some items included in an array
+        case equals = "equals" //Object/referential equality Object.is/===
+        case equalsString = "equalsString" //Case-sensitive string equality
+        case equalsStringSensitive = "equalsStringSensitive" //Case-insensitive string equality
+        case includesString = "includesString" //Case-insensitive string inclusion
+        case includesStringSensitive = "includesStringSensitive" //Case-sensitive string inclusion
+        case inNumberRange = "inNumberRange"//Number range inclusion
+        case weakEquals = "weakEquals"//Weak object/referential equality ==
+        
+        // Custom Filters
         case filter = "filter"
-        case containsAll = "ca"
-        case containedBy = "icb"
-        case containsAny = "any"
+        case searchText = "searchText"
+        case notStartsWith = "notStartsWith"
+        case notEndsWith = "notEndsWith"
+        case arrIsContainedBy = "arrIsContainedBy"
+        case arrNotIncludes = "arrNotIncludes"
+        
+        // Convert to database query filter method
+        func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
+            switch self {
+            case .equals, .equalsString, .equalsStringSensitive, .weakEquals:
+                return .equal
+            case .notEquals:
+                return .notEqual
+            case .arrIncludes:
+                return .inSubSet
+            case .arrIncludesAll:
+                return .notInSubSet
+            case .arrIncludesSome:
+                return .overlaps
+            case .arrIsContainedBy:
+                return .isContainedByArray
+            case .greaterThan:
+                return .greaterThan
+            case .greaterThanOrEqualTo:
+                return .greaterThanOrEqual
+            case .lessThan:
+                return .lessThan
+            case .lessThanOrEqualTo:
+                return .lessThanOrEqual
+            case .startsWith:
+                return .contains(inverse: false, .prefix)
+            case .notStartsWith:
+                return .contains(inverse: true, .prefix)
+            case .endsWith:
+                return .contains(inverse: false, .suffix)
+            case .notEndsWith:
+                return .contains(inverse: true, .suffix)
+            case .contains, .includesString, .includesStringSensitive:
+                return .contains(inverse: false, .anywhere)
+            case .empty:
+                return .isNull
+            case .notEmpty:
+                return .isNotNull
+            case .fuzzy:
+                return .similarTo
+            case .between, .betweenInclusive, .inNumberRange:
+                return .placeholder
+            case .searchText:
+                return .fullTextSearch
+            case .filter:
+                return .equal
+            case .arrNotIncludes:
+                return .notInSubSet
+            }
+        }
     }
+
     
     public func queryField(for schema: Schema.Type? = nil) -> DatabaseQuery.Field {
         let schema = schema ?? self.schema
@@ -93,6 +205,7 @@ public class QueryParameterFilter {
     
 }
 
+
 public enum FilterCondition: Codable {
     case `where`(field: String, method: QueryParameterFilter.Method, value: AnyCodable)
     case and([FilterCondition])
@@ -108,7 +221,8 @@ public enum FilterCondition: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         if let field = try? container.decode(String.self, forKey: .field),
-           let method = try? container.decode(QueryParameterFilter.Method.self, forKey: .method),
+           let method = (try? container.decode(QueryParameterFilter.Method.self, forKey: .method)) ??
+            (try? container.decode(QueryParameterFilter.Method.Aliases.self, forKey: .method).toMethod()),
            let value = try? container.decode(AnyCodable.self, forKey: .value) {
             self = .`where`(field: field, method: method, value: value)
         } else if let andConditions = try? container.decode([FilterCondition].self, forKey: .and) {
@@ -141,11 +255,14 @@ public enum FilterCondition: Codable {
 }
 
 
-
 public extension DatabaseQuery.Filter {
     
     static func build<M: Model>(from filterString: String,
                                 builder: QueryParameterFilter.Builder<M>) throws -> DatabaseQuery.Filter? {
+        guard !filterString.isEmpty else {
+            return nil
+        }
+        
         let condition = try FilterCondition.decoded(from: filterString)
         return try build(from: condition, builder: builder)
     }
@@ -161,7 +278,42 @@ public extension DatabaseQuery.Filter {
             if let override = fieldFilterOverrides[field] {
                 return try override(builder.query, method, value)
             }
+            let fieldKey = builder.config.fieldKeyMap[field] ?? FieldKey(field)
+            let path = [fieldKey]
+            
             switch method {
+            case .between, .betweenInclusive, .inNumberRange:
+                guard let range = value.value as? [Any], range.count == 2,
+                      let lower = range[0] as? Encodable,
+                      let upper = range[1] as? Encodable else {
+                    throw QueryParameterFilterError.invalidFilterConfiguration
+                }
+                
+                let lowerFilter = DatabaseQuery.Filter.value(.path(path, schema: schema),
+                                                            method == .betweenInclusive ? .greaterThanOrEqual : .greaterThan,
+                                                            .bind(lower))
+                let upperFilter = DatabaseQuery.Filter.value(.path(path, schema: schema),
+                                                            method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
+                                                            .bind(upper))
+                return .group([lowerFilter, upperFilter], .and)
+                
+            case .empty:
+                return .value(.path(path, schema: schema),
+                             .notEqual,
+                             .null)
+                
+            case .notEmpty:
+                return .value(.path(path, schema: schema),
+                             .equal,
+                             .null)
+                
+            case .fuzzy:
+                // Requires pg_trgm extension
+                return .value(.path(path, schema: schema),
+                             .similarTo,
+                             value.toDatabaseQueryValue())
+                
+           
             case .filter:
                 guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
                     throw QueryParameterFilterError.invalidFilterConfiguration
@@ -173,7 +325,7 @@ public extension DatabaseQuery.Filter {
                 }
                 return try? nestedBuilder(builder.query, field, nestedCondition)
             default:
-                return .value(.path([builder.config.fieldKeyMap[field] ?? FieldKey(field)], schema: schema),
+                return .value(.path(path, schema: schema),
                               method.toDatabaseQueryFilterMethod(),
                               value.toDatabaseQueryValue())
             }
@@ -206,33 +358,25 @@ public extension QueryBuilder {
         return self
     }
 }
-
-public extension QueryParameterFilter.Method {
-    func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
-        switch self {
-        case .equal: return .equal
-        case .notEqual: return .notEqual
-        case .in: return .inSubSet
-        case .notIn: return .notInSubSet
-        case .greaterThan: return .greaterThan
-        case .greaterThanOrEqual: return .greaterThanOrEqual
-        case .lessThan: return .lessThan
-        case .lessThanOrEqual: return .lessThanOrEqual
-        case .startsWith: return .contains(inverse: false, .prefix)
-        case .notStartsWith: return .contains(inverse: true, .prefix)
-        case .endsWith: return .contains(inverse: false, .suffix)
-        case .notEndsWith: return .contains(inverse: true, .suffix)
-        case .contains: return .contains(inverse: false, .anywhere)
-        case .notContains: return .contains(inverse: true, .anywhere)
-        case .filter: return .equal  // This won't be used directly
-        case .containsAll: return .containsArray //PSQL only
-        case .containedBy: return .isContainedByArray //PSQL only
-        case .containsAny: return .overlaps //PSQL only
-        }
+extension DatabaseQuery.Filter.Method {
+    static var placeholder: DatabaseQuery.Filter.Method {
+        return .custom("")
     }
 }
 
-//https://www.postgresql.org/docs/8.3/functions-array.html
+// General database extensions
+public extension DatabaseQuery.Filter.Method {
+    static var isNull: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("IS NULL"))
+    }
+    
+    static var isNotNull: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("IS NOT NULL"))
+    }
+                            
+}
+
+// PostgreSQL specific extensions
 public extension DatabaseQuery.Filter.Method {
     //PSQL only
     static var containsArray: DatabaseQuery.Filter.Method {
@@ -248,8 +392,19 @@ public extension DatabaseQuery.Filter.Method {
     static var overlaps: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("&&"))
     }
-        
+    
+    //PSQL only
+    static var similarTo: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("SIMILAR TO"))
+    }
+    
+    //PSQL only
+    static var fullTextSearch: DatabaseQuery.Filter.Method {
+        return .custom(SQLRaw("@@"))
+    }
 }
+
+
 
 public extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
@@ -271,8 +426,10 @@ public extension AnyCodable {
 }
 
 extension String {
+    /// Converts string to boolean value if possible
+    /// - Returns: Boolean value if string represents a valid boolean, nil otherwise
     var bool: Bool? {
-        switch self {
+        switch self.lowercased() {
         case "true", "yes", "1", "y": return true
         case "false", "no", "0", "n": return false
         default: return nil

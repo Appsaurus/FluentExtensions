@@ -106,16 +106,80 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "5C346B05-853E-4727-B0D1-235F68BA1197"
+            uuid = "18C1507A-5A47-48C0-AF67-09A9EFBB0BFC"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Tests/FluentExtensionsTests/QueryParameterNestedSiblingFilterTests.swift"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "66"
-            endingLineNumber = "66"
-            landmarkName = "testNestedSiblingFilter()"
+            startingLineNumber = "328"
+            endingLineNumber = "328"
+            landmarkName = "build(from:builder:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "79412E6D-F137-46D8-ACB4-4B95A080C5A7"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Tests/FluentExtensionsTests/QueryParameterTests.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
+            landmarkName = "testEqualsFieldQuery()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "79412E6D-F137-46D8-ACB4-4B95A080C5A7 - e466cc71ac8ae9f4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (VaporTestUtils.TestingHTTPResponse) throws -&gt; () in FluentExtensionsTests.QueryParameterTests.testEqualsFieldQuery() throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "58"
+                  endingLineNumber = "58"
+                  offsetFromSymbolStart = "472">
+               </Location>
+               <Location
+                  uuid = "79412E6D-F137-46D8-ACB4-4B95A080C5A7 - e466cc71ac8ae9f4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (VaporTestUtils.TestingHTTPResponse) throws -&gt; () in FluentExtensionsTests.QueryParameterTests.testEqualsFieldQuery() throws -&gt; ()"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Tests/FluentExtensionsTests/QueryParameterTests.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "58"
+                  endingLineNumber = "58"
+                  offsetFromSymbolStart = "1380">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "61AE9446-CDF2-4A63-8757-A04776F2559F"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryBuilder+QueryParameterFilters.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
+            landmarkName = "filter(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -84,6 +84,19 @@ extension QueryBuilder {
         return try filter(queryFilter)
     }
 }
+
+public extension QueryParameterFilter.Method {
+    static var methodsThatExpectMultipleValues: [QueryParameterFilter.Method] {
+        return [.between,
+                .betweenInclusive,
+                .inNumberRange,
+                .arrIncludes,
+                .arrIncludesAll,
+                .arrIncludesSome,
+                .arrNotIncludes
+            ]
+    }
+}
 extension QueryParameterFilter {
     public convenience init(schema: Schema.Type,
                             fieldName: String,
@@ -97,12 +110,12 @@ extension QueryParameterFilter {
             throw QueryParameterFilterError.invalidFilterConfiguration
         }
         
-        let filterConfig = config.toFilterConfig
+        let filterConfig = try config.toFilterConfig()
         
         let method = filterConfig.method
         let value = filterConfig.value
         
-        let multiple = [.in, .notIn].contains(method)
+        let multiple = QueryParameterFilter.Method.methodsThatExpectMultipleValues.contains(method)
         var filterValue: QueryParameterFilter.Value<String, [String]>
         
         if multiple {
@@ -156,19 +169,29 @@ internal struct FilterConfig {
     public var value: String
 }
 
-internal let FILTER_CONFIG_REGEX = "(\(QueryParameterFilter.Method.allCases.map { $0.rawValue }.joined(separator: "|")))?:?(.*)"
+internal let AllQueryParameterMethodsAndAliases =
+QueryParameterFilter.Method.allCases.map { $0.rawValue } +
+QueryParameterFilter.Method.Aliases.allCases.map { $0.rawValue }
+
+internal let FILTER_CONFIG_REGEX = "\\(?(\(AllQueryParameterMethodsAndAliases.joined(separator: "|")))?\\)?:?(.*?)$"
 
 internal extension String {
-    var toFilterConfig: FilterConfig {
-        let result = capturedGroups(withRegex: FILTER_CONFIG_REGEX)
+    func toFilterConfig() throws -> FilterConfig {
+        let result = capturedGroups(withRegex: FILTER_CONFIG_REGEX).compactMap { $0 }
 
-        var method = QueryParameterFilter.Method.equal
+        var method = QueryParameterFilter.Method.equals
 
-        if let rawValue = result[0], let qfm = QueryParameterFilter.Method(rawValue: rawValue) {
+        guard result.count == 2 else {
+            throw QueryParameterFilterError.invalidFilterConfiguration
+        }
+        let rawMethod = result[0]
+        let value = result[1]
+        if let qfm = QueryParameterFilter.Method(rawValue: rawMethod) ??
+            QueryParameterFilter.Method.Aliases(rawValue: rawMethod)?.toMethod() {
             method = qfm
         }
 
-        return FilterConfig(method: method, value: result[1] ?? "")
+        return FilterConfig(method: method, value: value)
     }
 
     func capturedGroups(withRegex pattern: String) -> [String?] {
