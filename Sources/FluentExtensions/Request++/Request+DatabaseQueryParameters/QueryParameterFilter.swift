@@ -30,8 +30,11 @@ public class QueryParameterFilter {
     }
     
     func encodableValue(for rangeValue: QueryParameterRangeValue) throws -> [Encodable] {
-        let lowerBound = rangeValue.lowerBound == "null" ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
-        let upperBound = rangeValue.upperBound == "null" ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
+        func isNull(value: String) -> Bool {
+            return ["null", ""].contains(value)
+        }
+        let lowerBound = isNull(value: rangeValue.lowerBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
+        let upperBound = isNull(value: rangeValue.upperBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
         return [lowerBound, upperBound]
     }
     

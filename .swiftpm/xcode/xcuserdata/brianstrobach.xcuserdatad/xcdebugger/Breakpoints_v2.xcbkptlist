@@ -158,8 +158,8 @@
             filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "365"
-            endingLineNumber = "365"
+            startingLineNumber = "368"
+            endingLineNumber = "368"
             landmarkName = "buildSimpleFilter(field:method:value:)"
             landmarkType = "7">
             <Locations>
@@ -206,8 +206,8 @@
             filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "35"
-            endingLineNumber = "35"
+            startingLineNumber = "38"
+            endingLineNumber = "38"
             landmarkName = "encodableValue(for:)"
             landmarkType = "7">
             <Locations>
