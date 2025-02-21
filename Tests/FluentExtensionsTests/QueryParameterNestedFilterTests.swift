@@ -86,17 +86,9 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         try router.register(parentController, childController)        
     }
     
-    // Generic helper function to create filter URL
-    func makeFilterURL(basePath: String, _ condition: TestFilterCondition) throws -> String {
-        return "\(basePath)?filter=\(try condition.toURLQueryString())"
-    }
-    
-    // Generic helper function to get filtered items
-    func getFilteredItems<T: Content>(_ condition: TestFilterCondition, basePath: String) async throws -> [T] {
-        let response = try await app.sendRequest(.GET, try makeFilterURL(basePath: basePath, condition))
-        XCTAssertEqual(response.status, .ok)
-        return try response.content.decode(Page<T>.self).items
-    }
+//    func getFilteredItems(_ condition: TestFilterCondition) async throws -> [KitchenSink] {
+//        try await self.getFilteredItems(basePath: basePath, condition)
+//    }
     
     // Parent model tests
     func testNestedChildFilter() async throws {
@@ -110,7 +102,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         let parent1ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 1").first()!.requireID()
         let parent2ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 2").first()!.requireID()
         
-        let models: [TestParentModel] = try await getFilteredItems(condition, basePath: parentBasePath)
+        let models: [TestParentModel] = try await getFilteredItems(basePath: parentBasePath, condition)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent1ID]) })
         
@@ -130,7 +122,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
         let parent1ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 1").first()!.requireID()
         let parent2ID = try await TestParentModel.query(on: request.db).filter(\.$name == "Parent 2").first()!.requireID()
         
-        let models: [TestParentModel] = try await getFilteredItems(condition, basePath: parentBasePath)
+        let models: [TestParentModel] = try await getFilteredItems(basePath: parentBasePath, condition)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.id.equalToAny(of: [parent2ID]) })
         
@@ -148,7 +140,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
             AnyCodable(try TestFilterCondition.field("name", "eq", "Parent 1").toURLQueryString())
         )
         
-        let models: [TestChildModel] = try await getFilteredItems(condition, basePath: childBasePath)
+        let models: [TestChildModel] = try await getFilteredItems(basePath: childBasePath, condition)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.name.contains("Child A") || $0.name.contains("Optional Child") })
         
@@ -165,7 +157,7 @@ class QueryParameterNestedFilterTests: FluentTestModels.TestCase {
             AnyCodable(try TestFilterCondition.field("name", "eq", "Parent 2").toURLQueryString())
         )
         
-        let models: [TestChildModel] = try await getFilteredItems(condition, basePath: childBasePath)
+        let models: [TestChildModel] = try await getFilteredItems(basePath: childBasePath, condition)
         XCTAssertFalse(models.isEmpty)
         XCTAssert(models.allSatisfy { $0.name.contains("Optional Child") })
         

@@ -30,15 +30,8 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         try router.register(controller)
     }
     
-    // Helper function to create filter URL
-    func makeFilterURL(_ condition: TestFilterCondition) throws -> String {
-        return "\(basePath)?filter=\(try condition.toURLQueryString())"
-    }
-    
     func getFilteredItems(_ condition: TestFilterCondition) async throws -> [KitchenSink] {
-        let response = try await app.sendRequest(.GET, try makeFilterURL(condition))
-        XCTAssertEqual(response.status, .ok)
-        return try response.content.decode(Page<KitchenSink>.self).items
+        return try await self.getFilteredItems(basePath: basePath, condition)
     }
     
     func testSimpleEqualityFilter() async throws {
@@ -93,11 +86,11 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
 //        let models = try await getFilteredItems(.and([
 //            .field("intField", "gte", "10"),
 //            .field("booleanField", "eq", "false")
-//        ]))
+//        ]), basePath: basePath)
 //        XCTAssert(models.count > 0)
 //        XCTAssert(models.allSatisfy { $0.intField >= 10 && $0.booleanField == false })
 //    }
-//    
+//
 //    func testStringInputResiliency2() async throws {
 //        let response = try await app.sendRequest(.GET, "\(basePath)?filter=\(#"{"field":"booleanField","method":"eq","value":"true"}"#)")
 //        XCTAssertEqual(response.status, .ok)
@@ -114,36 +107,43 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         XCTAssert(models.allSatisfy { $0.groupedFields.intField > 5 })
     }
     
-    
-}
+    func testStringOperations() async throws {
+        // Test contains
+        let containsModels = try await getFilteredItems(.field("stringField", "ct", "Value"))
+        XCTAssert(containsModels.count > 0)
+        XCTAssert(containsModels.allSatisfy { $0.stringField.contains("Value") })
+        
+        // Test endsWith
+        let endsWithModels = try await getFilteredItems(.field("stringField", "ew", "_A"))
+        XCTAssert(endsWithModels.count > 0)
+        XCTAssert(endsWithModels.allSatisfy { $0.stringField.hasSuffix("_A") })
+        
+        // Test notEndsWith
+        let notEndsWithModels = try await getFilteredItems(.field("stringField", "new", "_A"))
+        XCTAssert(notEndsWithModels.count > 0)
+        XCTAssert(notEndsWithModels.allSatisfy { !$0.stringField.hasSuffix("_A") })
+    }
 
-// Helper structures to represent filter conditions
-enum TestFilterCondition: Encodable {
-    case field(_ field: String, _ method: String, _ value: AnyCodable)
-    case and([TestFilterCondition])
-    case or([TestFilterCondition])
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch self {
-        case .field(let field, let method, let value):
-            try container.encode(field, forKey: .field)
-            try container.encode(method, forKey: .method)
-            try container.encode(value, forKey: .value)
-        case .and(let conditions):
-            try container.encode(conditions, forKey: .and)
-        case .or(let conditions):
-            try container.encode(conditions, forKey: .or)
-        }
+    func testRangeOperations() async throws {
+        // Test between
+        let betweenModels = try await getFilteredItems(.field("intField", "between", [5, 15]))
+        XCTAssert(betweenModels.count > 0)
+        XCTAssert(betweenModels.allSatisfy { $0.intField > 5 && $0.intField < 15 })
+        
+        // Test betweenInclusive
+        let betweenInclusiveModels = try await getFilteredItems(.field("intField", "betweenInclusive", [5, 15]))
+        XCTAssert(betweenInclusiveModels.count > 0)
+        XCTAssert(betweenInclusiveModels.allSatisfy { $0.intField >= 5 && $0.intField <= 15 })
     }
     
-    private enum CodingKeys: String, CodingKey {
-        case field, method, value, and, or
+    func testNullChecks() async throws {
+        // Test empty
+        let emptyModels = try await getFilteredItems(.field("optionalStringField", "isNull", true))
+        XCTAssert(emptyModels.count == 10)
+        
+        // Test notEmpty
+        let notEmptyModels = try await getFilteredItems(.field("optionalStringField", "isNotNull", true))
+        XCTAssert(notEmptyModels.count == 3)
     }
-    
-    func toURLQueryString() throws -> String {
-        let jsonData = try JSONEncoder().encode(self)
-        let jsonString = String(data: jsonData, encoding: .utf8)!
-        return jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-    }
+
 }

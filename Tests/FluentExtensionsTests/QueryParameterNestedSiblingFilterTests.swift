@@ -41,15 +41,8 @@ class QueryParameterSiblingFilterTests: FluentAdminControllerTestCase {
         
     }
     
-    // Helper function to create filter URL
-    func makeFilterURL(_ condition: TestFilterCondition) throws -> String {
-        return "\(basePath)?filter=\(try condition.toURLQueryString())"
-    }
-    
-    func getFilteredItems(_ condition: TestFilterCondition) async throws -> [TestClassModel] {
-        let response = try await app.sendRequest(.GET, try makeFilterURL(condition))
-        XCTAssertEqual(response.status, .ok)
-        return try response.content.decode(Page<TestClassModel>.self).items
+    func getFilteredItems<M: Decodable>(_ condition: TestFilterCondition) async throws -> [M] {
+        try await self.getFilteredItems(basePath: basePath, condition)
     }
     
     func testNestedSiblingFilter() async throws {
@@ -62,7 +55,7 @@ class QueryParameterSiblingFilterTests: FluentAdminControllerTestCase {
         )
         
         
-        let classes = try await getFilteredItems(condition)
+        let classes: [TestClassModel] = try await getFilteredItems(condition)
         XCTAssertTrue(classes.count == 1)
         // Verify that filtered students are enrolled in the specified class
         XCTAssert(try classes.first?.requireID() == FluentAdminControllerTestCase.classUUID)

@@ -11,6 +11,7 @@ public class QueryParameterFilter {
     public var value: Value<String, [String]>
     public var queryValueType: Any.Type? = nil
     
+    
     func encodableValue(for value: String) throws -> Encodable {
         switch queryValueType {
         case is Bool.Type:
@@ -48,9 +49,9 @@ public class QueryParameterFilter {
             case new = "new"     // notEndsWith
             case ct = "ct"       // contains
             case nct = "nct"     // notContains
-            case ca = "ca"       // containsAll
-            case cb = "cb"       // containedBy
-            case cany = "cany"   // containsAny
+            case ca = "ca"       // arrIncludesAll
+            case cb = "cb"       // arrIsContainedBy
+            case cany = "cany"   // arrIncludesSome
             case `in` = "in"     // arrIncludes
             case notIn = "notIn" // arrNotIncludes
             
@@ -112,6 +113,8 @@ public class QueryParameterFilter {
         case notEndsWith = "notEndsWith"
         case arrIsContainedBy = "arrIsContainedBy"
         case arrNotIncludes = "arrNotIncludes"
+        case isNull = "isNull"       // Value is null
+        case isNotNull = "isNotNull" // Value is not null
         
         // Convert to database query filter method
         func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
@@ -123,7 +126,7 @@ public class QueryParameterFilter {
             case .arrIncludes:
                 return .inSubSet
             case .arrIncludesAll:
-                return .notInSubSet
+                return .containsArray
             case .arrIncludesSome:
                 return .overlaps
             case .arrIsContainedBy:
@@ -147,9 +150,9 @@ public class QueryParameterFilter {
             case .contains, .includesString, .includesStringSensitive:
                 return .contains(inverse: false, .anywhere)
             case .empty:
-                return .isNull
+                return .placeholder
             case .notEmpty:
-                return .isNotNull
+                return .placeholder
             case .fuzzy:
                 return .similarTo
             case .between, .betweenInclusive, .inNumberRange:
@@ -160,6 +163,10 @@ public class QueryParameterFilter {
                 return .equal
             case .arrNotIncludes:
                 return .notInSubSet
+            case .isNull:
+                return .placeholder
+            case .isNotNull:
+                return .placeholder
             }
         }
     }
@@ -267,6 +274,7 @@ public extension DatabaseQuery.Filter {
         return try build(from: condition, builder: builder)
     }
     
+    
     static func build<M>(from condition: FilterCondition,
                          builder: QueryParameterFilter.Builder<M>) throws -> DatabaseQuery.Filter? {
         let fieldFilterOverrides = builder.config.fieldOverrides
@@ -281,54 +289,17 @@ public extension DatabaseQuery.Filter {
             let fieldKey = builder.config.fieldKeyMap[field] ?? FieldKey(field)
             let path = [fieldKey]
             
-            switch method {
-            case .between, .betweenInclusive, .inNumberRange:
-                guard let range = value.value as? [Any], range.count == 2,
-                      let lower = range[0] as? Encodable,
-                      let upper = range[1] as? Encodable else {
-                    throw QueryParameterFilterError.invalidFilterConfiguration
-                }
-                
-                let lowerFilter = DatabaseQuery.Filter.value(.path(path, schema: schema),
-                                                            method == .betweenInclusive ? .greaterThanOrEqual : .greaterThan,
-                                                            .bind(lower))
-                let upperFilter = DatabaseQuery.Filter.value(.path(path, schema: schema),
-                                                            method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
-                                                            .bind(upper))
-                return .group([lowerFilter, upperFilter], .and)
-                
-            case .empty:
-                return .value(.path(path, schema: schema),
-                             .notEqual,
-                             .null)
-                
-            case .notEmpty:
-                return .value(.path(path, schema: schema),
-                             .equal,
-                             .null)
-                
-            case .fuzzy:
-                // Requires pg_trgm extension
-                return .value(.path(path, schema: schema),
-                             .similarTo,
-                             value.toDatabaseQueryValue())
-                
-           
-            case .filter:
-                guard let nestedFilterString = (value.value as? String)?.urlDecoded else {
-                    throw QueryParameterFilterError.invalidFilterConfiguration
-                }
-                
+            if case .filter = method,
+               let nestedFilterString = (value.value as? String)?.urlDecoded,
+               let nestedBuilder = nestedFilterBuilders[field] {
                 let nestedCondition = try FilterCondition.decoded(from: nestedFilterString)
-                guard let nestedBuilder = nestedFilterBuilders[field] else {
-                    return nil //Maybe throw here
-                }
                 return try? nestedBuilder(builder.query, field, nestedCondition)
-            default:
-                return .value(.path(path, schema: schema),
-                              method.toDatabaseQueryFilterMethod(),
-                              value.toDatabaseQueryValue())
             }
+            
+            return try buildSimpleFilter(field: .path([FieldKey(field)], schema: schema),
+                                        method: method,
+                                        value: value)
+            
         case let .and(conditions):
             let filters = try conditions.compactMap { try build(from: $0, builder: builder) }
             return .group(filters, .and)
@@ -337,6 +308,44 @@ public extension DatabaseQuery.Filter {
             return .group(filters, .or)
         }
     }
+    
+    static func buildSimpleFilter(field: DatabaseQuery.Field,
+                                  method: QueryParameterFilter.Method,
+                                  value: AnyCodable) throws -> DatabaseQuery.Filter? {
+        switch method {
+        case .between, .betweenInclusive, .inNumberRange:
+            guard let range = value.value as? [Any], range.count == 2,
+                  let lower = range[0] as? Encodable,
+                  let upper = range[1] as? Encodable else {
+                throw QueryParameterFilterError.invalidFilterConfiguration
+            }
+            
+            let lowerFilter = DatabaseQuery.Filter.value(field,
+                                                         method == .betweenInclusive ? .greaterThanOrEqual : .greaterThan,
+                                                         .bind(lower))
+            let upperFilter = DatabaseQuery.Filter.value(field,
+                                                         method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
+                                                         .bind(upper))
+            return .group([lowerFilter, upperFilter], .and)
+            
+        case .isNull:
+            return .value(field, .equal, .null)
+        case .isNotNull:
+            return .value(field, .notEqual, .null)
+        case .empty:
+            return .value(field, .equal, .bind(""))
+            
+        case .notEmpty:
+            return .value(field, .notEqual, .bind(""))
+            
+        case .fuzzy:
+            return .value(field, .similarTo, value.toDatabaseQueryValue())
+            
+        default:
+            return .value(field, method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
+        }
+    }
+
 }
 
 public extension QueryBuilder {
@@ -362,18 +371,6 @@ extension DatabaseQuery.Filter.Method {
     static var placeholder: DatabaseQuery.Filter.Method {
         return .custom("")
     }
-}
-
-// General database extensions
-public extension DatabaseQuery.Filter.Method {
-    static var isNull: DatabaseQuery.Filter.Method {
-        return .custom(SQLRaw("IS NULL"))
-    }
-    
-    static var isNotNull: DatabaseQuery.Filter.Method {
-        return .custom(SQLRaw("IS NOT NULL"))
-    }
-                            
 }
 
 // PostgreSQL specific extensions
