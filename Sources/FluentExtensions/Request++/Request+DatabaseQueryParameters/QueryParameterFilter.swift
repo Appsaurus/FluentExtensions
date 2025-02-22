@@ -30,11 +30,14 @@ public class QueryParameterFilter {
     }
     
     func encodableValue(for rangeValue: QueryParameterRangeValue) throws -> [Encodable] {
-        func isNull(value: String) -> Bool {
-            return ["null", ""].contains(value)
-        }
-        let lowerBound = isNull(value: rangeValue.lowerBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
-        let upperBound = isNull(value: rangeValue.upperBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
+//        func isNull(value: String) -> Bool {
+//            return ["null", ""].contains(value)
+//        }
+//        let lowerBound = isNull(value: rangeValue.lowerBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
+//        let upperBound = isNull(value: rangeValue.upperBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
+        
+        let lowerBound = rangeValue.lowerBound//try encodableValue(for: rangeValue.lowerBound)
+        let upperBound = rangeValue.upperBound//try encodableValue(for: rangeValue.upperBound)
         return [lowerBound, upperBound]
     }
     
@@ -353,20 +356,43 @@ public extension DatabaseQuery.Filter {
                                   value: AnyCodable) throws -> DatabaseQuery.Filter? {
         switch method {
         case .between, .betweenInclusive, .inNumberRange:
-            guard let range = value.value as? [Any], range.count == 2,
-                  let lower = range[0] as? Encodable,
-                  let upper = range[1] as? Encodable else {
+            guard let range = value.value as? [Any], range.count == 2 else {
                 throw QueryParameterFilterError.invalidFilterConfiguration
             }
+            let lower = range[0]
+            let upper = range[1]
             
-            let lowerFilter = DatabaseQuery.Filter.value(field,
+            func isNull(value: Any) -> Bool {
+                return ["null", ""].any { val in
+                    return val == "\(value)"
+                }
+            }
+            
+            let hasLower = !isNull(value: lower)
+            let hasUpper = !isNull(value: upper)
+            
+            if !hasLower && !hasUpper {
+                return nil
+            }
+            
+            var filters: [DatabaseQuery.Filter] = []
+            
+            if hasLower {
+                let lowerFilter = DatabaseQuery.Filter.value(field,
                                                          method == .betweenInclusive ? .greaterThanOrEqual : .greaterThan,
-                                                         .bind(lower))
-            let upperFilter = DatabaseQuery.Filter.value(field,
-                                                         method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
-                                                         .bind(upper))
-            return .group([lowerFilter, upperFilter], .and)
+                                                         .bind(AnyCodable(lower)))
+                filters.append(lowerFilter)
+            }
             
+            if hasUpper {
+                let upperFilter = DatabaseQuery.Filter.value(field,
+                                                         method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
+                                                         .bind(AnyCodable(upper)))
+                filters.append(upperFilter)
+            }
+            
+            return filters.count > 1 ? .group(filters, .and) : filters.first
+
         case .isNull:
             return .value(field, .equal, .null)
         case .isNotNull:

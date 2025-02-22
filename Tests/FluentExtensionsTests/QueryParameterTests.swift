@@ -73,51 +73,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
         }
     }
     
-    func testDoubleFilters() throws {
-        let value = 10.0
-        
-        try app.test(.GET, "\(basePath)?doubleField=eq:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.count == 1)
-            models.forEach { XCTAssert($0.doubleField == value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?doubleField=gt:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.doubleField > value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?doubleField=lt:\(value)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.doubleField < value) }
-        }
-        
-        //Test resiliency with string value
-        
-        let stringValue = "\(value)"
-        try app.test(.GET, "\(basePath)?doubleField=eq:\(stringValue)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            XCTAssert(models.count == 1)
-            models.forEach { XCTAssert($0.doubleField == value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?doubleField=gt:\(stringValue)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.doubleField > value) }
-        }
-        
-        try app.test(.GET, "\(basePath)?doubleField=lt:\(stringValue)") { response in
-            XCTAssertEqual(response.status, .ok)
-            let models = try response.content.decode([KitchenSink].self)
-            models.forEach { XCTAssert($0.doubleField < value) }
-        }
-    }
-    
     func testIntFilters() throws {
         let value = 10
         
@@ -131,13 +86,59 @@ class QueryParameterTests: FluentTestModels.TestCase {
         try app.test(.GET, "\(basePath)?intField=gt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 15)
             models.forEach { XCTAssert($0.intField > value) }
         }
         
         try app.test(.GET, "\(basePath)?intField=lt:\(value)") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 10)
             models.forEach { XCTAssert($0.intField < value) }
+        }
+    }
+    
+    func testDoubleFilters() throws {
+        let value = 10.0
+        
+        try app.test(.GET, "\(basePath)?doubleField=eq:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 1)
+            models.forEach { XCTAssert($0.doubleField == value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=gt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 15)
+            models.forEach { XCTAssert($0.doubleField > value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=lt:\(value)") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 10)
+            models.forEach { XCTAssert($0.doubleField < value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=eq:\(String(value))") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 1)
+            models.forEach { XCTAssert($0.doubleField == value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=gt:\(String(value))") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach { XCTAssert($0.doubleField > value) }
+        }
+        
+        try app.test(.GET, "\(basePath)?doubleField=lt:\(String(value))") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            models.forEach { XCTAssert($0.doubleField < value) }
         }
     }
     
@@ -179,37 +180,37 @@ class QueryParameterTests: FluentTestModels.TestCase {
     }
     
     func testNumberRange() throws {
-//        // Test inclusive range
-//        try app.test(.GET, "\(basePath)?intField=bti:[5,15]") { response in
-//            XCTAssertEqual(response.status, .ok)
-//            let models = try response.content.decode([KitchenSink].self)
-//            models.forEach {
-//                XCTAssert($0.intField >= 5 && $0.intField <= 15)
-//            }
-//        }
-//
-//        // Test exclusive range
-//        try app.test(.GET, "\(basePath)?intField=bt:[5,15]") { response in
-//            XCTAssertEqual(response.status, .ok)
-//            let models = try response.content.decode([KitchenSink].self)
-//            models.forEach {
-//                XCTAssert($0.intField > 5 && $0.intField < 15)
-//            }
-//        }
+        try app.test(.GET, "\(basePath)?intField=bti:[5,15]") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 11)
+            models.forEach {
+                XCTAssert($0.intField >= 5 && $0.intField <= 15)
+            }
+        }
 
-        // Test open-ended range (lower bound only)
+        try app.test(.GET, "\(basePath)?intField=bt:[5,15]") { response in
+            XCTAssertEqual(response.status, .ok)
+            let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 9)
+            models.forEach {
+                XCTAssert($0.intField > 5 && $0.intField < 15)
+            }
+        }
+
         try app.test(.GET, "\(basePath)?intField=bti:[10,null]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 16)
             models.forEach {
                 XCTAssert($0.intField >= 10)
             }
         }
 
-        // Test open-ended range (upper bound only)
         try app.test(.GET, "\(basePath)?intField=bti:[null,10]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
+            XCTAssert(models.count == 11)
             models.forEach {
                 XCTAssert($0.intField <= 10)
             }
@@ -217,7 +218,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
     }
 
     func testDoubleRange() throws {
-        // Test inclusive range with decimals
         try app.test(.GET, "\(basePath)?doubleField=bti:[5.5,15.5]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
@@ -226,7 +226,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
             }
         }
 
-        // Test exclusive range with decimals
         try app.test(.GET, "\(basePath)?doubleField=bt:[5.5,15.5]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
@@ -237,7 +236,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
     }
 
     func testStringRange() throws {
-        // Test inclusive string range
         try app.test(.GET, "\(basePath)?stringField=bti:[apple,mango]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
@@ -246,7 +244,6 @@ class QueryParameterTests: FluentTestModels.TestCase {
             }
         }
 
-        // Test exclusive string range
         try app.test(.GET, "\(basePath)?stringField=bt:[apple,mango]") { response in
             XCTAssertEqual(response.status, .ok)
             let models = try response.content.decode([KitchenSink].self)
