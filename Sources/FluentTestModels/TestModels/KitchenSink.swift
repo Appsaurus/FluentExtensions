@@ -14,6 +14,7 @@ private extension FieldKey {
     static var doubleField: Self { "doubleField" }
     static var booleanField: Self { "booleanField" }
     static var dateField: Self { "dateField" }
+    static var optionalDateField: Self { "optionalDateField" }
     static var stringArrayField: Self { "stringArrayField" }
     static var intArrayField: Self { "intArrayField" }
     static var doubleArrayField: Self { "doubleArrayField" }
@@ -61,6 +62,9 @@ public final class KitchenSink: TestModel, @unchecked Sendable {
 
     @Field(key: .dateField)
 	public var dateField: Date
+    
+    @OptionalField(key: .optionalDateField)
+    public var optionalDateField: Date?
 
     //MARK: Collection Fields
 
@@ -148,6 +152,7 @@ public final class KitchenSink: TestModel, @unchecked Sendable {
                 doubleField: Double = 2.0,
                 booleanField: Bool = true,
                 dateField: Date = Date(),
+                optionalDateField: Date? = nil,
                 stringArrayField: [String] = ["StringValue"],
                 intArrayField: [Int] = [1],
                 doubleArrayField: [Double] = [2.0],
@@ -173,6 +178,7 @@ public final class KitchenSink: TestModel, @unchecked Sendable {
         self.doubleField = doubleField
         self.booleanField = booleanField
         self.dateField = dateField
+        self.optionalDateField = optionalDateField
         self.stringArrayField = stringArrayField
         self.intArrayField = intArrayField
         self.doubleArrayField = doubleArrayField
@@ -262,6 +268,7 @@ public final class KitchenSinkMigration: AsyncMigration {
             .field(.doubleField, .double, .required)
             .field(.booleanField, .bool, .required)
             .field(.dateField, .datetime, .required)
+            .field(.optionalDateField, .datetime)
 
             //MARK: Collection Fields Schema
             .field(.stringArrayField, .array(of: .string), .required)

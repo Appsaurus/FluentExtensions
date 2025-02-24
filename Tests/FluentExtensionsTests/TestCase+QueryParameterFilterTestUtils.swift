@@ -28,7 +28,7 @@ public extension FluentTestModels.TestCase {
 
 // Helper structures to represent filter conditions
 public enum TestFilterCondition: Encodable {
-    case field(_ field: String, _ method: String, _ value: AnyCodable)
+    case field(_ field: String, _ method: String, _ value: Encodable?)
     case and([TestFilterCondition])
     case or([TestFilterCondition])
     
@@ -38,7 +38,13 @@ public enum TestFilterCondition: Encodable {
         case .field(let field, let method, let value):
             try container.encode(field, forKey: .field)
             try container.encode(method, forKey: .method)
-            try container.encode(value, forKey: .value)
+            if let value {
+                try container.encode(value, forKey: .value)
+            }
+            else {
+                try container.encodeNil(forKey: .value)
+            }
+            
         case .and(let conditions):
             try container.encode(conditions, forKey: .and)
         case .or(let conditions):
@@ -50,8 +56,23 @@ public enum TestFilterCondition: Encodable {
         case field, method, value, and, or
     }
     
+    
+    
     func toURLQueryString() throws -> String {
-        let jsonData = try JSONEncoder().encode(self)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = JSONEncoder.DateEncodingStrategy.custom { (date, encoder) in
+
+            
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            let dateString = formatter.string(from: date)            
+            var singleEncoder = encoder.singleValueContainer()
+            try singleEncoder.encode(dateString)
+            
+        }
+
+        
+        let jsonData = try encoder.encode(self)
         let jsonString = String(data: jsonData, encoding: .utf8)!
         return jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     }

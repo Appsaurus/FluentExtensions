@@ -82,25 +82,6 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         XCTAssert(models.allSatisfy { $0.stringField.starts(with: "String") && $0.intField >= 10 && $0.booleanField })
     }
     
-//    func testStringInputResiliency() async throws {
-//        let models = try await getFilteredItems(.and([
-//            .field("intField", "gte", "10"),
-//            .field("booleanField", "eq", "false")
-//        ]), basePath: basePath)
-//        XCTAssert(models.count > 0)
-//        XCTAssert(models.allSatisfy { $0.intField >= 10 && $0.booleanField == false })
-//    }
-//
-//    func testStringInputResiliency2() async throws {
-//        let response = try await app.sendRequest(.GET, "\(basePath)?filter=\(#"{"field":"booleanField","method":"eq","value":"true"}"#)")
-//        XCTAssertEqual(response.status, .ok)
-//        let models = try response.content.decode(Page<KitchenSink>.self).items
-//        XCTAssert(models.count > 0)
-//        XCTAssert(models.allSatisfy { $0.booleanField == false })
-//    }
-    
-    
-    
     func testNestedFields() async throws {
         let models = try await getFilteredItems(.field("groupedFields_intField", "gt", 5))
         XCTAssert(models.count > 0)
@@ -130,10 +111,21 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         XCTAssert(betweenModels.count > 0)
         XCTAssert(betweenModels.allSatisfy { $0.intField > 5 && $0.intField < 15 })
         
+        // Test Open-ended
+        let lessThanModels = try await getFilteredItems(.field("intField", "between", [nil, 15]))
+        XCTAssert(lessThanModels.count > 0)
+        XCTAssert(lessThanModels.allSatisfy { $0.intField < 15 })
+        
+        let greaterThanModels = try await getFilteredItems(.field("intField", "between", [15, nil]))
+        XCTAssert(greaterThanModels.count > 0)
+        XCTAssert(greaterThanModels.allSatisfy { $0.intField > 15 })
+        
         // Test betweenInclusive
         let betweenInclusiveModels = try await getFilteredItems(.field("intField", "betweenInclusive", [5, 15]))
         XCTAssert(betweenInclusiveModels.count > 0)
         XCTAssert(betweenInclusiveModels.allSatisfy { $0.intField >= 5 && $0.intField <= 15 })
+        
+        
     }
     
     func testNullChecks() async throws {
@@ -146,4 +138,58 @@ class QueryParameterFilterTests: FluentTestModels.TestCase {
         XCTAssert(notEmptyModels.count == 3)
     }
 
+    func testDateOperations() async throws {
+        let baseDate = Date()
+        let oneYear: TimeInterval = 365 * 24 * 60 * 60
+        
+        // Test greater than date (should find recent dates)
+        let threeYearsAgo = baseDate.addingTimeInterval(-3 * oneYear)
+        let recentModels = try await getFilteredItems(.field("dateField", "greaterThan", threeYearsAgo))
+        XCTAssert(recentModels.count > 0)
+        XCTAssert(recentModels.allSatisfy { $0.dateField > threeYearsAgo })
+        
+        // Test less than date (should find older dates)
+        let fiveYearsAgo = baseDate.addingTimeInterval(-5 * oneYear)
+        let olderModels = try await getFilteredItems(.field("dateField", "lessThan", fiveYearsAgo))
+        XCTAssert(olderModels.count > 0)
+        XCTAssert(olderModels.allSatisfy { $0.dateField < fiveYearsAgo })
+        
+        // Test date range with between
+        let startDate = baseDate.addingTimeInterval(-4 * oneYear)
+        let endDate = baseDate.addingTimeInterval(-2 * oneYear)
+        let rangeModels = try await getFilteredItems(.field("dateField", "between", [startDate, endDate]))
+        XCTAssert(rangeModels.count > 0)
+        XCTAssert(rangeModels.allSatisfy { $0.dateField > startDate && $0.dateField < endDate })
+        
+        // Test optional date field presence
+        let nonNullDateModels = try await getFilteredItems(.field("optionalDateField", "isNotNull", true))
+        XCTAssertEqual(nonNullDateModels.count, 5)
+        
+        // Test optional date field range
+        let futureDate = baseDate.addingTimeInterval(oneYear)
+        let futureDateModels = try await getFilteredItems(
+            .and([
+                .field("optionalDateField", "isNotNull", true),
+                .field("optionalDateField", "greaterThan", futureDate)
+            ])
+        )
+        XCTAssert(futureDateModels.count > 0)
+        XCTAssert(futureDateModels.allSatisfy { $0.optionalDateField?.timeIntervalSince(futureDate) ?? 0 > 0 })
+        
+        // Test complex date conditions
+        let complexModels = try await getFilteredItems(
+            .or([
+                .and([
+                    .field("dateField", "greaterThan", threeYearsAgo),
+                    .field("optionalDateField", "isNotNull", true)
+                ]),
+                .field("dateField", "lessThan", fiveYearsAgo)
+            ])
+        )
+        XCTAssert(complexModels.count > 0)
+        XCTAssert(complexModels.allSatisfy { model in
+            (model.dateField > threeYearsAgo && model.optionalDateField != nil) ||
+            model.dateField < fiveYearsAgo
+        })
+    }
 }

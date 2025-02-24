@@ -59,22 +59,33 @@ class QueryParameterTestSeeder: AsyncMigration {
             [TestStringEnum.case1, TestStringEnum.case2, TestStringEnum.case3]
         ]
         
+        // Base date for testing (current date)
+        let baseDate = Date()
+        let oneYear: TimeInterval = 365 * 24 * 60 * 60 // One year in seconds
+        
         for (index, letter) in letters.enumerated() {
-            let createUser = KitchenSink()
-            createUser.stringField += "_\(letter)"
-            createUser.intField = index
-            createUser.doubleField = Double(index)
-            createUser.optionalStringField = index < 3 ? String(letter) : nil
-            createUser.booleanField = index % 2 == 0
-            createUser.groupedFields.intField = index
+            let model = KitchenSink()
+            model.stringField += "_\(letter)"
+            model.intField = index
+            model.doubleField = Double(index)
+            model.optionalStringField = index < 3 ? String(letter) : nil
+            model.booleanField = index % 2 == 0
+            model.groupedFields.intField = index
             
             // Assign array values cyclically
-            createUser.stringArrayField = stringArrayValues[index % stringArrayValues.count]
-            createUser.intArrayField = intArrayValues[index % intArrayValues.count]
-            createUser.booleanArrayField = boolArrayValues[index % boolArrayValues.count]
-            createUser.stringEnumArray = enumArrayValues[index % enumArrayValues.count]
+            model.stringArrayField = stringArrayValues[index % stringArrayValues.count]
+            model.intArrayField = intArrayValues[index % intArrayValues.count]
+            model.booleanArrayField = boolArrayValues[index % boolArrayValues.count]
+            model.stringEnumArray = enumArrayValues[index % enumArrayValues.count]
             
-            kitchenSinks.append(createUser)
+            // Add dates going backwards in time (1 year per index)
+            model.dateField = baseDate.addingTimeInterval(-oneYear * Double(index))
+            
+            // Optional dates: first 5 entries get dates (2 years after their dateField)
+            model.optionalDateField = index < 5 ?
+                model.dateField.addingTimeInterval(2 * oneYear) : nil
+            
+            kitchenSinks.append(model)
         }
         try await kitchenSinks.create(on: database)
     }

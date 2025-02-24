@@ -354,6 +354,82 @@ public extension DatabaseQuery.Filter {
     static func buildSimpleFilter(field: DatabaseQuery.Field,
                                   method: QueryParameterFilter.Method,
                                   value: AnyCodable) throws -> DatabaseQuery.Filter? {
+        // Helper functions
+        func isNull(value: Any) -> Bool {
+            if type(of: value) == type(of: ()) {
+                return true
+            }
+            return ["null", "", "<null>"].contains("\(value)")
+        }
+        
+        func parseNumberRangeBoundary(_ value: Any) -> Double? {
+            if let num = value as? Double {
+                return num
+            } else if let num = value as? Int {
+                return Double(num)
+            } else if let str = value as? String {
+                return Double(str)
+            }
+            return nil
+        }
+        
+        func parseNumberFilters(lower: Any, upper: Any, inclusive: Bool) -> [DatabaseQuery.Filter]? {
+            var filters: [DatabaseQuery.Filter] = []
+            
+            if !isNull(value: lower), let lowerValue = parseNumberRangeBoundary(lower) {
+                filters.append(.value(field,
+                                     inclusive ? .greaterThanOrEqual : .greaterThan,
+                                     .bind(lowerValue)))
+            }
+            
+            if !isNull(value: upper), let upperValue = parseNumberRangeBoundary(upper) {
+                filters.append(.value(field,
+                                     inclusive ? .lessThanOrEqual : .lessThan,
+                                     .bind(upperValue)))
+            }
+            
+            return filters.isEmpty ? nil : filters
+        }
+        
+        func parseDateFilters(lower: Any, upper: Any, inclusive: Bool) -> [DatabaseQuery.Filter]? {
+            var filters: [DatabaseQuery.Filter] = []
+            
+            if !isNull(value: lower),
+               let lowerDate = Date(string: "\(lower)") {
+//                self.format.serialize(Date()).flatMap { .bind($0) } ?? .null
+                filters.append(.value(field,
+                                     inclusive ? .greaterThanOrEqual : .greaterThan,
+                                      .bind(lowerDate)))
+            }
+            
+            if !isNull(value: upper),
+               let upperDate = Date(string: "\(upper)") {
+                filters.append(.value(field,
+                                     inclusive ? .lessThanOrEqual : .lessThan,
+                                      .bind(upperDate)))
+            }
+            
+            return filters.isEmpty ? nil : filters
+        }
+        
+        func parseStringFilters(lower: Any, upper: Any, inclusive: Bool) -> [DatabaseQuery.Filter]? {
+            var filters: [DatabaseQuery.Filter] = []
+            
+            if !isNull(value: lower) {
+                filters.append(.value(field,
+                                     inclusive ? .greaterThanOrEqual : .greaterThan,
+                                     .bind(String(describing: lower))))
+            }
+            
+            if !isNull(value: upper) {
+                filters.append(.value(field,
+                                     inclusive ? .lessThanOrEqual : .lessThan,
+                                     .bind(String(describing: upper))))
+            }
+            
+            return filters.isEmpty ? nil : filters
+        }
+        
         switch method {
         case .between, .betweenInclusive, .inNumberRange:
             guard let range = value.value as? [Any], range.count == 2 else {
@@ -361,73 +437,39 @@ public extension DatabaseQuery.Filter {
             }
             let lower = range[0]
             let upper = range[1]
-            
-            func isNumberRange(range: [Any]) -> Bool {
-                return range.allSatisfy { value in
-                    if type(of: value) == Double.self {
-                        return true
-                    }
-                    if type(of: value) == Int.self {
-                        return true
-                    }
-                    if let stringValue = value as? String {
-                        return Double(stringValue) != nil
-                    }
-                    return isNull(value: value)
-                }
+            let inclusive = method == .betweenInclusive
+            var filters: [DatabaseQuery.Filter]?
+            // Try number range first
+            if method == .inNumberRange {
+                filters = parseNumberFilters(lower: lower, upper: upper, inclusive: inclusive)
             }
-            func isNull(value: Any) -> Bool {
-                if type(of: value) == type(of: ()) {
-                    return true
-                }
-                return ["null", "", "<null>"].any { val in
-                    return val == "\(value)"
-                }
+            // Try date range
+            else if let dateFilters = parseDateFilters(lower: lower, upper: upper, inclusive: inclusive) {
+                filters = dateFilters
             }
-            
-            let hasLower = !isNull(value: lower)
-            let hasUpper = !isNull(value: upper)
-            
-            if !hasLower && !hasUpper {
+            // Fall back to string range
+            else if let stringFilters = parseStringFilters(lower: lower, upper: upper, inclusive: inclusive) {
+                filters = stringFilters
+            }
+            guard let filters, filters.count != 0 else {
                 return nil
             }
+            return filters.count > 1 ? .group(filters, .and) : filters[0]
             
-            var filters: [DatabaseQuery.Filter] = []
-            
-            if hasLower {
-                let lowerFilter = DatabaseQuery.Filter.value(field,
-                                                         method == .betweenInclusive ? .greaterThanOrEqual : .greaterThan,
-                                                         .bind(AnyCodable(lower)))
-                filters.append(lowerFilter)
-            }
-            
-            if hasUpper {
-                let upperFilter = DatabaseQuery.Filter.value(field,
-                                                         method == .betweenInclusive ? .lessThanOrEqual : .lessThan,
-                                                         .bind(AnyCodable(upper)))
-                filters.append(upperFilter)
-            }
-            
-            return filters.count > 1 ? .group(filters, .and) : filters.first
-
         case .isNull:
             return .value(field, .equal, .null)
         case .isNotNull:
             return .value(field, .notEqual, .null)
         case .empty:
             return .value(field, .equal, .bind(""))
-            
         case .notEmpty:
             return .value(field, .notEqual, .bind(""))
-            
         case .fuzzy:
             return .value(field, .similarTo, value.toDatabaseQueryValue())
-            
         default:
             return .value(field, method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
         }
     }
-
 }
 
 public extension QueryBuilder {
@@ -487,6 +529,9 @@ public extension DatabaseQuery.Filter.Method {
 
 public extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
+        if let dateValue = Date(string: "\(value)") {
+            return .bind(dateValue)
+        }
         switch value {
         case let doubleValue as Double:
             return .bind(doubleValue)
