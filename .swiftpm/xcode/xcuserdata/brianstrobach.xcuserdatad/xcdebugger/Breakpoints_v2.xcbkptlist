@@ -87,17 +87,238 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "1AA115E6-096B-43FC-8B44-E4DBBE157A4B"
+            uuid = "B1EF7A66-3F7E-409B-9336-1373D14DDAD7"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Tests/FluentExtensionsTests/QueryParameterTests.swift"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "204"
-            endingLineNumber = "204"
-            landmarkName = "testNumberRange()"
+            startingLineNumber = "401"
+            endingLineNumber = "401"
+            landmarkName = "buildSimpleFilter(field:method:value:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "B1EF7A66-3F7E-409B-9336-1373D14DDAD7 - c8ec99449694917c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "401"
+                  endingLineNumber = "401"
+                  offsetFromSymbolStart = "1968">
+               </Location>
+               <Location
+                  uuid = "B1EF7A66-3F7E-409B-9336-1373D14DDAD7 - c8ec99449694917c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "401"
+                  endingLineNumber = "401"
+                  offsetFromSymbolStart = "1292">
+               </Location>
+               <Location
+                  uuid = "B1EF7A66-3F7E-409B-9336-1373D14DDAD7 - c8ec99449694917c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "401"
+                  endingLineNumber = "401"
+                  offsetFromSymbolStart = "1108">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6D2BBE3A-0DE4-42CC-ADBD-A4CEF3C8C199"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "408"
+            endingLineNumber = "408"
+            landmarkName = "buildSimpleFilter(field:method:value:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "6D2BBE3A-0DE4-42CC-ADBD-A4CEF3C8C199 - c8ec994496949245"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "408"
+                  endingLineNumber = "408"
+                  offsetFromSymbolStart = "2444">
+               </Location>
+               <Location
+                  uuid = "6D2BBE3A-0DE4-42CC-ADBD-A4CEF3C8C199 - c8ec994496949245"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "408"
+                  endingLineNumber = "408"
+                  offsetFromSymbolStart = "1700">
+               </Location>
+               <Location
+                  uuid = "6D2BBE3A-0DE4-42CC-ADBD-A4CEF3C8C199 - c8ec994496949245"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "408"
+                  endingLineNumber = "408"
+                  offsetFromSymbolStart = "1500">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A9456C65-25AB-4DC4-BE4B-32ABFFFC70C0"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "395"
+            endingLineNumber = "395"
+            landmarkName = "buildSimpleFilter(field:method:value:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "A9456C65-25AB-4DC4-BE4B-32ABFFFC70C0 - c8ec99449694903a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "395"
+                  endingLineNumber = "395"
+                  offsetFromSymbolStart = "1500">
+               </Location>
+               <Location
+                  uuid = "A9456C65-25AB-4DC4-BE4B-32ABFFFC70C0 - c8ec99449694903a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "395"
+                  endingLineNumber = "395"
+                  offsetFromSymbolStart = "924">
+               </Location>
+               <Location
+                  uuid = "A9456C65-25AB-4DC4-BE4B-32ABFFFC70C0 - c8ec99449694903a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "395"
+                  endingLineNumber = "395"
+                  offsetFromSymbolStart = "756">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "8474E038-C4E1-4F40-AB30-4859FDA837D4"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "357"
+            endingLineNumber = "357"
+            landmarkName = "buildSimpleFilter(field:method:value:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "8474E038-C4E1-4F40-AB30-4859FDA837D4 - c8ec994496949bf7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "358"
+                  endingLineNumber = "358"
+                  offsetFromSymbolStart = "164">
+               </Location>
+               <Location
+                  uuid = "8474E038-C4E1-4F40-AB30-4859FDA837D4 - c8ec994496949bf7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "static FluentKit.DatabaseQuery.Filter.buildSimpleFilter(field: FluentKit.DatabaseQuery.Field, method: FluentExtensions.QueryParameterFilter.Method, value: Codability.AnyCodable) throws -&gt; Swift.Optional&lt;FluentKit.DatabaseQuery.Filter&gt;"
+                  moduleName = "FluentExtensionsTests"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "358"
+                  endingLineNumber = "358"
+                  offsetFromSymbolStart = "152">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -362,8 +362,25 @@ public extension DatabaseQuery.Filter {
             let lower = range[0]
             let upper = range[1]
             
+            func isNumberRange(range: [Any]) -> Bool {
+                return range.allSatisfy { value in
+                    if type(of: value) == Double.self {
+                        return true
+                    }
+                    if type(of: value) == Int.self {
+                        return true
+                    }
+                    if let stringValue = value as? String {
+                        return Double(stringValue) != nil
+                    }
+                    return isNull(value: value)
+                }
+            }
             func isNull(value: Any) -> Bool {
-                return ["null", ""].any { val in
+                if type(of: value) == type(of: ()) {
+                    return true
+                }
+                return ["null", "", "<null>"].any { val in
                     return val == "\(value)"
                 }
             }
