@@ -102,10 +102,9 @@ public extension QueryParameterFilter.Method {
         return .single
     }
     static var arrayValues: [QueryParameterFilter.Method] {
-        return [.arrIncludes,
-                .arrIncludesAll,
+        return [.arrIncludesAll,
                 .arrIncludesSome,
-                .arrNotIncludes
+                .equalsAny
             ]
     }
     

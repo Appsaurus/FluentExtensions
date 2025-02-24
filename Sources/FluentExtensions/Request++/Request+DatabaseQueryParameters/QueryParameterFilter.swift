@@ -52,7 +52,7 @@ public class QueryParameterFilter {
             //Shorthand Aliases
             case eq = "eq"       // equals
             case neq = "neq"     // notEquals
-            case nin = "nin"     // arrNotIncludes
+            case nin = "nin"     // notEqualToAny
             case gt = "gt"       // greaterThan
             case gte = "gte"     // greaterThanOrEqualTo
             case lt = "lt"       // lessThan
@@ -67,7 +67,7 @@ public class QueryParameterFilter {
             case cb = "cb"       // arrIsContainedBy
             case cany = "cany"   // arrIncludesSome
             case `in` = "in"     // arrIncludes
-            case notIn = "notIn" // arrNotIncludes
+            case notIn = "notIn" // notEqualToAny
             case bt = "bt"       // between
             case bti = "bti"     // betweenInclusive
             case fz = "fz"       // fuzzy
@@ -87,7 +87,7 @@ public class QueryParameterFilter {
                 switch self {
                 case .eq: return .equals
                 case .neq: return .notEquals
-                case .nin: return .arrNotIncludes
+                case .nin: return .notEqualToAny
                 case .gt: return .greaterThan
                 case .gte: return .greaterThanOrEqualTo
                 case .lt: return .lessThan
@@ -97,12 +97,12 @@ public class QueryParameterFilter {
                 case .ew: return .endsWith
                 case .new: return .notEndsWith
                 case .ct: return .contains
-                case .nct: return .arrNotIncludes
+                case .nct: return .notContains
                 case .ca: return .arrIncludesAll
                 case .cb: return .arrIsContainedBy
                 case .cany: return .arrIncludesSome
-                case .in: return .arrIncludes
-                case .notIn: return .arrNotIncludes
+                case .in: return .equalsAny
+                case .notIn: return .notEqualToAny
                 case .bt: return .between
                 case .bti: return .betweenInclusive
                 case .fz: return .fuzzy
@@ -137,9 +137,9 @@ public class QueryParameterFilter {
         case startsWith = "startsWith" // String begins with filter text (case-insensitive)
         
         // TanStack Table Filters
-        case arrIncludes = "arrIncludes" //Item inclusion within an array
-        case arrIncludesAll = "arrIncludesAll" //All items included in an array
-        case arrIncludesSome = "arrIncludesSome" //Some items included in an array
+        case arrIncludes = "arrIncludes" //Array on LHS includes the single RHS filter value
+        case arrIncludesAll = "arrIncludesAll" //Array on LHS includes all items in RHS array
+        case arrIncludesSome = "arrIncludesSome" //Array on LHS includes at least one item in RHS array
         case equals = "equals" //Object/referential equality Object.is/===
         case equalsString = "equalsString" //Case-sensitive string equality
         case equalsStringSensitive = "equalsStringSensitive" //Case-insensitive string equality
@@ -153,10 +153,12 @@ public class QueryParameterFilter {
         case searchText = "searchText"
         case notStartsWith = "notStartsWith"
         case notEndsWith = "notEndsWith"
-        case arrIsContainedBy = "arrIsContainedBy"
-        case arrNotIncludes = "arrNotIncludes"
+        case arrIsContainedBy = "arrIsContainedBy" //Array on RHS includes all items in LHS array
         case isNull = "isNull"       // Value is null
         case isNotNull = "isNotNull" // Value is not null
+        case equalsAny = "equalsAny" // LHS value is one of any in RHS array
+        case notEqualToAny = "notEqualToAny" //LHS is not equal to any in RHS array
+        case notContains = "notContains"
         
         // Convert to database query filter method
         public func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
@@ -166,7 +168,7 @@ public class QueryParameterFilter {
             case .notEquals:
                 return .notEqual
             case .arrIncludes:
-                return .inSubSet
+                return .placeholder
             case .arrIncludesAll:
                 return .containsArray
             case .arrIncludesSome:
@@ -191,6 +193,8 @@ public class QueryParameterFilter {
                 return .contains(inverse: true, .suffix)
             case .contains, .includesString, .includesStringSensitive:
                 return .contains(inverse: false, .anywhere)
+            case .notContains:
+                return .contains(inverse: true, .anywhere)
             case .empty:
                 return .placeholder
             case .notEmpty:
@@ -203,12 +207,15 @@ public class QueryParameterFilter {
                 return .fullTextSearch
             case .filter:
                 return .equal
-            case .arrNotIncludes:
-                return .notInSubSet
             case .isNull:
                 return .placeholder
             case .isNotNull:
                 return .placeholder
+            case .equalsAny:
+                return .placeholder
+            case .notEqualToAny:
+                return .placeholder
+                
             }
         }
     }
@@ -328,8 +335,6 @@ public extension DatabaseQuery.Filter {
             if let override = fieldFilterOverrides[field] {
                 return try override(builder.query, method, value)
             }
-            let fieldKey = builder.config.fieldKeyMap[field] ?? FieldKey(field)
-            let path = [fieldKey]
             
             if case .filter = method,
                let nestedFilterString = (value.value as? String)?.urlDecoded,
@@ -396,7 +401,6 @@ public extension DatabaseQuery.Filter {
             
             if !isNull(value: lower),
                let lowerDate = Date(string: "\(lower)") {
-//                self.format.serialize(Date()).flatMap { .bind($0) } ?? .null
                 filters.append(.value(field,
                                      inclusive ? .greaterThanOrEqual : .greaterThan,
                                       .bind(lowerDate)))
@@ -460,12 +464,25 @@ public extension DatabaseQuery.Filter {
             return .value(field, .equal, .null)
         case .isNotNull:
             return .value(field, .notEqual, .null)
-        case .empty:
+        case .empty: //TODO: Support both string and arrays
             return .value(field, .equal, .bind(""))
-        case .notEmpty:
+        case .notEmpty:  //TODO: Support both string and arrays
             return .value(field, .notEqual, .bind(""))
         case .fuzzy:
             return .value(field, .similarTo, value.toDatabaseQueryValue())
+        case .arrIncludes:
+            return try buildSimpleFilter(field: field, method: .arrIncludesAll, value: [value.value])
+        case .equalsAny:
+            switch value.toDatabaseQueryValue() {
+                case .array(let array):
+                return .group(array.map {
+                    .value(field, .equal, $0)
+                }, .or)
+                    
+            default:
+                return nil
+            }
+            
         default:
             return .value(field, method.toDatabaseQueryFilterMethod(), value.toDatabaseQueryValue())
         }
