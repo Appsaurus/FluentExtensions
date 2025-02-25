@@ -546,9 +546,6 @@ public extension DatabaseQuery.Filter.Method {
 
 public extension AnyCodable {
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
-        if let dateValue = Date(string: "\(value)") {
-            return .bind(dateValue)
-        }
         switch value {
         case let doubleValue as Double:
             return .bind(doubleValue)
@@ -557,6 +554,9 @@ public extension AnyCodable {
         case let boolValue as Bool:
             return .bind(boolValue)
         case let stringValue as String:
+            if let dateValue = Date(string: "\(stringValue)") {
+                return .bind(dateValue)
+            }
             return .bind(stringValue)
         case let arrayValue as [Any]:
             return .array(arrayValue.map { AnyCodable($0).toDatabaseQueryValue() })

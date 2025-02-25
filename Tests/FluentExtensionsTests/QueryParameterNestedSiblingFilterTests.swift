@@ -51,7 +51,7 @@ class QueryParameterSiblingFilterTests: FluentAdminControllerTestCase {
         let condition = TestFilterCondition.field(
             "students",
             "filter",
-            AnyCodable(try TestFilterCondition.field("id", "eq", testUUID).toURLQueryString())
+            AnyCodable(try TestFilterCondition.field("id", "equals", testUUID).toURLQueryString())
         )
         
         
