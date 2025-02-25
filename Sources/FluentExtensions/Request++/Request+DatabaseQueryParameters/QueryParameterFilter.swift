@@ -471,7 +471,7 @@ public extension DatabaseQuery.Filter {
         case .fuzzy:
             return .value(field, .similarTo, value.toDatabaseQueryValue())
         case .arrIncludes:
-            return try buildSimpleFilter(field: field, method: .arrIncludesAll, value: [value.value])
+            return .value(field, .overlaps, .array([value.toDatabaseQueryValue()]))
         case .equalsAny:
             switch value.toDatabaseQueryValue() {
                 case .array(let array):
