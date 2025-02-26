@@ -471,7 +471,7 @@ public extension DatabaseQuery.Filter {
         case .fuzzy:
             return .value(field, .similarTo, value.toDatabaseQueryValue())
         case .arrIncludes:
-            return .value(field, .overlaps, .bind(["\(value.value)"]))            
+            return .value(field, .overlaps, .bind(["\(value.value)"]))
         case .equalsAny:
             switch value.toDatabaseQueryValue() {
                 case .array(let array):
@@ -545,23 +545,42 @@ public extension DatabaseQuery.Filter.Method {
 
 
 public extension AnyCodable {
+    func castToEncodable(value: Any) -> Encodable {
+        switch type(of: value) {
+        case is Bool.Type:
+            if let boolValue = value as? Bool {
+                return boolValue
+            }
+        case is Int.Type:
+            if let intValue = value as? Int {
+                return intValue
+            }
+        case is Double.Type:
+            if let doubleValue = value as? Double {
+                return doubleValue
+            }
+        case is String.Type:
+            if let stringValue = value as? String{
+                if let dateValue = Date(string: "\(stringValue)")  {
+                    return dateValue
+                }
+                return stringValue
+            }
+        default:
+            break
+        }
+        return "\(value)"
+    }
+    func encodableInnerValue() -> Encodable {
+        return castToEncodable(value: value)        
+    }
+    
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
         switch value {
-        case let doubleValue as Double:
-            return .bind(doubleValue)
-        case let intValue as Int:
-            return .bind(Int64(intValue))
-        case let boolValue as Bool:
-            return .bind(boolValue)
-        case let stringValue as String:
-            if let dateValue = Date(string: "\(stringValue)") {
-                return .bind(dateValue)
-            }
-            return .bind(stringValue)
         case let arrayValue as [Any]:
-            return .array(arrayValue.map { AnyCodable($0).toDatabaseQueryValue() })
+            return .array(arrayValue.map { .bind(castToEncodable(value: $0)) })
         default:
-            return .bind(description)
+            return .bind(self.encodableInnerValue())
         }
     }
 }

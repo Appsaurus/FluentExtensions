@@ -16,7 +16,7 @@ import VaporExtensions
 
 @testable import FluentTestModels
 
-class QueryParameterTests: FluentTestModels.TestCase {
+class FlatQueryParameterFilterTests: FluentTestModels.TestCase {
     let basePath = "query-parameters"
     let valueA = "StringValue_A"
     let valueB = "StringValue_B"
