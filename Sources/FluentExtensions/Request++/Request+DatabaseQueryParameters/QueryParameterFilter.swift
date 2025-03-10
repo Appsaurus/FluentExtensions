@@ -343,7 +343,8 @@ public extension DatabaseQuery.Filter {
                 return try? nestedBuilder(builder.query, field, nestedCondition)
             }
             
-            return try buildSimpleFilter(field: .path([FieldKey(field)], schema: schema),
+            let fieldKey = builder.config.fieldKeyMap[field] ?? FieldKey(field)
+            return try buildSimpleFilter(field: .path([fieldKey], schema: schema),
                                         method: method,
                                         value: value)
             

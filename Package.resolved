@@ -149,8 +149,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/sqlite-nio.git",
       "state" : {
-        "revision" : "256c6b816e3bb3764ab98639c7f04d10cec88cff",
-        "version" : "1.11.0"
+        "revision" : "2adc895b738210bbbb3b9cd982c86a634542e87f",
+        "version" : "1.11.2"
       }
     },
     {
@@ -282,10 +282,10 @@
     {
       "identity" : "swift-numerics",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-numerics",
+      "location" : "https://github.com/apple/swift-numerics.git",
       "state" : {
-        "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
-        "version" : "1.0.2"
+        "revision" : "e0ec0f5f3af6f3e4d5e7a19d2af26b481acb6ba8",
+        "version" : "1.0.3"
       }
     },
     {

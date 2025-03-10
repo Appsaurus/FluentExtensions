@@ -14,42 +14,10 @@
             filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "581"
-            endingLineNumber = "581"
+            startingLineNumber = "582"
+            endingLineNumber = "582"
             landmarkName = "toDatabaseQueryValue()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "43156BA3-BEA4-4438-948D-56A7AA412B2A - 89f9984e354bb896"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Codability.AnyCodable.toDatabaseQueryValue() -&gt; FluentKit.DatabaseQuery.Value"
-                  moduleName = "FluentExtensionsTests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "562"
-                  endingLineNumber = "562"
-                  offsetFromSymbolStart = "1440">
-               </Location>
-               <Location
-                  uuid = "43156BA3-BEA4-4438-948D-56A7AA412B2A - 7866952b8ac2aba1"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (Any) -&gt; FluentKit.DatabaseQuery.Value in Codability.AnyCodable.toDatabaseQueryValue() -&gt; FluentKit.DatabaseQuery.Value"
-                  moduleName = "FluentExtensionsTests"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/brianstrobach/Local/Development/Swift/Packages/Vapor/FluentExtensions/Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "562"
-                  endingLineNumber = "562"
-                  offsetFromSymbolStart = "40">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -62,8 +30,8 @@
             filePath = "Sources/FluentExtensions/Request++/Request+DatabaseQueryParameters/QueryParameterFilter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "583"
-            endingLineNumber = "583"
+            startingLineNumber = "584"
+            endingLineNumber = "584"
             landmarkName = "toDatabaseQueryValue()"
             landmarkType = "7">
          </BreakpointContent>
