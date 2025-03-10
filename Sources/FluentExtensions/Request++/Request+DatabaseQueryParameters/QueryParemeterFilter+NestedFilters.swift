@@ -30,7 +30,7 @@ public extension QueryParameterFilter {
         _ foreignKey: OptionalParentPropertyKeyPath<Parent, Child>
     ) -> (_ query: QueryBuilder<Child>, _ field: String, _ condition: FilterCondition) throws -> DatabaseQuery.Filter? {
         { query, field, condition in
-            query.join(Parent.self, on: \Parent._$id == foreignKey.appending(path: \.$id))
+            query.join(parent: foreignKey)
             return try .build(from: condition, builder: .init(query, schema: Parent.schemaOrAlias))
         }
     }

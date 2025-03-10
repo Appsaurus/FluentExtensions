@@ -210,6 +210,7 @@ open class FluentController<Model: FluentResourceModel,
     
     open func configure(query: QueryBuilder<Model>, on request: Request, join: Bool? = nil) -> QueryBuilder<Model> {
         let shouldJoin = join != nil ? join : isJoinedRequest(request)
+        
         guard shouldJoin == true else {
             return query
         }
@@ -292,12 +293,18 @@ open class FluentController<Model: FluentResourceModel,
     }
     
     open func readResults(of query: QueryBuilder<Model>, on req: Request) async throws -> [Read] {
-        try await query.all().map(read)
+        try await query
+            .deduplicateJoinsToSameTable()
+            .all()
+            .map(read)
     }
     
     open func readPage(of query: QueryBuilder<Model>, on req: Request) async throws -> Page<Read> {
-        try await query.paginate(for: req).transformDatum(with: read)
+        try await query
+            .deduplicateJoinsToSameTable()
+            .paginate(for: req).transformDatum(with: read)
     }
     
     //MARK: End Database-Level Implementations
 }
+
