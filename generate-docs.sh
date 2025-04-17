@@ -6,4 +6,6 @@ generate-documentation \
 --output-path ./docs \
 --transform-for-static-hosting \
 --hosting-base-path FluentExtensions \
---enable-inherited-docs
+--enable-inherited-docs \
+--emit-hosting-base-path \
+--disable-indexing false

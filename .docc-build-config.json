@@ -4,9 +4,10 @@
         "**/Tests/**",
         "**/Dependencies/**"
     ],
-    "skip-inherited-docs": true,
+    "skip-inherited-docs": false,
     "author": "Brian Strobach",
     "author-url": "",
     "bundle-identifier": "com.fluentextensions",
-    "module-version": "1.0.0"
+    "module-version": "1.0.0",
+    "theme": "dark"
 }
