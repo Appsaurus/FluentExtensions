@@ -1,6 +1,6 @@
 # FluentExtensions
 
-[![Documentation](https://github.com/Appsaurus/FluentExtensions/actions/workflows/generate-docc-site.yml/badge.svg)](https://appsaurus.github.io/FluentExtensions/)
+[![Documentation](https://github.com/Appsaurus/FluentExtensions/actions/workflows/generate-docc-site.yml/badge.svg)](https://appsaurus.github.io/FluentExtensions/documentation/fluentextensions/)
 [![Swift](https://img.shields.io/badge/Swift-5.7-orange.svg)](https://swift.org)
 [![Vapor](https://img.shields.io/badge/Vapor-4.0-blue.svg)](https://vapor.codes)
 
@@ -14,7 +14,7 @@ FluentExtensions enhances Vapor's Fluent ORM with:
 - **Reflection-Based Migrations**: Dramatically reduce boilerplate with automatic schema generation
 - **Advanced Query Building**: Enhanced query capabilities with sorting, pagination, and nested relationship queries
 
-[**View Full Documentation**](https://appsaurus.github.io/FluentExtensions/)
+[**View Full Documentation**](https://appsaurus.github.io/FluentExtensions/documentation/fluentextensions/)
 
 ## Installation
 
@@ -350,7 +350,7 @@ try await KitchenSink.autoMigrate(on: database)
 
 ## Advanced Usage
 
-For more detailed examples and advanced features, please refer to our [comprehensive documentation](https://appsaurus.github.io/FluentExtensions/).
+For more detailed examples and advanced features, please refer to our [comprehensive documentation](https://appsaurus.github.io/FluentExtensions/documentation/fluentextensions/).
 
 ## Contributing
 
