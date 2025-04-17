@@ -7,14 +7,14 @@ permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
+
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # Build job
+  build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,11 +27,22 @@ jobs:
       - name: Generate Documentation
         run: |
           chmod +x ./generate-docs.sh
-          ./generate-docs.sh            
+          ./generate-docs.sh
+          echo "Listing docs directory:"
+          ls -la ./docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: ./docs
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
