@@ -32,20 +32,18 @@ jobs:
       
       - name: Generate Documentation
         run: |
-          chmod +x ./generate-docs.sh
-          ./generate-docs.sh
-          echo "Generated documentation structure:"
-          ls -R ./docs
-      
-      - name: Fix Permissions
-        run: |
-          chmod -R 755 ./docs
-      
+            swift package \
+            --allow-writing-to-directory ./docs \
+            generate-documentation \
+            --target FluentExtensions \
+            --output-path 'docs' \
+            --transform-for-static-hosting \
+            --hosting-base-path FluentExtensions \
+            --disable-indexing    
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs
-          retention-days: 1
+          path: 'docs'
 
   # Deploy job
   deploy:
