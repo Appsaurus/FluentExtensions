@@ -27,7 +27,11 @@ jobs:
       - name: Generate Documentation
         run: |
           chmod +x ./generate-docs.sh
-          ./generate-docs.sh            
+          ./generate-docs.sh
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          path: './docs'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
