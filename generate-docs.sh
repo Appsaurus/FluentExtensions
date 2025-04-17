@@ -6,5 +6,4 @@ generate-documentation \
 --output-path ./docs \
 --transform-for-static-hosting \
 --hosting-base-path FluentExtensions \
---emit-hosting-base-path \
 --disable-indexing
