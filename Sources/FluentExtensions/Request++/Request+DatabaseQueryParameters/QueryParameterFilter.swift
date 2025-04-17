@@ -1,19 +1,31 @@
+
 import Foundation
 import Codability
 import Vapor
 import Fluent
 import SQLKit
 
+/// A class that handles filtering of database queries based on query parameters.
+///
+/// This class provides functionality to create and apply filters to database queries based on URL query parameters.
+/// It supports various filtering methods including equality, range comparisons, string operations, and array operations.
 public class QueryParameterFilter {
+    /// The database schema type to filter on
     public var schema: Schema.Type
+    /// The name of the field to filter
     public var name: String
+    /// The filtering method to apply
     public var method: QueryParameterFilter.Method
+    /// The filter value
     public var value: Value<String>
+    /// Optional type information for query value casting
     public var queryValueType: Any.Type? = nil
     
-    
+    /// Converts a string value to an appropriate `Encodable` type based on `queryValueType`
+    /// - Parameter value: The string value to convert
+    /// - Returns: An `Encodable` value of the appropriate type
+    /// - Throws: `Abort(.badRequest)` if value cannot be converted to the expected type
     func encodableValue(for value: String) throws -> Encodable {
-        
         switch queryValueType {
         case is Bool.Type:
             return try value.bool.unwrapped(or: Abort(.badRequest))
@@ -25,31 +37,36 @@ public class QueryParameterFilter {
         }
     }
     
+    /// Converts an array of string values to an array of appropriate `Encodable` types
+    /// - Parameter values: Array of string values to convert
+    /// - Returns: Array of converted `Encodable` values
     func encodableValue(for values: [String]) throws -> [Encodable] {
         return try values.map({try encodableValue(for: $0)})
     }
     
+    /// Converts a range value to an array of appropriate `Encodable` types
+    /// - Parameter rangeValue: The range value to convert
+    /// - Returns: Array containing the lower and upper bounds as `Encodable` values
     func encodableValue(for rangeValue: QueryParameterRangeValue) throws -> [Encodable] {
-//        func isNull(value: String) -> Bool {
-//            return ["null", ""].contains(value)
-//        }
-//        let lowerBound = isNull(value: rangeValue.lowerBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.lowerBound)
-//        let upperBound = isNull(value: rangeValue.upperBound) ? AnyCodable(nilLiteral: ()) : try encodableValue(for: rangeValue.upperBound)
-        
-        let lowerBound = rangeValue.lowerBound//try encodableValue(for: rangeValue.lowerBound)
-        let upperBound = rangeValue.upperBound//try encodableValue(for: rangeValue.upperBound)
+        let lowerBound = rangeValue.lowerBound
+        let upperBound = rangeValue.upperBound
         return [lowerBound, upperBound]
     }
     
+    /// Represents different types of filter values that can be applied
     public enum Value<S: Comparable> {
+        /// A single value
         case single(S)
+        /// Multiple values for IN-type operations
         case multiple([S])
+        /// A range of values with upper and lower bounds
         case range(QueryParameterRangeValue)
     }
     
+    /// Represents different filtering methods that can be applied
     public enum Method: String, Codable, CaseIterable {
+        /// Shorthand aliases for filter methods to improve API usability
         public enum Aliases: String, Codable, CaseIterable {
-            //Shorthand Aliases
             case eq = "eq"       // equals
             case neq = "neq"     // notEquals
             case nin = "nin"     // notEqualToAny
@@ -83,6 +100,7 @@ public class QueryParameterFilter {
             case inc = "inc"     // includesString
             case incs = "incs"   // includesStringSensitive
             
+            /// Converts an alias to its corresponding full method
             public func toMethod() -> Method {
                 switch self {
                 case .eq: return .equals
@@ -121,46 +139,46 @@ public class QueryParameterFilter {
             }
         }
         
-        // Material React Table (MRT) Filters
-        case between = "between" // Value falls between two bounds (exclusive), with numeric handling
-        case betweenInclusive = "betweenInclusive" // Value falls between two bounds (inclusive), with numeric handling
-        case contains = "contains" // String contains the filter text (case-insensitive)
-        case empty = "empty" // Value is empty or only whitespace
-        case endsWith = "endsWith" // String ends with filter text (case-insensitive)
-        case fuzzy = "fuzzy" // Fuzzy matching using match-sorter ranking algorithm
-        case greaterThan = "greaterThan" // Value exceeds filter (numbers and strings)
-        case greaterThanOrEqualTo = "greaterThanOrEqualTo" // Value equals or exceeds filter (numbers and strings)
-        case lessThan = "lessThan" // Value is below filter (numbers and strings)
-        case lessThanOrEqualTo = "lessThanOrEqualTo" // Value equals or is below filter (numbers and strings)
-        case notEmpty = "notEmpty" // Value contains non-whitespace characters
-        case notEquals = "notEquals" // Value differs from filter text (case-insensitive)
-        case startsWith = "startsWith" // String begins with filter text (case-insensitive)
+        // MARK: - Material React Table (MRT) Filters
+        case between = "between"
+        case betweenInclusive = "betweenInclusive"
+        case contains = "contains"
+        case empty = "empty"
+        case endsWith = "endsWith"
+        case fuzzy = "fuzzy"
+        case greaterThan = "greaterThan"
+        case greaterThanOrEqualTo = "greaterThanOrEqualTo"
+        case lessThan = "lessThan"
+        case lessThanOrEqualTo = "lessThanOrEqualTo"
+        case notEmpty = "notEmpty"
+        case notEquals = "notEquals"
+        case startsWith = "startsWith"
         
-        // TanStack Table Filters
-        case arrIncludes = "arrIncludes" //Array on LHS includes the single RHS filter value
-        case arrIncludesAll = "arrIncludesAll" //Array on LHS includes all items in RHS array
-        case arrIncludesSome = "arrIncludesSome" //Array on LHS includes at least one item in RHS array
-        case equals = "equals" //Object/referential equality Object.is/===
-        case equalsString = "equalsString" //Case-sensitive string equality
-        case equalsStringSensitive = "equalsStringSensitive" //Case-insensitive string equality
-        case includesString = "includesString" //Case-insensitive string inclusion
-        case includesStringSensitive = "includesStringSensitive" //Case-sensitive string inclusion
-        case inNumberRange = "inNumberRange"//Number range inclusion
-        case weakEquals = "weakEquals"//Weak object/referential equality ==
+        // MARK: - TanStack Table Filters
+        case arrIncludes = "arrIncludes"
+        case arrIncludesAll = "arrIncludesAll"
+        case arrIncludesSome = "arrIncludesSome"
+        case equals = "equals"
+        case equalsString = "equalsString"
+        case equalsStringSensitive = "equalsStringSensitive"
+        case includesString = "includesString"
+        case includesStringSensitive = "includesStringSensitive"
+        case inNumberRange = "inNumberRange"
+        case weakEquals = "weakEquals"
         
-        // Custom Filters
+        // MARK: - Custom Filters
         case filter = "filter"
         case searchText = "searchText"
         case notStartsWith = "notStartsWith"
         case notEndsWith = "notEndsWith"
-        case arrIsContainedBy = "arrIsContainedBy" //Array on RHS includes all items in LHS array
-        case isNull = "isNull"       // Value is null
-        case isNotNull = "isNotNull" // Value is not null
-        case equalsAny = "equalsAny" // LHS value is one of any in RHS array
-        case notEqualToAny = "notEqualToAny" //LHS is not equal to any in RHS array
+        case arrIsContainedBy = "arrIsContainedBy"
+        case isNull = "isNull"
+        case isNotNull = "isNotNull"
+        case equalsAny = "equalsAny"
+        case notEqualToAny = "notEqualToAny"
         case notContains = "notContains"
         
-        // Convert to database query filter method
+        /// Converts the filter method to its corresponding database query filter method
         public func toDatabaseQueryFilterMethod() -> DatabaseQuery.Filter.Method {
             switch self {
             case .equals, .equalsString, .equalsStringSensitive, .weakEquals:
@@ -215,17 +233,19 @@ public class QueryParameterFilter {
                 return .placeholder
             case .notEqualToAny:
                 return .placeholder
-                
             }
         }
     }
-
     
+    /// Gets the database query field for the filter
+    /// - Parameter schema: Optional schema override
+    /// - Returns: A `DatabaseQuery.Field` representing the field to filter on
     public func queryField(for schema: Schema.Type? = nil) -> DatabaseQuery.Field {
         let schema = schema ?? self.schema
         return .path([FieldKey(name)], schema: schema.schemaOrAlias)
     }
     
+    /// Internal initializer for creating a filter
     internal init(schema: Schema.Type,
                   name: String,
                   method: QueryParameterFilter.Method,
@@ -238,6 +258,11 @@ public class QueryParameterFilter {
         self.queryValueType = queryValueType
     }
     
+    /// Convenience initializer that creates a filter from a URL query container
+    /// - Parameters:
+    ///   - schema: The database schema type
+    ///   - queryContainer: The URL query container containing the filter
+    /// - Throws: `QueryParameterFilterError` if filter configuration is invalid
     public convenience init(schema: Schema.Type,
                             from queryContainer: URLQueryContainer) throws {
         guard let filterJson: String = queryContainer["filter"] else {
@@ -257,14 +282,15 @@ public class QueryParameterFilter {
                   value: .single(value.description),
                   queryValueType: type(of: value.value))
     }
-    
-    
 }
 
-
+/// Represents different types of filter conditions that can be combined
 public enum FilterCondition: Codable {
+    /// A single filter condition
     case `where`(field: String, method: QueryParameterFilter.Method, value: AnyCodable)
+    /// A group of conditions that must all be true (AND)
     case and([FilterCondition])
+    /// A group of conditions where at least one must be true (OR)
     case or([FilterCondition])
     
     private enum CodingKeys: String, CodingKey {
@@ -272,7 +298,7 @@ public enum FilterCondition: Codable {
         case and, or
     }
     
-    
+    /// Decodes a filter condition from JSON data
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
@@ -290,10 +316,12 @@ public enum FilterCondition: Codable {
         }
     }
     
+    /// Decodes a filter condition from a JSON string
     public static func decoded(from filterString: String) throws -> FilterCondition {
         return try JSONDecoder().decode(FilterCondition.self, from: Data(filterString.utf8))
     }
     
+    /// Encodes the filter condition to JSON
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
@@ -310,9 +338,14 @@ public enum FilterCondition: Codable {
     }
 }
 
-
+/// Extension to support building database query filters
 public extension DatabaseQuery.Filter {
     
+    /// Builds a database query filter from a filter string
+    /// - Parameters:
+    ///   - filterString: The JSON filter string
+    ///   - builder: The query parameter filter builder
+    /// - Returns: A database query filter if valid, nil otherwise
     static func build<M: Model>(from filterString: String,
                                 builder: QueryParameterFilter.Builder<M>) throws -> DatabaseQuery.Filter? {
         guard !filterString.isEmpty else {
@@ -323,7 +356,7 @@ public extension DatabaseQuery.Filter {
         return try build(from: condition, builder: builder)
     }
     
-    
+    /// Builds a database query filter from a filter condition
     static func build<M>(from condition: FilterCondition,
                          builder: QueryParameterFilter.Builder<M>) throws -> DatabaseQuery.Filter? {
         let fieldFilterOverrides = builder.config.fieldOverrides
@@ -345,8 +378,8 @@ public extension DatabaseQuery.Filter {
             
             let fieldKey = builder.config.fieldKeyMap[field] ?? FieldKey(field)
             return try buildSimpleFilter(field: .path([fieldKey], schema: schema),
-                                        method: method,
-                                        value: value)
+                                         method: method,
+                                         value: value)
             
         case let .and(conditions):
             let filters = try conditions.compactMap { try build(from: $0, builder: builder) }
@@ -357,6 +390,7 @@ public extension DatabaseQuery.Filter {
         }
     }
     
+    /// Builds a simple database query filter
     static func buildSimpleFilter(field: DatabaseQuery.Field,
                                   method: QueryParameterFilter.Method,
                                   value: AnyCodable) throws -> DatabaseQuery.Filter? {
@@ -384,14 +418,14 @@ public extension DatabaseQuery.Filter {
             
             if !isNull(value: lower), let lowerValue = parseNumberRangeBoundary(lower) {
                 filters.append(.value(field,
-                                     inclusive ? .greaterThanOrEqual : .greaterThan,
-                                     .bind(lowerValue)))
+                                      inclusive ? .greaterThanOrEqual : .greaterThan,
+                                      .bind(lowerValue)))
             }
             
             if !isNull(value: upper), let upperValue = parseNumberRangeBoundary(upper) {
                 filters.append(.value(field,
-                                     inclusive ? .lessThanOrEqual : .lessThan,
-                                     .bind(upperValue)))
+                                      inclusive ? .lessThanOrEqual : .lessThan,
+                                      .bind(upperValue)))
             }
             
             return filters.isEmpty ? nil : filters
@@ -403,14 +437,14 @@ public extension DatabaseQuery.Filter {
             if !isNull(value: lower),
                let lowerDate = Date(string: "\(lower)") {
                 filters.append(.value(field,
-                                     inclusive ? .greaterThanOrEqual : .greaterThan,
+                                      inclusive ? .greaterThanOrEqual : .greaterThan,
                                       .bind(lowerDate)))
             }
             
             if !isNull(value: upper),
                let upperDate = Date(string: "\(upper)") {
                 filters.append(.value(field,
-                                     inclusive ? .lessThanOrEqual : .lessThan,
+                                      inclusive ? .lessThanOrEqual : .lessThan,
                                       .bind(upperDate)))
             }
             
@@ -422,14 +456,14 @@ public extension DatabaseQuery.Filter {
             
             if !isNull(value: lower) {
                 filters.append(.value(field,
-                                     inclusive ? .greaterThanOrEqual : .greaterThan,
-                                     .bind(String(describing: lower))))
+                                      inclusive ? .greaterThanOrEqual : .greaterThan,
+                                      .bind(String(describing: lower))))
             }
             
             if !isNull(value: upper) {
                 filters.append(.value(field,
-                                     inclusive ? .lessThanOrEqual : .lessThan,
-                                     .bind(String(describing: upper))))
+                                      inclusive ? .lessThanOrEqual : .lessThan,
+                                      .bind(String(describing: upper))))
             }
             
             return filters.isEmpty ? nil : filters
@@ -465,9 +499,9 @@ public extension DatabaseQuery.Filter {
             return .value(field, .equal, .null)
         case .isNotNull:
             return .value(field, .notEqual, .null)
-        case .empty: //TODO: Support both string and arrays
+        case .empty:
             return .value(field, .equal, .bind(""))
-        case .notEmpty:  //TODO: Support both string and arrays
+        case .notEmpty:
             return .value(field, .notEqual, .bind(""))
         case .fuzzy:
             return .value(field, .similarTo, value.toDatabaseQueryValue())
@@ -475,11 +509,11 @@ public extension DatabaseQuery.Filter {
             return .value(field, .overlaps, .bind(["\(value.value)"]))
         case .equalsAny:
             switch value.toDatabaseQueryValue() {
-                case .array(let array):
+            case .array(let array):
                 return .group(array.map {
                     .value(field, .equal, $0)
                 }, .or)
-                    
+                
             default:
                 return nil
             }
@@ -490,8 +524,15 @@ public extension DatabaseQuery.Filter {
     }
 }
 
+/// Extension to add query parameter filtering to query builders
 public extension QueryBuilder {
     
+    /// Applies a filter from URL query parameters
+    /// - Parameters:
+    ///   - queryParameterKey: The key in the URL query string containing the filter
+    ///   - request: The incoming request
+    ///   - builder: Optional custom filter builder
+    /// - Returns: The filtered query builder
     func filterWithQueryParameter(at queryParameterKey: String = "filter",
                                   in request: Request,
                                   builder: QueryParameterFilter.Builder<Model>? = nil) throws -> Self {
@@ -501,6 +542,11 @@ public extension QueryBuilder {
         return try filterWithQueryParameterString(filterString, builder: builder)
     }
     
+    /// Applies a filter from a filter string
+    /// - Parameters:
+    ///   - queryParameterFilterString: The JSON filter string
+    ///   - builder: Optional custom filter builder
+    /// - Returns: The filtered query builder
     func filterWithQueryParameterString(_ queryParameterFilterString: String,
                                         builder: QueryParameterFilter.Builder<Model>? = nil) throws -> Self {
         if let filterCondition = try DatabaseQuery.Filter.build(from: queryParameterFilterString, builder: builder ?? QueryParameterFilter.Builder<Model>(self)) {
@@ -509,43 +555,45 @@ public extension QueryBuilder {
         return self
     }
 }
+
 extension DatabaseQuery.Filter.Method {
+    /// A placeholder filter method used when the actual method needs to be determined at runtime
     static var placeholder: DatabaseQuery.Filter.Method {
         return .custom("")
     }
 }
 
-// PostgreSQL specific extensions
+// MARK: - PostgreSQL Extensions
 public extension DatabaseQuery.Filter.Method {
-    //PSQL only
+    /// PostgreSQL array contains operator (@>)
     static var containsArray: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("@>"))
     }
-
-    //PSQL only
+    
+    /// PostgreSQL array is contained by operator (<@)
     static var isContainedByArray: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("<@"))
     }
-
-    //PSQL only
+    
+    /// PostgreSQL array overlaps operator (&&)
     static var overlaps: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("&&"))
     }
     
-    //PSQL only
+    /// PostgreSQL similar to operator
     static var similarTo: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("SIMILAR TO"))
     }
     
-    //PSQL only
+    /// PostgreSQL full text search operator
     static var fullTextSearch: DatabaseQuery.Filter.Method {
         return .custom(SQLRaw("@@"))
     }
 }
 
-
-
+/// Extension to support type conversion and database value conversion
 public extension AnyCodable {
+    /// Converts a value to an appropriate `Encodable` type
     func castToEncodable(value: Any) -> Encodable {
         switch type(of: value) {
         case is Bool.Type:
@@ -572,10 +620,13 @@ public extension AnyCodable {
         }
         return "\(value)"
     }
+    
+    /// Gets the inner value as an `Encodable`
     func encodableInnerValue() -> Encodable {
-        return castToEncodable(value: value)        
+        return castToEncodable(value: value)
     }
     
+    /// Converts the value to a database query value
     func toDatabaseQueryValue() -> DatabaseQuery.Value {
         switch value {
         case let arrayValue as [Any]:

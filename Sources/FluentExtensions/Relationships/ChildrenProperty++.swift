@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 
+/// Represents the changes to be made to a collection of child models
 public struct ChildrenDiff<T: Model> {
     let modelsToUpdate: [T]
     let modelsToCreate: [T]
@@ -8,8 +9,11 @@ public struct ChildrenDiff<T: Model> {
 }
 
 public extension ChildrenProperty {
-    /// Returns true if the supplied model is a child
-    /// to this relationship.
+    /// Checks if a specific model is included in the children relationship
+    /// - Parameters:
+    ///   - model: The model to check for
+    ///   - database: The database to perform the check on
+    /// - Returns: Boolean indicating if the model is included
     func includes(_ model: To, in database: Database) async throws -> Bool {
         let id = try model.requireID()
         return try await query(on: database)
@@ -17,13 +21,18 @@ public extension ChildrenProperty {
             .first() != nil
     }
 
+    /// Retrieves all children in the relationship
+    /// - Parameter database: The database to query
+    /// - Returns: Array of child models
     func all(in database: Database) async throws -> [To] {
         try await query(on: database).all()
     }
 
+    /// Marks models for attachment to the parent
+    /// - Parameter children: The children to mark for attachment
+    /// - Returns: The modified children array
     @discardableResult
     func markForAttachment(_ children: [To]) throws -> [To] {
-        
         guard let id = fromId else {
             fatalError("Cannot query children relation from unsaved model.")
         }
@@ -38,6 +47,12 @@ public extension ChildrenProperty {
         return children
     }
     
+    /// Attaches children to the parent
+    /// - Parameters:
+    ///   - children: The children to attach
+    ///   - method: The method to use for updating
+    ///   - database: The database to perform the operation on
+    /// - Returns: The attached children
     @discardableResult
     func attach(_ children: [To],
                 updatingBy method: UpdateMethod = .upsert,
@@ -46,10 +61,11 @@ public extension ChildrenProperty {
         return try await children.updateBy(method, in: database)
     }
     
-    
+    /// Marks children for detachment from the parent
+    /// - Parameter children: The children to mark for detachment
+    /// - Returns: The modified children array
     @discardableResult
     func markForDetachment(_ children: [To]) throws -> [To] {
-        
         switch self.parentKey {
         case .required(_):
             throw Abort(.badRequest, reason: "That parent child relationship is required.")
@@ -59,12 +75,19 @@ public extension ChildrenProperty {
         return children
     }
     
+    /// Detaches children from the parent
+    /// - Parameters:
+    ///   - children: The children to detach
+    ///   - database: The database to perform the operation on
+    /// - Returns: The detached children
     @discardableResult
     func detach(_ children: [To], in database: Database) async throws -> [To] {
         return try await markForDetachment(children)
             .update(in: database, force: true)
     }
     
+    /// Detaches all children from the parent
+    /// - Parameter database: The database to perform the operation on
     func detachAll(on database: Database) async throws {
         guard let fromID = self.fromId else {
             fatalError("Cannot detach siblings relation \(self.name) from unsaved model.")
@@ -75,6 +98,11 @@ public extension ChildrenProperty {
         try await existingChildren.update(in: database)
     }
     
+    /// Removes children using the specified removal method
+    /// - Parameters:
+    ///   - children: The children to remove
+    ///   - removalMethod: The method to use for removal
+    ///   - database: The database to perform the operation on
     func remove(children: [To], by removalMethod: RemovalMethod = .detach, in database: Database) async throws {
         switch removalMethod {
         case .delete(let force):
@@ -84,49 +112,11 @@ public extension ChildrenProperty {
         }
     }
     
-
-
-//    func markForReplacement(_ children: [To], force: Bool = false, in database: Database) async throws -> ([To], [To]) {
-//        switch (self.parentKey, force) {
-//        case (.required(_), false):
-//            throw Abort(.badRequest, reason: "That parent child relationship is required.")
-//        default:
-//            break
-//        }
-//        
-//        var existingChildren = try await self.all(in: database)
-//        existingChildren = try markForDetachment(existingChildren)
-//        let children = try markForAttachment(children)
-//        return (existingChildren, children)
-//    }
-//    @discardableResult
-//    func replace(with children: [To], force: Bool = false, in database: Database) async throws -> [To] {
-//        let resources = try await markForReplacement(children, force: force, in: database)
-//        let existingChildren = resources.0
-//        let children = resources.1
-//        
-//        try await existingChildren.update(in: database, force: force)
-//        return try await children.upsert(in: database)
-//    }
-//
-//    @discardableResult
-//    func replace(
-//        with children: [To],
-//        by removalMethod: RemovalMethod = .detach,
-//        updatingBy updateMethod: UpdateMethod = .upsert,
-//        on database: Database) async throws -> [To] {
-//        return try await database.transaction { database in
-//            switch removalMethod {
-//            case .delete(let force):
-//                try await self.query(on: database).delete(force: force)
-//            case .detach:
-//                try await self.detachAll(on: database)
-//            }
-//            return try await self.attach(children, updatingBy: .upsert, in: database)
-//        }
-//        
-//    }
-    
+    /// Analyzes the differences between existing and new children
+    /// - Parameters:
+    ///   - newChildren: The new set of children
+    ///   - database: The database to perform the comparison on
+    /// - Returns: A ChildrenDiff containing the changes to be made
     func diffWithExistingChildren(_ newChildren: [To], in database: Database) async throws -> ChildrenDiff<To> {
         let existingChildren = try await self.all(in: database)
         
@@ -166,6 +156,12 @@ public extension ChildrenProperty {
         )
     }
 
+    /// Replaces all children with a new set
+    /// - Parameters:
+    ///   - children: The new set of children
+    ///   - deleteOrphaned: Whether to delete orphaned children
+    ///   - database: The database to perform the operation on
+    /// - Returns: The updated set of children
     @discardableResult
     func replace(
         with children: [To],
@@ -194,16 +190,24 @@ public extension ChildrenProperty {
             return try await modelsToUpsert.upsert(in: database)
         }
     }
-    
 }
 
 public extension Model {
-    /// Returns true if this model is a child
-    /// to the supplied relationship.
+    /// Checks if the model is a child in the specified relationship
+    /// - Parameters:
+    ///   - children: The children relationship to check
+    ///   - database: The database to perform the check on
+    /// - Returns: Boolean indicating if the model is a child
     func isChild<M: Model>(_ children: ChildrenProperty<M, Self>, in database: Database) async throws -> Bool {
         try await children.includes(self, in: database)
     }
 
+    /// Replaces children in a specific relationship
+    /// - Parameters:
+    ///   - children: The new children to set
+    ///   - childKeyPath: The key path to the children relationship
+    ///   - database: The database to perform the operation on
+    /// - Returns: The updated children array
     @discardableResult
     func replaceChildren<C: Model>(
         with children: [C],

@@ -8,18 +8,20 @@
 import SQLKit
 import CollectionConcurrencyKit
 
+/// Extension adding pagination support to SQLRawBuilder
 extension SQLRawBuilder: QueryPaginating {
-
+    /// Paginates the results of a raw SQL query
+    /// - Parameter request: The pagination request containing page number and items per page
+    /// - Returns: A Page containing the paginated SQLRows and metadata
+    /// - Throws: PaginationError if invalid pagination parameters are provided
     public func paginate(_ request: PageRequest) async throws -> Page<SQLRow> {
         let page = request.page
         let per = request.per
 
-        // Make sure the current page is greater than 0
         guard page > 0 else {
             throw PaginationError.invalidPageNumber(page)
         }
 
-        // Per-page also must be greater than zero
         guard per > 0 else {
             throw PaginationError.invalidPerSize(per)
         }
@@ -32,24 +34,30 @@ extension SQLRawBuilder: QueryPaginating {
         let lowerBound = (page - 1) * per
         sql.appendLiteral("\nLIMIT \(per)\nOFFSET \(lowerBound)")
         let builder = SQLRawBuilder(sql, on: self.database)
-        print("Final Query: \n\(builder.serializedSQLString)")
         let rows = try await builder.all()
         return Page(items: rows, metadata: PageMetadata(page: page, per: per, total: total))
     }
 
+    /// Counts the total number of rows in the query result
+    /// - Returns: The total count of rows
+    /// - Throws: Any errors encountered during query execution
     func count() async throws -> Int {
         try await count(rawQuery: serializedSQLString)
     }
 
+    /// Counts the total number of rows for a given raw SQL query
+    /// - Parameter rawQuery: The SQL query string
+    /// - Returns: The total count of rows
+    /// - Throws: Any errors encountered during query execution
     func count(rawQuery: String) async throws -> Int {
         let countQuery = "SELECT COUNT(*) FROM (\(rawQuery)) countQuery;"
-        print("COUNT QUERY: \(countQuery)")
         let output = try await self.database.raw(SQLQueryString(stringLiteral: countQuery)).all(decoding: CountResult.self)
         return output.first?.count ?? 0
     }
 }
 
 public extension SQLRawBuilder {
+    /// The serialized SQL string representation of the query
     var serializedSQLString: String {
         guard let sql = self.query as? SQLQueryString else {
             fatalError()

@@ -1,6 +1,6 @@
 //
 //  QueryBuilder+RangerFilterable.swift
-//  
+//
 //
 //  Created by Brian Strobach on 9/1/21.
 //
@@ -8,9 +8,16 @@ import FluentKit
 import Fluent
 import SQLKit
 
+/// A type that can be used in range-based filtering operations.
+/// The type must conform to both `Strideable` and `Codable` protocols.
 public typealias RangeFilterable = Strideable & Codable
 
-public extension QueryBuilder  {
+public extension QueryBuilder {
+    /// Filters query results based on a range of values for a given property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - range: The range of values to filter by
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, to range: Range<P.Value>) -> Self where P.Value: Strideable {
         return group(.and) {
@@ -19,6 +26,11 @@ public extension QueryBuilder  {
         }
     }
 
+    /// Filters query results based on a range of optional values for a given property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - range: The range of values to filter by
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, to range: Range<P.Value>) -> Self
     where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
@@ -28,6 +40,11 @@ public extension QueryBuilder  {
         }
     }
 
+    /// Filters query results based on a closed range of values for a given property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - range: The closed range of values to filter by
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, P>, to range: ClosedRange<P.Value>) -> Self where P.Value: Strideable {
         return group(.and) {
@@ -35,6 +52,12 @@ public extension QueryBuilder  {
             $0.filter(keyPath <= range.upperBound)
         }
     }
+
+    /// Filters query results based on a closed range of optional values for a given property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - range: The closed range of values to filter by
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath:  KeyPath<Model, P>, to range: ClosedRange<P.Value>) -> Self
     where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
@@ -44,6 +67,12 @@ public extension QueryBuilder  {
         }
     }
 
+    /// Filters query results based on a range specified in a URL query parameter.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - parameter: The URL query parameter containing the range
+    ///   - request: The request containing the query parameters
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self where P.Value: Strideable {
         if let param = request.query[String.self, at: parameter],
@@ -53,6 +82,12 @@ public extension QueryBuilder  {
         return self
     }
 
+    /// Filters query results based on a range of optional values specified in a URL query parameter.
+    /// - Parameters:
+    ///   - keyPath: The key path to the property being filtered
+    ///   - parameter: The URL query parameter containing the range
+    ///   - request: The request containing the query parameters
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<P: QueryableProperty>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self
     where P.Value: Vapor.OptionalType & Strideable, P.Value.WrappedType: RangeFilterable {
@@ -63,7 +98,13 @@ public extension QueryBuilder  {
         return self
     }
 
-    //MARK: Timenstamps
+    //MARK: - Timestamp Filtering
+
+    /// Filters query results based on a closed range of dates for a timestamp property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the timestamp property
+    ///   - range: The closed range of dates to filter by
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<F: TimestampFormat, P: TimestampProperty<Model, F>>(_ keyPath: KeyPath<Model, P>, to range: ClosedRange<Date>) -> Self {
         return group(.and) {
@@ -72,6 +113,11 @@ public extension QueryBuilder  {
         }
     }
 
+    /// Filters query results based on a range of dates for a timestamp property.
+    /// - Parameters:
+    ///   - keyPath: The key path to the timestamp property
+    ///   - range: The range of dates to filter by
+    /// - Returns: The modified query builder
     func filter<F: TimestampFormat, P: TimestampProperty<Model, F>>(_ keyPath: KeyPath<Model, P>, to range: Range<Date>) -> Self {
         return group(.and) {
             $0.filter(keyPath >= range.lowerBound)
@@ -79,6 +125,12 @@ public extension QueryBuilder  {
         }
     }
 
+    /// Filters query results based on a range of dates specified in a URL query parameter.
+    /// - Parameters:
+    ///   - keyPath: The key path to the timestamp property
+    ///   - parameter: The URL query parameter containing the range
+    ///   - request: The request containing the query parameters
+    /// - Returns: The modified query builder
     @discardableResult
     func filter<F: TimestampFormat, P: TimestampProperty<Model, F>>(_ keyPath: KeyPath<Model, P>, toRangeAt parameter: String, on request: Request) -> Self {
         if let param = request.query[String.self, at: parameter],
@@ -89,11 +141,19 @@ public extension QueryBuilder  {
     }
 }
 
+/// Extension to handle range query parameters in URL queries
 public extension URLQueryContainer {
+    /// Attempts to extract and parse a range from a query parameter.
+    /// - Parameter parameter: The query parameter key
+    /// - Returns: A closed range if successfully parsed, nil otherwise
     func range<V: RangeFilterable>(at parameter: String) -> ClosedRange<V>? {
         return try? rangeThrowing(at: parameter)
     }
 
+    /// Attempts to extract and parse a range from a query parameter, throwing an error if parsing fails.
+    /// - Parameter parameter: The query parameter key
+    /// - Returns: A closed range if successfully parsed, nil if parameter doesn't exist
+    /// - Throws: An error if the range string is malformed
     func rangeThrowing<V: RangeFilterable>(at parameter: String) throws -> ClosedRange<V>? {
         guard let param = self[String.self, at: parameter] else {
             return nil
@@ -102,30 +162,34 @@ public extension URLQueryContainer {
     }
 }
 
-
+/// Error thrown when a range query parameter is malformed
 public final class MalformedRangeQueryError: AbortError {
     public var query: String
 
     public init(_ query: String) {
         self.query = query
     }
+    
     public var status: HTTPResponseStatus {
         return .badRequest
     }
+    
     public var reason: String {
         return "\(query) is not a properly formed range query."
     }
+    
     public var identifier: String {
         return "MalformedRangeQueryError"
     }
 }
-public extension ClosedRange where Bound: Codable & Strideable {
 
+/// Extension to create ranges from string representations
+public extension ClosedRange where Bound: Codable & Strideable {
+    /// Initializes a range from a string representation.
+    /// - Parameter string: The string containing the range definition
+    /// - Throws: MalformedRangeQueryError if the string format is invalid
     init?(string: String) throws {
         let pattern = #"\.\.\.|\.\.\<|\<\.\.|\<\.\<"#
-//        let pattern = RangeOperators.allCases.map({
-//            return $0.rawValue.charactersArray.map({String($0)}).joined(separator: #"\"#)
-//        }).joined(separator: "|")
 
         guard let rangeOperatorString = string.substringsMatching(regex: pattern).first,
               let rangeOperator = RangeOperators(rawValue: rangeOperatorString) else {
@@ -154,19 +218,15 @@ public extension ClosedRange where Bound: Codable & Strideable {
                 let upper: Bound = try .decode(fromJSON: lowerBounds, using: decoder)
                 self = rangeOperator.rangeFunction(lhs: lower, rhs: upper)
             }
-
         }
         catch {
             throw DecodingError.typeMismatch(Date.self, DecodingError.Context(codingPath: [], debugDescription: "Unable to parse date from json query parameter \(string)"))
         }
-
     }
 }
 
 public extension JSONDecoder.DateDecodingStrategy {
-
-    /// The strategy that formats dates according to the ISO 8601 standard.
-    /// - Note: This includes the fractional seconds, unlike the standard `.iso8601`, which fails to decode those.
+    /// A date decoding strategy that includes fractional seconds in ISO8601 format.
     static var iso8601withFractionalSeconds: JSONDecoder.DateDecodingStrategy {
         JSONDecoder.DateDecodingStrategy.custom { (decoder) in
             let singleValue = try decoder.singleValueContainer()
@@ -180,9 +240,9 @@ public extension JSONDecoder.DateDecodingStrategy {
             return date
         }
     }
-
 }
 
+/// Defines the available range operators and their behavior
 public enum RangeOperators: String, ExpressibleByStringLiteral, CaseIterable {
     case betweenInclusive = "..."
     case betweenExclusive = "<.<"
@@ -208,37 +268,7 @@ public enum RangeOperators: String, ExpressibleByStringLiteral, CaseIterable {
 }
 
 
-fileprivate extension String {
-    func substringsMatching(regex: String) -> [String] {
-        do {
-            let regex = try NSRegularExpression(pattern: regex)
-            let results = regex.matches(in: self,
-                                        range: NSRange(self.startIndex..., in: self))
-            return results.map {
-                String(self[Range($0.range, in: self)!])
-            }
-        } catch let error {
-            print("invalid regex: \(error.localizedDescription)")
-            return []
-        }
-    }
-
-    func regexSplit(_ pattern: String) -> [String] {
-        do {
-            let regex: NSRegularExpression = try NSRegularExpression(pattern: pattern, options: .caseInsensitive)
-            let stop: String = "&උටෟ#ߤჀ"
-            let modifiedString: String = regex.stringByReplacingMatches(in: self, options: NSRegularExpression.MatchingOptions(),
-                                                                        range: NSRange(location: 0, length: self.count), withTemplate: stop)
-            return modifiedString.components(separatedBy: stop)
-        } catch {
-            return []
-        }
-    }
-
-}
-
-
-extension Date: /*@retroactive*/ Strideable {
+extension Date:  /*@retroactive*/ Strideable {
     public typealias Stride = TimeInterval
 
     public func distance(to other: Date) -> TimeInterval {
