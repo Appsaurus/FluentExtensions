@@ -3,10 +3,13 @@ on:
   push:
     branches:
       - master
+
+# These permissions are needed for deploying to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 concurrency:
   group: "pages"
@@ -17,23 +20,52 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      
       - name: Setup Pages
         uses: actions/configure-pages@v3
+      
       - name: Setup Swift
         uses: swift-actions/setup-swift@v1
         with:
           swift-version: '5.9'
+      
       - name: Generate Documentation
         run: |
           chmod +x ./generate-docs.sh
           ./generate-docs.sh
           echo "Listing docs directory:"
           ls -la ./docs
-      - name: Upload artifact
+      
+      - name: Fix Permissions
+        run: |
+          chmod -R 755 ./docs
+      
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs'
+          path: ./docs
+          retention-days: 1
+
+  # Deploy job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
