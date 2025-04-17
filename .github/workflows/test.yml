@@ -1,7 +1,6 @@
 name: test
 on:
   push:
-
 jobs:
   linux:
     strategy:
@@ -9,7 +8,6 @@ jobs:
       matrix:
         runner:
           - swift:5.7-focal
-#          - swiftlang/swift:nightly-main-focal
     container: ${{ matrix.runner }}
     runs-on: ubuntu-latest
     steps:

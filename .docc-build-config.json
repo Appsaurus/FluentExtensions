@@ -1,0 +1,12 @@
+{
+    "exclude": [
+        "**/.build/**",
+        "**/Tests/**",
+        "**/Dependencies/**"
+    ],
+    "skip-inherited-docs": true,
+    "author": "Brian Strobach",
+    "author-url": "",
+    "bundle-identifier": "com.fluentextensions",
+    "module-version": "1.0.0"
+}
