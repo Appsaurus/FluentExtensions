@@ -5,4 +5,5 @@ generate-documentation \
 --target FluentExtensions \
 --output-path ./docs \
 --transform-for-static-hosting \
---hosting-base-path fluentextensions
+--hosting-base-path FluentExtensions \
+--enable-inherited-docs
