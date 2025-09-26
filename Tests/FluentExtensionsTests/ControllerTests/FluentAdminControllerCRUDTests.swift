@@ -65,7 +65,7 @@ class FluentAdminControllerCRUDTests: FluentAdminControllerTestCase {
         })
     }
     
-    func testDelete() throws {
+    func testDelete() throws {        
         try app.test(.DELETE, "\(basePath)/\(Self.classUUID)") { response in
             XCTAssertEqual(response.status, .ok)
         }

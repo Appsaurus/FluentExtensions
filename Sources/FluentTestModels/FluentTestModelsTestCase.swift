@@ -12,7 +12,7 @@ public struct FluentTestModels {
 
     open class TestCase: FluentTestCase {
         open var useReflectionMigrations: Bool {
-            false
+            true
         }
 
         override open func configure(_ databases: Databases) throws {

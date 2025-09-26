@@ -83,25 +83,34 @@ extension TimestampProperty: SchemaReflectable {
 
 // MARK: - Parent Property
 /// Parent property schema reflection for UUID-based relationships
-extension ParentProperty: SchemaReflectable where To.IDValue == UUID {
+extension ParentProperty: SchemaReflectable {
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self), .required)
-            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
+            .foreignKey(key,
+                        references: To.schema,
+                        To.ID<To.IDValue>(custom: .id).key,
+                        onDelete: .cascade,
+                        onUpdate: .cascade)
     }
 }
 
 // MARK: - Optional Parent Property
 /// Optional parent property schema reflection for UUID-based relationships
-extension OptionalParentProperty: SchemaReflectable where To.IDValue == UUID {
+extension OptionalParentProperty: SchemaReflectable{
     @discardableResult
     public static func reflectSchema(with key: FieldKey, to builder: SchemaBuilder) -> SchemaBuilder {
         return builder
             .field(key, .init(To.IDValue.self))
-            .foreignKey(key, references: To.schema, To.ID<To.IDValue>(key: .id).key)
+            .foreignKey(key,
+                        references: To.schema,
+                        To.ID<To.IDValue>(custom: .id).key,
+                        onDelete: .cascade,
+                        onUpdate: .cascade)
     }
 }
+
 
 public extension FieldKey {
     /// Creates a composite field key by combining a group key with a field key
